@@ -266,7 +266,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                           )
                         : const Text(
-                            'LOGINNNNNNNN',
+                            'Masuk ke Platfrom',
                             style: TextStyle(
                               color: Colors.white,
                               fontSize: 16,
