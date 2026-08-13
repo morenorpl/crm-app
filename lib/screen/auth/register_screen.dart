@@ -337,7 +337,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     Padding(
                       padding: EdgeInsets.symmetric(horizontal: 12.0),
                       child: Text(
-                        'DANNNNNNNNN',
+                        'ATAU',
                         style: TextStyle(
                           color: Color(0xFFA197B4),
                           fontSize: 11,
