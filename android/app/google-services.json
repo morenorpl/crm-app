@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "769606657768",
+    "project_id": "sejadah-crm-app",
+    "storage_bucket": "sejadah-crm-app.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:769606657768:android:875f4e88333df649714b5d",
+        "android_client_info": {
+          "package_name": "com.example.crm_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDFs62v2BVr1ldU7q4sal6oJ0cBFcObCL4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:769606657768:android:948439370e3cf47f714b5d",
+        "android_client_info": {
+          "package_name": "com.retali.crm_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDFs62v2BVr1ldU7q4sal6oJ0cBFcObCL4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
