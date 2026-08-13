@@ -1,3 +1,5 @@
+import 'package:crm_app/screen/auth/forgot_password_screen.dart';
+import 'package:crm_app/screen/auth/otp_screen.dart';
 import 'package:crm_app/screen/auth/register_screen.dart';
 import 'package:crm_app/screen/dashboard/dashboard_screen.dart';
 import 'package:flutter/material.dart';
@@ -230,7 +232,18 @@ class _LoginScreenState extends State<LoginScreen> {
                 Align(
                   alignment: Alignment.centerRight,
                   child: TextButton(
-                    onPressed: () {},
+                    onPressed: () {
+                      if (Navigator.canPop(context)) {
+                        Navigator.pop(context);
+                      } else {
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const ForgotPasswordPage(),
+                          ),
+                        );
+                      }
+                    },
                     child: const Text(
                       'Lupa password?',
                       style: TextStyle(
