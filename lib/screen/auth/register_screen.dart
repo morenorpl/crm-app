@@ -3,8 +3,8 @@
 import 'package:crm_app/screen/auth/login_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:crm_app/screen/dashboard/dashboard_screen.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:crm_app/constants/app_assets.dart';
+import 'package:crm_app/services/auth_service.dart'; // Import your AuthService
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -22,6 +22,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   @override
   void dispose() {
+    _nameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
@@ -44,39 +45,35 @@ class _RegisterScreenState extends State<RegisterScreen> {
     });
 
     try {
-      final UserCredential userCredential = await FirebaseAuth.instance
-          .createUserWithEmailAndPassword(email: email, password: password);
+      // Call your backend service connected to MySQL
+      final result = await AuthService.register(name, email, password);
 
-      await userCredential.user?.updateDisplayName(name);
+      print('Register Result: $result');
 
       if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Registrasi berhasil!'),
+          backgroundColor: Color(0xFF32C770),
+        ),
+      );
+
+      // Navigate to Dashboard after successful registration
       Navigator.pushAndRemoveUntil(
         context,
         MaterialPageRoute(builder: (context) => const DashboardScreen()),
         (route) => false,
       );
-    } on FirebaseAuthException catch (e) {
-      String errorMessage = 'terjadi kesalahan. Silahkan coba lagi.';
-      if (e.code == 'email-already-in-use') {
-        errorMessage = 'Email sudah terdaftar. Silahkan gunakan email lain.';
-      } else if (e.code == 'weak-password') {
-        errorMessage = 'Passwordterlalu lemah. Minimal 6 karakter.';
-      } else if (e.code == 'invalid-email') {
-        errorMessage = 'Format email tidak valid.';
-      }
-
+    } catch (e) {
       if (!mounted) return;
+
+      // Extract exception message or display default
+      String errorMessage = e.toString().replaceAll('Exception: ', '');
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(errorMessage),
-          backgroundColor: Colors.redAccent,
-        ),
-      );
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error: ${e.toString()}'),
           backgroundColor: Colors.redAccent,
         ),
       );
@@ -164,12 +161,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 TextField(
                   controller: _nameController,
                   style: const TextStyle(color: Colors.white),
-                  keyboardType: TextInputType.emailAddress,
+                  keyboardType: TextInputType.name,
                   decoration: InputDecoration(
                     hintText: 'Abdullah',
                     hintStyle: const TextStyle(color: Color(0xFF948AAB)),
                     prefixIcon: const Icon(
-                      Icons.email_outlined,
+                      Icons.person_outline,
                       color: Color(0xFF948AAB),
                     ),
                     filled: true,
@@ -292,8 +289,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             strokeWidth: 2,
                           ),
                         )
-                      : Text(
-                          'Masuk ke Platform',
+                      : const Text(
+                          'Daftar Akun',
                           style: TextStyle(
                             fontSize: 15,
                             fontWeight: FontWeight.bold,
@@ -307,12 +304,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 Center(
                   child: GestureDetector(
                     onTap: () {
-                      Navigator.pop(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const LoginScreen(),
-                        ),
-                      );
+                      if (Navigator.canPop(context)) {
+                        Navigator.pop(context);
+                      } else {
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const LoginScreen(),
+                          ),
+                        );
+                      }
                     },
                     child: const Text(
                       'Sudah punya akun? Masuk disini',
@@ -400,9 +401,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 const SizedBox(height: 28),
 
                 // --- Footer Text ---
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                  child: const Text(
+                const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 20.0),
+                  child: Text(
                     'Platform Retali mempermudahkan leads, pembuatan konten, dan pelanggan anda',
                     textAlign: TextAlign.center,
                     style: TextStyle(
