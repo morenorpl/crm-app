@@ -4,6 +4,8 @@ import 'screen/auth/register_screen.dart';
 import 'screen/auth/forgot_password_screen.dart';
 import 'screen/auth/otp_screen.dart';
 import 'screen/auth/reset_password_screen.dart';
+import 'screen/dashboard/dashboard_screen.dart';
+import 'screen/CRM/kanban_screen.dart';
 
 void main() {
   runApp(const ProjectRetalioneApp());
@@ -25,7 +27,7 @@ class ProjectRetalioneApp extends StatelessWidget {
         useMaterial3: true,
       ),
 
-      initialRoute: '/login',
+      initialRoute: '/kanban',
 
       routes: {
         '/login': (context) => const LoginScreen(),
@@ -37,6 +39,10 @@ class ProjectRetalioneApp extends StatelessWidget {
         '/verify-otp': (context) => const VerifyOtpPage(),
 
         '/reset-password': (context) => const ResetPasswordPage(),
+
+        '/dashboard': (context) => const DashboardScreen(),
+
+        '/kanban':(context) => const CrmBoardScreen(),
       },
     );
   }
