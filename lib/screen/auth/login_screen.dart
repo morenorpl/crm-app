@@ -1,5 +1,6 @@
 import 'package:crm_app/screen/auth/forgot_password_screen.dart';
 import 'package:crm_app/screen/auth/otp_screen.dart';
+import 'package:crm_app/constants/app_assets.dart';
 import 'package:crm_app/screen/auth/register_screen.dart';
 import 'package:crm_app/screen/dashboard/dashboard_screen.dart';
 import 'package:flutter/material.dart';
@@ -95,7 +96,8 @@ class _LoginScreenState extends State<LoginScreen> {
                 // --- App Logo ---
                 Center(
                   child: Image.asset(
-                    'assets/retali_logo.png', // Ensure asset is added in pubspec.yaml
+                    AppAssets
+                        .sejadahLogo, // Ensure asset is added in pubspec.yaml
                     height: 110,
                     errorBuilder: (context, error, stackTrace) => const Icon(
                       Icons.stars_rounded,

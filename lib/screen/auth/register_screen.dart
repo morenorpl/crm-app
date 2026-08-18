@@ -116,7 +116,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     width: 110,
                     height: 110,
                     child: Image.asset(
-                      AppAssets.appLogo,
+                      AppAssets.sejadahLogo,
                       width: 120.0,
                       height: 120.0,
                       fit: BoxFit.contain,

@@ -1,6 +1,7 @@
 // ignore_for_file: deprecated_member_use
 
 import 'package:flutter/material.dart';
+import 'package:crm_app/constants/app_assets.dart';
 import '../../services/auth_service.dart';
 
 class ForgotPasswordPage extends StatefulWidget {
@@ -61,6 +62,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
   }
 
   @override
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
@@ -82,18 +84,38 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const SizedBox(height: 20),
+                // --- Back Button ---
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: IconButton(
+                    onPressed: () {
+                      if (Navigator.canPop(context)) {
+                        Navigator.pop(context);
+                      } else {
+                        Navigator.pushReplacementNamed(context, '/login');
+                      }
+                    },
+                    icon: const Icon(
+                      Icons.arrow_back_ios_new_rounded,
+                      color: Colors.white,
+                      size: 20,
+                    ),
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                  ),
+                ),
+                const SizedBox(height: 12),
 
                 // --- Top Logo Graphic ---
                 Center(
-                  child: Container(
-                    width: 100,
-                    height: 100,
-                    decoration: const BoxDecoration(shape: BoxShape.circle),
-                    child: const Icon(
-                      Icons.blur_on_rounded,
-                      size: 80,
-                      color: Color(0xFFE056FD),
+                  child: SizedBox(
+                    width: 110,
+                    height: 110,
+                    child: Image.asset(
+                      AppAssets.sejadahLogo,
+                      width: 120.0,
+                      height: 120.0,
+                      fit: BoxFit.contain,
                     ),
                   ),
                 ),
@@ -124,7 +146,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                 // --- Subtitle ---
                 const Center(
                   child: Text(
-                    'Mail Address Here',
+                    'Input Email for OTP Code',
                     style: TextStyle(
                       color: Color(0xFFAC6BFF),
                       fontSize: 15,

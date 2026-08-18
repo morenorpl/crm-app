@@ -1,3 +1,4 @@
+import 'package:crm_app/screen/layout/main_layout_screen.dart';
 import 'package:flutter/material.dart';
 import 'screen/auth/login_screen.dart';
 import 'screen/auth/register_screen.dart';
@@ -29,18 +30,19 @@ class ProjectRetalioneApp extends StatelessWidget {
         useMaterial3: true,
       ),
 
-      initialRoute: '/profile',
+      initialRoute: '/login',
 
       routes: {
+        '/main': (context) => const MainLayoutScreen(),
         '/login': (context) => const LoginScreen(),
         '/register': (context) => const RegisterScreen(),
         '/forgot-password': (context) => const ForgotPasswordPage(),
         '/verify-otp': (context) => const VerifyOtpPage(),
         '/reset-password': (context) => const ResetPasswordPage(),
         '/dashboard': (context) => const DashboardScreen(),
-        '/kanban':(context) => const CrmBoardScreen(),
-        '/jadwal':(context) => const ScheduleScreen(),
-        '/profile':(context) => const ProfileScreen(),
+        '/kanban': (context) => const CrmBoardScreen(),
+        '/jadwal': (context) => const ScheduleScreen(),
+        '/profile': (context) => const ProfileScreen(),
       },
     );
   }

@@ -1,6 +1,7 @@
 // ignore_for_file: deprecated_member_use
 
 import 'package:flutter/material.dart';
+import 'package:crm_app/constants/app_assets.dart';
 import '../../services/auth_service.dart';
 
 class ResetPasswordPage extends StatefulWidget {
@@ -123,14 +124,14 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
 
                 // --- Top Logo Graphic ---
                 Center(
-                  child: Container(
-                    width: 100,
-                    height: 100,
-                    decoration: const BoxDecoration(shape: BoxShape.circle),
-                    child: const Icon(
-                      Icons.blur_on_rounded,
-                      size: 80,
-                      color: Color(0xFFE056FD),
+                  child: SizedBox(
+                    width: 110,
+                    height: 110,
+                    child: Image.asset(
+                      AppAssets.sejadahLogo,
+                      width: 120.0,
+                      height: 120.0,
+                      fit: BoxFit.contain,
                     ),
                   ),
                 ),

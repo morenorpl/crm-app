@@ -79,10 +79,7 @@ class CrmBoardScreen extends StatelessWidget {
               SizedBox(height: 2),
               Text(
                 'Siap membuat konten berkah hari ini?',
-                style: TextStyle(
-                  color: textMuted,
-                  fontSize: 9,
-                ),
+                style: TextStyle(color: textMuted, fontSize: 9),
               ),
             ],
           ),
@@ -134,10 +131,7 @@ class CrmBoardScreen extends StatelessWidget {
                 SizedBox(width: 4),
                 Text(
                   'CRM Pipeline — Kanban Board',
-                  style: TextStyle(
-                    color: textMuted,
-                    fontSize: 7.5,
-                  ),
+                  style: TextStyle(color: textMuted, fontSize: 7.5),
                 ),
               ],
             ),
@@ -160,11 +154,7 @@ class CrmBoardScreen extends StatelessWidget {
           const SizedBox(height: 6),
           const Text(
             'Kelola prospek calon jamaah umrah Anda dengan visualisasi Kanban board yang intuitif. Pindahkan kartu prospek antar kolom untuk memantau siklus konversi leads.',
-            style: TextStyle(
-              color: textMuted,
-              fontSize: 9.5,
-              height: 1.35,
-            ),
+            style: TextStyle(color: textMuted, fontSize: 9.5, height: 1.35),
           ),
         ],
       ),
@@ -187,17 +177,11 @@ class CrmBoardScreen extends StatelessWidget {
           Row(
             children: [
               Expanded(
-                child: _inputField(
-                  Icons.filter_alt_outlined,
-                  'Semua Sumber',
-                ),
+                child: _inputField(Icons.filter_alt_outlined, 'Semua Sumber'),
               ),
               const SizedBox(width: 8),
               Expanded(
-                child: _inputField(
-                  Icons.people_outline,
-                  'Semua Tipe (Output)',
-                ),
+                child: _inputField(Icons.people_outline, 'Semua Tipe (Output)'),
               ),
             ],
           ),
@@ -274,10 +258,7 @@ class CrmBoardScreen extends StatelessWidget {
             child: Text(
               hintText,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                color: textMuted,
-                fontSize: 8.5,
-              ),
+              style: const TextStyle(color: textMuted, fontSize: 8.5),
             ),
           ),
         ],
@@ -293,22 +274,33 @@ class CrmBoardScreen extends StatelessWidget {
       physics: const NeverScrollableScrollPhysics(),
       crossAxisSpacing: 10,
       mainAxisSpacing: 10,
-      childAspectRatio: 2.8, // Dinaikkan rasionya agar kartu tidak terlalu tinggi
+      childAspectRatio:
+          2.8, // Dinaikkan rasionya agar kartu tidak terlalu tinggi
       children: [
         _statCard(Icons.group_outlined, 'Total Prospek', '4', cyanAccent),
-        _statCard(Icons.auto_awesome, 'Estimasi Total Pax', '115 Pax', textLight),
-        _statCard(Icons.attach_money, 'Nilai Pipeline', 'Rp. 3.38 Miliar', yellowAccent),
-        _statCard(Icons.check_circle_outline, 'Deal Closed ( WON )', 'Rp 750.0 Juta', greenAccent),
+        _statCard(
+          Icons.auto_awesome,
+          'Estimasi Total Pax',
+          '115 Pax',
+          textLight,
+        ),
+        _statCard(
+          Icons.attach_money,
+          'Nilai Pipeline',
+          'Rp. 3.38 Miliar',
+          yellowAccent,
+        ),
+        _statCard(
+          Icons.check_circle_outline,
+          'Deal Closed ( WON )',
+          'Rp 750.0 Juta',
+          greenAccent,
+        ),
       ],
     );
   }
 
-  Widget _statCard(
-    IconData icon,
-    String title,
-    String value,
-    Color iconColor,
-  ) {
+  Widget _statCard(IconData icon, String title, String value, Color iconColor) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
@@ -440,7 +432,11 @@ class CrmBoardScreen extends StatelessWidget {
                     color: Colors.white.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(4),
                   ),
-                  child: const Icon(Icons.edit_outlined, color: textLight, size: 14),
+                  child: const Icon(
+                    Icons.edit_outlined,
+                    color: textLight,
+                    size: 14,
+                  ),
                 ),
                 const SizedBox(width: 6),
                 Container(
@@ -449,9 +445,15 @@ class CrmBoardScreen extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: const Color(0xFFFF3B30).withOpacity(0.2),
                     borderRadius: BorderRadius.circular(4),
-                    border: Border.all(color: const Color(0xFFFF3B30).withOpacity(0.5)),
+                    border: Border.all(
+                      color: const Color(0xFFFF3B30).withOpacity(0.5),
+                    ),
                   ),
-                  child: const Icon(Icons.delete_outline, color: Color(0xFFFF5252), size: 14),
+                  child: const Icon(
+                    Icons.delete_outline,
+                    color: Color(0xFFFF5252),
+                    size: 14,
+                  ),
                 ),
               ],
             ),
@@ -464,10 +466,7 @@ class CrmBoardScreen extends StatelessWidget {
                 SizedBox(width: 6),
                 Text(
                   'Mitra Travel',
-                  style: TextStyle(
-                    color: textMuted,
-                    fontSize: 9.5,
-                  ),
+                  style: TextStyle(color: textMuted, fontSize: 9.5),
                 ),
               ],
             ),
@@ -545,7 +544,11 @@ class CrmBoardScreen extends StatelessWidget {
                     child: const Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.chat_bubble_outline, color: textLight, size: 12),
+                        Icon(
+                          Icons.chat_bubble_outline,
+                          color: textLight,
+                          size: 12,
+                        ),
                         SizedBox(width: 6),
                         Text(
                           'Hubungi via WhatsApp',
@@ -566,7 +569,10 @@ class CrmBoardScreen extends StatelessWidget {
                 ),
                 const SizedBox(width: 6),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.white.withOpacity(0.08),
                     borderRadius: BorderRadius.circular(12),
@@ -583,7 +589,11 @@ class CrmBoardScreen extends StatelessWidget {
                         ),
                       ),
                       SizedBox(width: 2),
-                      Icon(Icons.keyboard_arrow_down, color: textLight, size: 12),
+                      Icon(
+                        Icons.keyboard_arrow_down,
+                        color: textLight,
+                        size: 12,
+                      ),
                     ],
                   ),
                 ),

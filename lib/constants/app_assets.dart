@@ -3,9 +3,9 @@ class AppAssets {
 
   static const String _baseImages = 'assets/images';
 
-  static const String appLogo = '$_baseImages/Logo-sejadah 1.png';
+  static const String sejadahLogo = '$_baseImages/Logo-sejadah.png';
+  static const String retaliLogo = '$_baseImages/Logo-retali.png';
 
   // tambah custom asset strings if needed
   // contoh: static const String onboardingIllustration = '$_baseImages/welcome.png';
-
 }
