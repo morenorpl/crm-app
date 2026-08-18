@@ -13,7 +13,8 @@ class ScheduleScreen extends StatelessWidget {
         child: SingleChildScrollView(
           physics: const BouncingScrollPhysics(),
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(19, 16, 19, 25),
+            // Bottom padding ditingkatkan menjadi 80 agar tidak tertutup bottom bar
+            padding: const EdgeInsets.fromLTRB(19, 16, 19, 80),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [

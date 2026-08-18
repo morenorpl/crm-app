@@ -31,6 +31,8 @@ class CrmBoardScreen extends StatelessWidget {
                 _buildTabs(),
                 const SizedBox(height: 14),
                 _buildProspectCard(),
+                // Menambahkan jarak tambahan di bawah kartu paling akhir agar tidak tertutup bottom bar
+                const SizedBox(height: 80), 
               ],
             ),
           ),
@@ -270,8 +272,7 @@ class CrmBoardScreen extends StatelessWidget {
       physics: const NeverScrollableScrollPhysics(),
       crossAxisSpacing: 10,
       mainAxisSpacing: 10,
-      childAspectRatio:
-          2.8, // Dinaikkan rasionya agar kartu tidak terlalu tinggi
+      childAspectRatio: 2.8,
       children: [
         _statCard(
           Icons.group_outlined,
@@ -345,7 +346,7 @@ class CrmBoardScreen extends StatelessWidget {
                     color: (iconColor == AppColors.textLight)
                         ? AppColors.white
                         : iconColor,
-                    fontSize: 12, // Ukuran teks nilai diperbesar
+                    fontSize: 12,
                     fontWeight: FontWeight.bold,
                   ),
                 ),

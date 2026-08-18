@@ -442,7 +442,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               ),
                               onPressed: () {},
                               icon: const Icon(Icons.add, size: 18),
-                              label: const Text('+ Tambah Prospek Baru'),
+                              label: const Text('Tambah Prospek Baru'),
                             ),
                           ],
                         ),
