@@ -3,6 +3,8 @@ import 'package:crm_app/screen/dashboard/dashboard_screen.dart';
 import 'package:crm_app/screen/CRM/jadwal_screen.dart';
 import 'package:crm_app/screen/CRM/kanban_screen.dart';
 import 'package:crm_app/screen/profile/profile_screen.dart';
+import 'package:crm_app/constants/app_colors.dart';
+import 'package:crm_app/widgets/header_bar.dart';
 
 class MainLayoutScreen extends StatefulWidget {
   const MainLayoutScreen({super.key});
@@ -14,10 +16,6 @@ class MainLayoutScreen extends StatefulWidget {
 class _MainLayoutScreenState extends State<MainLayoutScreen> {
   int _currentIndex = 0;
 
-  static const Color background = Color(0xFF1E1B3A);
-  static const Color white = Colors.white;
-  static const Color muted = Colors.white54;
-
   final List<Widget> _pages = const [
     DashboardScreen(),
     CrmBoardScreen(),
@@ -28,7 +26,7 @@ class _MainLayoutScreenState extends State<MainLayoutScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: background,
+      backgroundColor: AppColors.background,
       body: Stack(
         children: [
           // 1. Main Page Content
@@ -82,12 +80,16 @@ class _MainLayoutScreenState extends State<MainLayoutScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 19, color: active ? white : muted),
+            Icon(
+              icon,
+              size: 19,
+              color: active ? AppColors.white : AppColors.muted,
+            ),
             const SizedBox(height: 2),
             Text(
               label,
               style: TextStyle(
-                color: active ? white : muted,
+                color: active ? AppColors.white : AppColors.muted,
                 fontSize: 8,
                 fontWeight: active ? FontWeight.bold : FontWeight.normal,
               ),

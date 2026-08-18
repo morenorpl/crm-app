@@ -30,7 +30,7 @@ class ProjectRetalioneApp extends StatelessWidget {
         useMaterial3: true,
       ),
 
-      initialRoute: '/login',
+      initialRoute: '/main',
 
       routes: {
         '/main': (context) => const MainLayoutScreen(),

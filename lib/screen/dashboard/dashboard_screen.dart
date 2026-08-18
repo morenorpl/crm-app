@@ -2,6 +2,8 @@
 
 import 'package:crm_app/screen/auth/login_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:crm_app/constants/app_colors.dart';
+import 'package:crm_app/widgets/header_bar.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -34,64 +36,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // --- Top Bar (Dashboard Title & Profile Avatar) ---
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF4A3E63).withOpacity(0.5),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: const Icon(
-                        Icons.menu,
-                        color: Colors.white,
-                        size: 20,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: const [
-                          Text(
-                            'Dashboard',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
-                            ),
-                          ),
-                          Text(
-                            'Siap membuat konten/produk baru?',
-                            style: TextStyle(
-                              color: Color(0xFFA197B4),
-                              fontSize: 11,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    // Profile/Logout Action
-                    GestureDetector(
-                      onTap: () {
-                        // Quick logout popup or navigation
-                        _showLogoutDialog(context);
-                      },
-                      child: CircleAvatar(
-                        radius: 18,
-                        backgroundColor: const Color(0xFF9C27B0),
-                        child: const Text(
-                          'R',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
+                const HeaderBar(
+                  title: 'Dashboard',
+                  subtitle: 'Siap membuat konten berkah hari ini?',
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 12),
 
                 // --- Section Header ---
                 Row(
@@ -511,6 +460,60 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   // --- Helper Widgets ---
+
+  Widget _buildHeader() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.06),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: Colors.white.withOpacity(0.12)),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.notes, color: Colors.white70, size: 22),
+          const SizedBox(width: 10),
+          const Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'CRM Pipeline — Kanban Board',
+                style: TextStyle(
+                  color: AppColors.white,
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              SizedBox(height: 2),
+              Text(
+                'Siap membuat konten berkah hari ini?',
+                style: TextStyle(color: AppColors.muted, fontSize: 9),
+              ),
+            ],
+          ),
+          const Spacer(),
+          Container(
+            width: 28,
+            height: 28,
+            alignment: Alignment.center,
+            decoration: const BoxDecoration(
+              color: AppColors.purpleAccent,
+              shape: BoxShape.circle,
+            ),
+            child: const Text(
+              'k',
+              style: TextStyle(
+                color: AppColors.white,
+                fontSize: 13,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
   Widget _buildFilterChip(
     String label,

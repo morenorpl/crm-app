@@ -1,22 +1,14 @@
+import 'package:crm_app/widgets/header_bar.dart';
 import 'package:flutter/material.dart';
+import 'package:crm_app/constants/app_colors.dart';
 
 class ScheduleScreen extends StatelessWidget {
   const ScheduleScreen({super.key});
 
-  static const Color background = Color(0xFF261943);
-  static const Color white = Color(0xFFF7F3FA);
-  static const Color muted = Color(0xFFAAA0B5);
-  static const Color border = Color(0xFF81718F);
-  static const Color green = Color(0xFF00D084);
-  static const Color blue = Color(0xFF6577FF);
-  static const Color yellow = Color(0xFFFFC400);
-  static const Color card = Color(0xFF271642);
-  static const Color header = Color(0xFF665579);
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: background,
+      backgroundColor: AppColors.background,
       body: SafeArea(
         child: SingleChildScrollView(
           physics: const BouncingScrollPhysics(),
@@ -25,7 +17,10 @@ class ScheduleScreen extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildHeader(),
+                const HeaderBar(
+                  title: 'CRM System - Jadwal Follow Up',
+                  subtitle: 'Siap membuat konten berkah hari ini?',
+                ),
                 const SizedBox(height: 20),
                 _buildTitle(),
                 const SizedBox(height: 15),
@@ -60,47 +55,51 @@ class ScheduleScreen extends StatelessWidget {
 
   Widget _buildHeader() {
     return Container(
-      height: 46,
-      padding: const EdgeInsets.symmetric(horizontal: 14),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.10),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.white.withOpacity(0.22)),
+        color: Colors.white.withOpacity(0.06),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: Colors.white.withOpacity(0.12)),
       ),
       child: Row(
         children: [
-          const Icon(Icons.calendar_month_outlined, color: green, size: 19),
-          const SizedBox(width: 9),
+          const Icon(Icons.notes, color: Colors.white70, size: 22),
+          const SizedBox(width: 10),
           const Column(
-            mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                'CRM System - Jadwal Follow Up',
+                'CRM Pipeline — Kanban Board',
                 style: TextStyle(
-                  color: white,
-                  fontSize: 10,
+                  color: AppColors.white,
+                  fontSize: 12,
                   fontWeight: FontWeight.bold,
                 ),
               ),
+              SizedBox(height: 2),
               Text(
                 'Siap membuat konten berkah hari ini?',
-                style: TextStyle(color: muted, fontSize: 7),
+                style: TextStyle(color: AppColors.muted, fontSize: 9),
               ),
             ],
           ),
           const Spacer(),
           Container(
-            width: 26,
-            height: 26,
+            width: 28,
+            height: 28,
             alignment: Alignment.center,
             decoration: const BoxDecoration(
-              color: Color(0xFFB63BDB),
+              color: AppColors.purpleAccent,
               shape: BoxShape.circle,
             ),
             child: const Text(
               'k',
-              style: TextStyle(color: white, fontSize: 12),
+              style: TextStyle(
+                color: AppColors.white,
+                fontSize: 13,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
         ],
@@ -114,12 +113,12 @@ class ScheduleScreen extends StatelessWidget {
       children: [
         Row(
           children: [
-            const Icon(Icons.calendar_month, color: green, size: 20),
+            const Icon(Icons.calendar_month, color: AppColors.green, size: 20),
             const SizedBox(width: 7),
             const Text(
               'Manajemen projects Leads',
               style: TextStyle(
-                color: white,
+                color: AppColors.white,
                 fontSize: 18,
                 fontWeight: FontWeight.w800,
               ),
@@ -129,7 +128,7 @@ class ScheduleScreen extends StatelessWidget {
         const SizedBox(height: 5),
         const Text(
           'Jadwal follow-up prospek mingguan berdasarkan tipe (Jama’ah, Mitra,\nB2B).',
-          style: TextStyle(color: muted, fontSize: 9, height: 1.35),
+          style: TextStyle(color: AppColors.muted, fontSize: 9, height: 1.35),
         ),
       ],
     );
@@ -142,20 +141,20 @@ class ScheduleScreen extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white.withOpacity(0.15),
         borderRadius: BorderRadius.circular(9),
-        border: Border.all(color: border, width: 0.8),
+        border: Border.all(color: AppColors.border, width: 0.8),
       ),
       child: Row(
         children: [
           const SizedBox(
             width: 35,
-            child: Icon(Icons.chevron_left, color: white, size: 17),
+            child: Icon(Icons.chevron_left, color: AppColors.white, size: 17),
           ),
           const Expanded(
             child: Center(
               child: Text(
                 '10 Agu - 16 Agu 2026',
                 style: TextStyle(
-                  color: white,
+                  color: AppColors.white,
                   fontSize: 8,
                   fontWeight: FontWeight.bold,
                 ),
@@ -164,7 +163,7 @@ class ScheduleScreen extends StatelessWidget {
           ),
           const SizedBox(
             width: 35,
-            child: Icon(Icons.chevron_right, color: white, size: 17),
+            child: Icon(Icons.chevron_right, color: AppColors.white, size: 17),
           ),
         ],
       ),
@@ -183,7 +182,10 @@ class ScheduleScreen extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white.withOpacity(0.045),
         borderRadius: BorderRadius.circular(9),
-        border: Border.all(color: border.withOpacity(0.65), width: 0.8),
+        border: Border.all(
+          color: AppColors.border.withOpacity(0.65),
+          width: 0.8,
+        ),
       ),
       child: Column(
         children: [
@@ -191,7 +193,7 @@ class ScheduleScreen extends StatelessWidget {
             width: double.infinity,
             padding: const EdgeInsets.only(top: 4, bottom: 5),
             decoration: BoxDecoration(
-              color: header.withOpacity(0.9),
+              color: AppColors.header.withOpacity(0.9),
               borderRadius: const BorderRadius.only(
                 topLeft: Radius.circular(8),
                 topRight: Radius.circular(8),
@@ -202,7 +204,7 @@ class ScheduleScreen extends StatelessWidget {
                 Text(
                   day,
                   style: const TextStyle(
-                    color: white,
+                    color: AppColors.white,
                     fontSize: 25,
                     height: 0.95,
                     fontWeight: FontWeight.w800,
@@ -211,7 +213,7 @@ class ScheduleScreen extends StatelessWidget {
                 Text(
                   name,
                   style: const TextStyle(
-                    color: white,
+                    color: AppColors.white,
                     fontSize: 8,
                     fontWeight: FontWeight.bold,
                   ),
@@ -226,7 +228,7 @@ class ScheduleScreen extends StatelessWidget {
                 child: Text(
                   'Kosong',
                   style: TextStyle(
-                    color: muted,
+                    color: AppColors.muted,
                     fontSize: 13,
                     fontStyle: FontStyle.italic,
                     fontWeight: FontWeight.bold,
@@ -258,7 +260,7 @@ class ScheduleScreen extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
       decoration: BoxDecoration(
-        color: card,
+        color: AppColors.card,
         borderRadius: BorderRadius.circular(10),
       ),
       child: Column(
@@ -277,7 +279,7 @@ class ScheduleScreen extends StatelessWidget {
                 child: const Text(
                   'Jamaah',
                   style: TextStyle(
-                    color: blue,
+                    color: AppColors.blue,
                     fontSize: 7,
                     fontWeight: FontWeight.bold,
                   ),
@@ -291,12 +293,12 @@ class ScheduleScreen extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: Colors.transparent,
                   borderRadius: BorderRadius.circular(3),
-                  border: Border.all(color: yellow, width: 0.8),
+                  border: Border.all(color: AppColors.yellow, width: 0.8),
                 ),
                 child: const Text(
                   'Contacted',
                   style: TextStyle(
-                    color: yellow,
+                    color: AppColors.yellow,
                     fontSize: 7,
                     fontWeight: FontWeight.bold,
                   ),
@@ -308,7 +310,7 @@ class ScheduleScreen extends StatelessWidget {
           Text(
             name,
             style: const TextStyle(
-              color: white,
+              color: AppColors.white,
               fontSize: 17,
               fontWeight: FontWeight.w800,
             ),
@@ -316,11 +318,15 @@ class ScheduleScreen extends StatelessWidget {
           const SizedBox(height: 8),
           Row(
             children: [
-              const Icon(Icons.phone_outlined, color: muted, size: 13),
+              const Icon(
+                Icons.phone_outlined,
+                color: AppColors.muted,
+                size: 13,
+              ),
               const SizedBox(width: 8),
               const Text(
                 '085678901234',
-                style: TextStyle(color: muted, fontSize: 8),
+                style: TextStyle(color: AppColors.muted, fontSize: 8),
               ),
             ],
           ),
@@ -336,12 +342,16 @@ class ScheduleScreen extends StatelessWidget {
             child: const Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.chat_bubble_outline, color: muted, size: 13),
+                Icon(
+                  Icons.chat_bubble_outline,
+                  color: AppColors.muted,
+                  size: 13,
+                ),
                 SizedBox(width: 6),
                 Text(
                   'Follow Up',
                   style: TextStyle(
-                    color: muted,
+                    color: AppColors.muted,
                     fontSize: 8,
                     fontWeight: FontWeight.w600,
                   ),

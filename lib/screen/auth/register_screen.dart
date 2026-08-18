@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:crm_app/screen/dashboard/dashboard_screen.dart';
 import 'package:crm_app/constants/app_assets.dart';
 import 'package:crm_app/services/auth_service.dart'; // Import your AuthService
+import 'package:shared_preferences/shared_preferences.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -49,6 +50,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
       final result = await AuthService.register(name, email, password);
 
       print('Register Result: $result');
+
+      // --- Save user details to SharedPreferences ---
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('username', name);
+      await prefs.setString('email', email);
 
       if (!mounted) return;
 
