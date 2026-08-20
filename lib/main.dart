@@ -9,6 +9,7 @@ import 'screen/dashboard/dashboard_screen.dart';
 import 'screen/CRM/kanban_screen.dart';
 import 'screen/CRM/jadwal_screen.dart';
 import 'screen/profile/profile_screen.dart';
+import 'screen/splash/splash_screen.dart';
 
 void main() {
   runApp(const ProjectRetalioneApp());
@@ -43,6 +44,7 @@ class ProjectRetalioneApp extends StatelessWidget {
         '/kanban': (context) => const CrmBoardScreen(),
         '/jadwal': (context) => const ScheduleScreen(),
         '/profile': (context) => const ProfileScreen(),
+        '/splash': (context) => const SplashScreen(),
       },
     );
   }
