@@ -6,6 +6,7 @@ import 'package:crm_app/screen/dashboard/dashboard_screen.dart';
 import 'package:crm_app/constants/app_assets.dart';
 import 'package:crm_app/services/auth_service.dart'; // Import your AuthService
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -46,12 +47,18 @@ class _RegisterScreenState extends State<RegisterScreen> {
     });
 
     try {
-      // Call your backend service connected to MySQL
-      final result = await AuthService.register(name, email, password);
+      // Call Supabase register function
+      final AuthResponse result = await AuthService.register(
+        name,
+        email,
+        password,
+      );
 
-      print('Register Result: $result');
+      print('Register Result User ID: ${result.user?.id}');
 
       // --- Save user details to SharedPreferences ---
+      // Note: Supabase automatically caches the session securely,
+      // but you can keep this if you use SharedPreferences for local UI state.
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('username', name);
       await prefs.setString('email', email);
@@ -71,12 +78,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
         MaterialPageRoute(builder: (context) => const DashboardScreen()),
         (route) => false,
       );
+    } on AuthException catch (e) {
+      // Specifically catch Supabase authentication errors (e.g., email already exists)
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.message), backgroundColor: Colors.redAccent),
+      );
     } catch (e) {
       if (!mounted) return;
 
-      // Extract exception message or display default
+      // General error catch
       String errorMessage = e.toString().replaceAll('Exception: ', '');
-
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(errorMessage),

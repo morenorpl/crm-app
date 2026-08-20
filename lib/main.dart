@@ -10,8 +10,19 @@ import 'screen/CRM/kanban_screen.dart';
 import 'screen/CRM/jadwal_screen.dart';
 import 'screen/profile/profile_screen.dart';
 import 'screen/splash/splash_screen.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'config/api_config.dart';
 
-void main() {
+Future<void> main() async {
+  // Pastikan binding Flutter siap sebelum menjalankan fungsi async
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // Inisialisasi koneksi remote Supabase
+  await Supabase.initialize(
+    url: ApiConfig.supabaseUrl,
+    anonKey: ApiConfig.supabaseAnonKey,
+  );
+
   runApp(const ProjectRetalioneApp());
 }
 
@@ -31,7 +42,7 @@ class ProjectRetalioneApp extends StatelessWidget {
         useMaterial3: true,
       ),
 
-      initialRoute: '/main',
+      initialRoute: '/splash',
 
       routes: {
         '/main': (context) => const MainLayoutScreen(),

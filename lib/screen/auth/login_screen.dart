@@ -5,6 +5,7 @@ import 'package:crm_app/screen/auth/register_screen.dart';
 import 'package:crm_app/screen/dashboard/dashboard_screen.dart';
 import 'package:flutter/material.dart';
 import '../../services/auth_service.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -21,50 +22,64 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _isLoading = false;
 
   Future<void> login() async {
+    // 1. Validasi Input
     if (emailController.text.trim().isEmpty ||
         passwordController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Silahkan isi email dan password')),
+        const SnackBar(content: Text('Silakan isi email dan password')),
       );
       return;
     }
 
+    // 2. Mulai Loading
     setState(() => _isLoading = true);
 
     try {
-      final result = await AuthService.login(
+      // 3. Panggil AuthService yang sudah dirapikan tadi
+      final AuthResponse response = await AuthService.login(
         emailController.text.trim(),
         passwordController.text.trim(),
       );
 
-      print(result);
+      final user = response.user;
+      final session = response.session;
 
-      final user = result['user'];
+      if (user == null) throw Exception('Login gagal, user tidak ditemukan');
 
-      print('Nama: ${user['name']}');
-      print('Role: ${user['role']}');
-      print('Token: ${result['token']}');
+      // Ambil metadata jika ada
+      final name = user.userMetadata?['name'] ?? 'Tidak ada nama';
+      final role = user.userMetadata?['role'] ?? 'Tidak ada role';
+      final token = session?.accessToken;
 
-      // Check if widget is still in the tree before using context across async boundary
+      print('Nama: $name');
+      print('Role: $role');
+      print('Token: $token');
+
+      // 4. Pastikan widget masih aktif sebelum pindah halaman
       if (!mounted) return;
 
-      // Navigate to DashboardScreen & clear login page from stack
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(
-          builder: (context) =>
-              const DashboardScreen(), // Pass user/role if needed: DashboardScreen(user: user)
-        ),
+        MaterialPageRoute(builder: (context) => const DashboardScreen()),
       );
+    } on AuthException catch (e) {
+      // Tangkap error dari Supabase (misal salah password)
+      print('Auth error: ${e.message}');
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(e.message)));
+      }
     } catch (error) {
+      // Tangkap error lainnya
       print(error);
-
       if (mounted) {
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text(error.toString())));
       }
     } finally {
+      // 5. Matikan Loading
       if (mounted) setState(() => _isLoading = false);
     }
   }

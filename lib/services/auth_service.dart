@@ -1,85 +1,65 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-
 import '../config/api_config.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class AuthService {
   // =========================
   // LOGIN
   // =========================
-  static Future<Map<String, dynamic>> login(
-    String email,
-    String password,
-  ) async {
-    final response = await http.post(
-      Uri.parse('${ApiConfig.baseUrl}/api/auth/login'),
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({'email': email, 'password': password}),
+  static Future<AuthResponse> login(String email, String password) async {
+    final response = await Supabase.instance.client.auth.signInWithPassword(
+      email: email,
+      password: password,
     );
-
-    final data = jsonDecode(response.body);
-
-    if (response.statusCode == 200) {
-      return data;
-    }
-
-    throw Exception(data['message'] ?? 'Login gagal');
+    return response;
   }
 
   // =========================
-  // REGISTER
+  // REGISTER VIA SUPABASE
   // =========================
-  static Future<Map<String, dynamic>> register(
+  static Future<AuthResponse> register(
     String name,
     String email,
     String password,
   ) async {
-    final response = await http.post(
-      Uri.parse('${ApiConfig.baseUrl}/api/auth/register'),
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({'name': name, 'email': email, 'password': password}),
+    // Kode ini akan menembak langsung ke server cloud Supabase
+    final response = await Supabase.instance.client.auth.signUp(
+      email: email,
+      password: password,
+      data: {
+        'name': name, // Menyimpan nama di metadata
+      },
     );
 
-    final data = jsonDecode(response.body);
-
-    if (response.statusCode == 201) {
-      return data;
+    if (response.user == null) {
+      throw Exception('Registrasi gagal, tidak dapat membuat user');
     }
 
-    throw Exception(data['message'] ?? 'Registrasi gagal');
+    return response;
   }
 
   // =========================
   // FORGOT PASSWORD
   // =========================
   static Future<void> forgotPassword(String email) async {
-    final response = await http.post(
-      Uri.parse('${ApiConfig.baseUrl}/api/auth/forgot-password'),
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({'email': email}),
-    );
-
-    final data = jsonDecode(response.body);
-
-    if (response.statusCode != 200) {
-      throw Exception(data['message'] ?? 'Gagal membuat OTP');
-    }
+    // This triggers Supabase to send a recovery email containing an OTP
+    await Supabase.instance.client.auth.resetPasswordForEmail(email);
   }
 
   // =========================
   // VERIFY OTP
   // =========================
   static Future<void> verifyOTP(String email, String otp) async {
-    final response = await http.post(
-      Uri.parse('${ApiConfig.baseUrl}/api/auth/verify-otp'),
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({'email': email, 'otp': otp}),
+    // Verifies the OTP. If correct, Supabase creates a temporary authenticated session.
+    final response = await Supabase.instance.client.auth.verifyOTP(
+      type: OtpType.recovery,
+      token: otp,
+      email: email,
     );
 
-    final data = jsonDecode(response.body);
-
-    if (response.statusCode != 200) {
-      throw Exception(data['message'] ?? 'OTP salah');
+    if (response.session == null) {
+      throw Exception('OTP salah atau sudah kedaluwarsa');
     }
   }
 
@@ -87,16 +67,15 @@ class AuthService {
   // RESET PASSWORD
   // =========================
   static Future<void> resetPassword(String email, String newPassword) async {
-    final response = await http.post(
-      Uri.parse('${ApiConfig.baseUrl}/api/auth/reset-password'),
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({'email': email, 'newPassword': newPassword}),
+    // Because verifyOTP creates a session, we can now safely update the user's password.
+    // Note: Supabase doesn't actually need the 'email' parameter here because it
+    // updates the currently authenticated user, but we leave it to keep your function signature the same.
+    final response = await Supabase.instance.client.auth.updateUser(
+      UserAttributes(password: newPassword),
     );
 
-    final data = jsonDecode(response.body);
-
-    if (response.statusCode != 200) {
-      throw Exception(data['message'] ?? 'Gagal mengubah password');
+    if (response.user == null) {
+      throw Exception('Gagal mengubah password');
     }
   }
 }
