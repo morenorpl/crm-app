@@ -1,4 +1,3 @@
-import 'package:crm_app/widgets/header_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:crm_app/constants/app_colors.dart';
 
@@ -18,10 +17,7 @@ class ScheduleScreen extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const HeaderBar(
-                  title: 'CRM System - Jadwal Follow Up',
-                  subtitle: 'Siap membuat konten berkah hari ini?',
-                ),
+                _buildHeader(),
                 const SizedBox(height: 20),
                 _buildTitle(),
                 const SizedBox(height: 15),
@@ -64,7 +60,11 @@ class ScheduleScreen extends StatelessWidget {
       ),
       child: Row(
         children: [
-          const Icon(Icons.notes, color: Colors.white70, size: 22),
+          Image.asset(
+            'assets/images/Logo-sejadah.png',
+            height: 32,
+            fit: BoxFit.contain,
+          ),
           const SizedBox(width: 10),
           const Column(
             crossAxisAlignment: CrossAxisAlignment.start,

@@ -14,7 +14,6 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'config/api_config.dart';
 
 Future<void> main() async {
-  // Pastikan binding Flutter siap sebelum menjalankan fungsi async
   WidgetsFlutterBinding.ensureInitialized();
 
   // Inisialisasi koneksi remote Supabase
@@ -42,7 +41,7 @@ class ProjectRetalioneApp extends StatelessWidget {
         useMaterial3: true,
       ),
 
-      initialRoute: '/splash',
+      initialRoute: '/jadwal',
 
       routes: {
         '/main': (context) => const MainLayoutScreen(),

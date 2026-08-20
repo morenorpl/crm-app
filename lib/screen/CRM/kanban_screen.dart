@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:crm_app/constants/app_colors.dart';
-import 'package:crm_app/widgets/header_bar.dart';
 
 class CrmBoardScreen extends StatelessWidget {
   const CrmBoardScreen({super.key});
@@ -17,22 +16,18 @@ class CrmBoardScreen extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const HeaderBar(
-                  title: 'CRM Pipeline — Kanban Board',
-                  subtitle: 'Siap membuat konten berkah hari ini?',
-                ),
+                _buildHeader(), // Memanggil header yang berisi logo sejadah
                 const SizedBox(height: 12),
                 _buildBoardInfo(),
                 const SizedBox(height: 12),
                 _buildSearchPanel(),
                 const SizedBox(height: 14),
-                _buildStatistics(), // Bagian statistik yang diubah
+                _buildStatistics(),
                 const SizedBox(height: 14),
                 _buildTabs(),
                 const SizedBox(height: 14),
                 _buildProspectCard(),
-                // Menambahkan jarak tambahan di bawah kartu paling akhir agar tidak tertutup bottom bar
-                const SizedBox(height: 80), 
+                const SizedBox(height: 80),
               ],
             ),
           ),
@@ -52,7 +47,12 @@ class CrmBoardScreen extends StatelessWidget {
       ),
       child: Row(
         children: [
-          const Icon(Icons.notes, color: Colors.white70, size: 22),
+          // Menggunakan logo dari folder assets kamu
+          Image.asset(
+            'assets/images/Logo-sejadah.png',
+            height: 32,
+            fit: BoxFit.contain,
+          ),
           const SizedBox(width: 10),
           const Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -264,7 +264,7 @@ class CrmBoardScreen extends StatelessWidget {
     );
   }
 
-  // 4. Statistics Grid Cards (Diperbarui agar lebih pendek & teks nilai lebih besar)
+  // 4. Statistics Grid Cards
   Widget _buildStatistics() {
     return GridView.count(
       crossAxisCount: 2,
