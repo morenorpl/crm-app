@@ -41,7 +41,7 @@ class ProjectRetalioneApp extends StatelessWidget {
         useMaterial3: true,
       ),
 
-      initialRoute: '/jadwal',
+      initialRoute: '/splash',
 
       routes: {
         '/main': (context) => const MainLayoutScreen(),
@@ -50,10 +50,6 @@ class ProjectRetalioneApp extends StatelessWidget {
         '/forgot-password': (context) => const ForgotPasswordPage(),
         '/verify-otp': (context) => const VerifyOtpPage(),
         '/reset-password': (context) => const ResetPasswordPage(),
-        '/dashboard': (context) => const DashboardScreen(),
-        '/kanban': (context) => const CrmBoardScreen(),
-        '/jadwal': (context) => const ScheduleScreen(),
-        '/profile': (context) => const ProfileScreen(),
         '/splash': (context) => const SplashScreen(),
       },
     );

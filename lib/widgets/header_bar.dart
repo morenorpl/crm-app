@@ -1,20 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:crm_app/constants/app_colors.dart';
 
 class HeaderBar extends StatelessWidget {
   final String title;
   final String? subtitle;
-  final IconData icon;
   final String avatarText;
-  final VoidCallback? onAvatarPressed;
+  final String assetLogoPath; // Parameter opsional untuk path logo asset
 
   const HeaderBar({
     super.key,
     required this.title,
     this.subtitle,
-    this.icon = Icons.notes,
-    this.avatarText = 'k',
-    this.onAvatarPressed,
+    this.avatarText = 'K',
+    this.assetLogoPath =
+        'assets/images/Logo-sejadah.png', // Nilai default logo kamu
   });
 
   @override
@@ -28,8 +28,11 @@ class HeaderBar extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Icon(icon, color: Colors.white70, size: 22),
+          // 1. Logo Asset di sebelah kiri
+          Image.asset(assetLogoPath, height: 32, fit: BoxFit.contain),
           const SizedBox(width: 10),
+
+          // 2. Title dan Subtitle
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -48,7 +51,10 @@ class HeaderBar extends StatelessWidget {
                   const SizedBox(height: 2),
                   Text(
                     subtitle!,
-                    style: const TextStyle(color: AppColors.muted, fontSize: 9),
+                    style: const TextStyle(
+                      color: AppColors.textMuted, // Mengikuti warna muted kamu
+                      fontSize: 9,
+                    ),
                     overflow: TextOverflow.ellipsis,
                   ),
                 ],
@@ -56,8 +62,55 @@ class HeaderBar extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 8),
-          GestureDetector(
-            onTap: onAvatarPressed,
+
+          // 3. Avatar dengan PopupMenuButton & Tombol Logout Kustom
+          PopupMenuButton<String>(
+            offset: const Offset(0, 35),
+            color: const Color(0xFF2C2245),
+            constraints: const BoxConstraints(minWidth: 160),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+              side: BorderSide(color: Colors.white.withOpacity(0.12)),
+            ),
+            onSelected: (value) async {
+              if (value == 'logout') {
+                await Supabase.instance.client.auth.signOut();
+                if (context.mounted) {
+                  Navigator.pushNamedAndRemoveUntil(
+                    context,
+                    '/login',
+                    (route) => false,
+                  );
+                }
+              }
+            },
+            itemBuilder: (BuildContext context) => [
+              PopupMenuItem<String>(
+                value: 'logout',
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 4,
+                ),
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(vertical: 10),
+                  decoration: BoxDecoration(
+                    color: Colors.redAccent.withOpacity(0.15),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.redAccent, width: 1.5),
+                  ),
+                  alignment: Alignment.center,
+                  child: const Text(
+                    'Log Out',
+                    style: TextStyle(
+                      color: Colors.redAccent,
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+            ],
             child: Container(
               width: 28,
               height: 28,

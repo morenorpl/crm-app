@@ -1,9 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:crm_app/constants/app_colors.dart';
+import 'package:crm_app/widgets/header_bar.dart';
 
-class ScheduleScreen extends StatelessWidget {
-  const ScheduleScreen({super.key});
+class ScheduleScreen extends StatefulWidget {
+  final String avatarLetter;
 
+  const ScheduleScreen({super.key, required this.avatarLetter});
+
+  @override
+  State<ScheduleScreen> createState() => _ScheduleScreenState();
+}
+
+class _ScheduleScreenState extends State<ScheduleScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -17,7 +25,11 @@ class ScheduleScreen extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildHeader(),
+                HeaderBar(
+                  title: 'Dashboard CRM',
+                  subtitle: 'Selamat datang kembali!',
+                  avatarText: widget.avatarLetter,
+                ),
                 const SizedBox(height: 20),
                 _buildTitle(),
                 const SizedBox(height: 15),

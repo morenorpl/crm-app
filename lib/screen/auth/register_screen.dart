@@ -1,6 +1,7 @@
 // ignore_for_file: deprecated_member_use
 
 import 'package:crm_app/screen/auth/login_screen.dart';
+import 'package:crm_app/screen/layout/main_layout_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:crm_app/screen/dashboard/dashboard_screen.dart';
 import 'package:crm_app/constants/app_assets.dart';
@@ -75,7 +76,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       // Navigate to Dashboard after successful registration
       Navigator.pushAndRemoveUntil(
         context,
-        MaterialPageRoute(builder: (context) => const DashboardScreen()),
+        MaterialPageRoute(builder: (context) => const MainLayoutScreen()),
         (route) => false,
       );
     } on AuthException catch (e) {
@@ -384,7 +385,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     Navigator.pushAndRemoveUntil(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => const DashboardScreen(),
+                        builder: (context) => const MainLayoutScreen(),
                       ),
                       (route) => false,
                     );

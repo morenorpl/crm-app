@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart'; // Pastikan import supabase
 import 'package:crm_app/screen/dashboard/dashboard_screen.dart';
 import 'package:crm_app/screen/CRM/jadwal_screen.dart';
 import 'package:crm_app/screen/CRM/kanban_screen.dart';
@@ -15,22 +16,63 @@ class MainLayoutScreen extends StatefulWidget {
 
 class _MainLayoutScreenState extends State<MainLayoutScreen> {
   int _currentIndex = 0;
+  String _avatarLetter = 'K'; // Default jika data belum dimuat
 
-  final List<Widget> _pages = const [
-    DashboardScreen(),
-    CrmBoardScreen(),
-    ScheduleScreen(),
-    ProfileScreen(),
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _loadUserInitial(); // Ambil inisial saat layout pertama kali dibuka
+  }
+
+  // Fungsi untuk mengambil huruf depan nama user dari database/metadata
+  Future<void> _loadUserInitial() async {
+    try {
+      final user = Supabase.instance.client.auth.currentUser;
+      if (user != null) {
+        // Cek dari userMetadata terlebih dahulu
+        String? name = user.userMetadata?['name'];
+
+        // Jika di metadata tidak ada, ambil dari tabel public.users
+        if (name == null || name.isEmpty) {
+          final data = await Supabase.instance.client
+              .from('users')
+              .select('name')
+              .eq('id', user.id)
+              .maybeSingle();
+
+          if (data != null) {
+            name = data['name'];
+          }
+        }
+
+        // Ambil huruf pertamanya dan jadikan huruf besar
+        if (name != null && name.isNotEmpty) {
+          setState(() {
+            _avatarLetter = name![0].toUpperCase();
+          });
+        }
+      }
+    } catch (e) {
+      // Biarkan default 'K' jika terjadi error
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+    // Daftar halaman yang diberi akses membawa variabel _avatarLetter jika dibutuhkan
+    final List<Widget> pages = [
+      DashboardScreen(avatarLetter: _avatarLetter),
+      CrmBoardScreen(avatarLetter: _avatarLetter),
+      ScheduleScreen(avatarLetter: _avatarLetter),
+      ProfileScreen(avatarLetter: _avatarLetter),
+    ];
+
     return Scaffold(
       backgroundColor: AppColors.background,
       body: Stack(
         children: [
           // 1. Main Page Content
-          IndexedStack(index: _currentIndex, children: _pages),
+          IndexedStack(index: _currentIndex, children: pages),
 
           // 2. Floating Navbar overlay
           Positioned(

@@ -3,6 +3,7 @@ import 'package:crm_app/screen/auth/otp_screen.dart';
 import 'package:crm_app/constants/app_assets.dart';
 import 'package:crm_app/screen/auth/register_screen.dart';
 import 'package:crm_app/screen/dashboard/dashboard_screen.dart';
+import 'package:crm_app/screen/layout/main_layout_screen.dart';
 import 'package:flutter/material.dart';
 import '../../services/auth_service.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -60,7 +61,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => const DashboardScreen()),
+        MaterialPageRoute(builder: (context) => const MainLayoutScreen()),
       );
     } on AuthException catch (e) {
       // Tangkap error dari Supabase (misal salah password)

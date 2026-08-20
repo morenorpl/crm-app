@@ -4,7 +4,9 @@ import 'package:crm_app/constants/app_colors.dart';
 import 'package:crm_app/widgets/header_bar.dart';
 
 class ProfileScreen extends StatefulWidget {
-  const ProfileScreen({super.key});
+  final String avatarLetter;
+
+  const ProfileScreen({super.key, required this.avatarLetter});
 
   @override
   State<ProfileScreen> createState() => _ProfileScreenState();

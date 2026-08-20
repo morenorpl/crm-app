@@ -1,9 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:crm_app/constants/app_colors.dart';
+import 'package:crm_app/widgets/header_bar.dart';
 
-class CrmBoardScreen extends StatelessWidget {
-  const CrmBoardScreen({super.key});
+class CrmBoardScreen extends StatefulWidget {
+  final String avatarLetter;
 
+  const CrmBoardScreen({super.key, required this.avatarLetter});
+
+  @override
+  State<CrmBoardScreen> createState() => _CrmBoardScreenState();
+}
+
+class _CrmBoardScreenState extends State<CrmBoardScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -16,7 +24,11 @@ class CrmBoardScreen extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildHeader(), // Memanggil header yang berisi logo sejadah
+                HeaderBar(
+                  title: 'Dashboard CRM',
+                  subtitle: 'Selamat datang kembali!',
+                  avatarText: widget.avatarLetter,
+                ),
                 const SizedBox(height: 12),
                 _buildBoardInfo(),
                 const SizedBox(height: 12),

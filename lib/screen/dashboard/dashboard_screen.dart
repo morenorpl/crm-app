@@ -3,9 +3,12 @@
 import 'package:crm_app/screen/auth/login_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:crm_app/constants/app_colors.dart';
+import 'package:crm_app/widgets/header_bar.dart';
 
 class DashboardScreen extends StatefulWidget {
-  const DashboardScreen({super.key});
+  final String avatarLetter;
+
+  const DashboardScreen({super.key, required this.avatarLetter});
 
   @override
   State<DashboardScreen> createState() => _DashboardScreenState();
@@ -35,7 +38,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // --- Top Bar (Header disesuaikan dengan Logo) ---
-                _buildHeader(),
+                HeaderBar(
+                  title: 'Dashboard CRM',
+                  subtitle: 'Selamat datang kembali!',
+                  avatarText:
+                      widget.avatarLetter, // Menggunakan huruf dari parameter
+                ),
                 const SizedBox(height: 16),
 
                 // --- Section Header ---
@@ -494,10 +502,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               SizedBox(height: 2),
               Text(
                 'Siap membuat konten berkah hari ini?',
-                style: TextStyle(
-                  color: Color(0xFFA197B4),
-                  fontSize: 11,
-                ),
+                style: TextStyle(color: Color(0xFFA197B4), fontSize: 11),
               ),
             ],
           ),
