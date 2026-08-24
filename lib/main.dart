@@ -6,7 +6,7 @@ import 'screen/auth/forgot_password_screen.dart';
 import 'screen/auth/otp_screen.dart';
 import 'screen/auth/reset_password_screen.dart';
 import 'screen/dashboard/dashboard_screen.dart';
-import 'screen/CRM/kanban_screen.dart';
+import 'screen/CRM/kanban/kanban_screen.dart';
 import 'screen/CRM/jadwal_screen.dart';
 import 'screen/profile/profile_screen.dart';
 import 'screen/splash/splash_screen.dart';
