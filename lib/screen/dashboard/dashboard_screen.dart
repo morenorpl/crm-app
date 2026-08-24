@@ -36,22 +36,37 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
     try {
       final supabase = Supabase.instance.client;
+      final currentUser = supabase.auth.currentUser;
 
-      // NOTE: Since your table uses integer IDs (1, 2, 3),
-      // we can set a test user ID (e.g., 1) for "Kinerja Ku Saja" while testing!
-      const int testCurrentUserId = 1;
+      if (currentUser == null) {
+        // Handle unauthenticated state if necessary
+        setState(() => _isLoading = false);
+        return;
+      }
 
-      // 1. Determine Date Filter Range for "Hari ini" (Aug 24, 2026 based on your table data)
+      // 1. Get the integer user_id from your 'users' table based on the logged-in email
+      final userResponse = await supabase
+          .from('users')
+          .select('id')
+          .eq('email', currentUser.email ?? '')
+          .maybeSingle();
+
+      // Fallback to ID 1 if not found in the custom users table yet
+      final int currentUserId = userResponse != null
+          ? (userResponse['id'] as num).toInt()
+          : 1;
+
+      // 2. Determine Date Filter Range Dynamically (Today)
       DateTime? startDate;
       DateTime? endDate;
 
       if (_selectedTimeFilter == 'Hari ini') {
-        // Using August 24, 2026 to match your table's sample data for testing
-        startDate = DateTime(2026, 8, 24, 0, 0, 0);
-        endDate = DateTime(2026, 8, 24, 23, 59, 59);
+        final now = DateTime.now();
+        startDate = DateTime(now.year, now.month, now.day, 0, 0, 0);
+        endDate = DateTime(now.year, now.month, now.day, 23, 59, 59);
       }
 
-      // 2. Base Queries for Tables
+      // 3. Base Queries for Tables
       var postingQuery = supabase
           .from('posting')
           .select('id, created_at, user_id');
@@ -60,14 +75,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
           .from('media_generations')
           .select('jumlah, created_at, user_id');
 
-      // 3. Apply User Scope Filter ('Kinerja Ku Saja' vs 'Tim Bawahanku')
+      // 4. Apply User Scope Filter dynamically
       if (_selectedTeamFilter == 'Kinerja Ku Saja') {
-        postingQuery = postingQuery.eq('user_id', testCurrentUserId);
-        leadsQuery = leadsQuery.eq('user_id', testCurrentUserId);
-        mediaQuery = mediaQuery.eq('user_id', testCurrentUserId);
+        postingQuery = postingQuery.eq('user_id', currentUserId);
+        leadsQuery = leadsQuery.eq('user_id', currentUserId);
+        mediaQuery = mediaQuery.eq('user_id', currentUserId);
       }
+      // If 'Tim Bawahanku' is selected, we omit the .eq('user_id') filter to pull all team records.
 
-      // 4. Apply Time Filter if "Hari ini" is selected
+      // 5. Apply Time Filter if "Hari ini" is selected
       if (_selectedTimeFilter == 'Hari ini' &&
           startDate != null &&
           endDate != null) {
@@ -82,7 +98,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             .lte('created_at', endDate.toIso8601String());
       }
 
-      // 5. Execute Queries
+      // 6. Execute Queries
       final postingData = await postingQuery;
       final leadsData = await leadsQuery;
       final mediaData = await mediaQuery;

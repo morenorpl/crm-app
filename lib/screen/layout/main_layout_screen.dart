@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart'; // Pastikan import supabase
 import 'package:crm_app/screen/dashboard/dashboard_screen.dart';
 import 'package:crm_app/screen/CRM/jadwal_screen.dart';
-import 'package:crm_app/screen/CRM/kanban_screen.dart';
+import 'package:crm_app/screen/CRM/kanban/kanban_screen.dart';
 import 'package:crm_app/screen/profile/profile_screen.dart';
 import 'package:crm_app/constants/app_colors.dart';
 import 'package:crm_app/widgets/header_bar.dart';
@@ -52,9 +52,7 @@ class _MainLayoutScreenState extends State<MainLayoutScreen> {
           });
         }
       }
-    } catch (e) {
-      // Biarkan default 'K' jika terjadi error
-    }
+    } catch (e) {}
   }
 
   @override
