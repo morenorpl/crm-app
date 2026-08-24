@@ -44,13 +44,14 @@ class _VerifyOtpPageState extends State<VerifyOtpPage> {
   Future<void> verifyOTP() async {
     _syncOtpController();
 
+    // 1. Get the email passed from the Forgot Password screen
     final args = ModalRoute.of(context)?.settings.arguments;
     final email = args is String ? args : '';
 
-    if (otpController.text.isEmpty) {
+    if (otpController.text.isEmpty || otpController.text.length < 6) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text("OTP wajib diisi"),
+          content: Text("OTP wajib diisi dengan lengkap"),
           backgroundColor: Colors.redAccent,
         ),
       );
@@ -62,11 +63,16 @@ class _VerifyOtpPageState extends State<VerifyOtpPage> {
     });
 
     try {
-      await AuthService.verifyOTP(email, otpController.text.trim());
+      // 2. Call AuthService and capture the returned resetId
+      final resetId = await AuthService.verifyOTP(
+        email,
+        otpController.text.trim(),
+      );
 
       if (!mounted) return;
 
-      Navigator.pushNamed(context, '/reset-password', arguments: email);
+      // 3. Navigate to Reset Password and pass the resetId
+      Navigator.pushNamed(context, '/reset-password', arguments: resetId);
     } catch (e) {
       if (!mounted) return;
 

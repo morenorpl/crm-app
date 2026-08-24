@@ -28,7 +28,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
 
   Future<void> resetPassword() async {
     final args = ModalRoute.of(context)?.settings.arguments;
-    final email = args is String ? args : '';
+    final resetId = args is String ? args : '';
 
     final password = passwordController.text;
     final confirm = confirmController.text;
@@ -68,7 +68,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
     });
 
     try {
-      await AuthService.resetPassword(email, password);
+      await AuthService.resetPassword(resetId, password);
 
       if (!mounted) return;
 

@@ -12,6 +12,7 @@ class AuthService {
       email: email,
       password: password,
     );
+
     return response;
   }
 
@@ -23,13 +24,10 @@ class AuthService {
     String email,
     String password,
   ) async {
-    // Kode ini akan menembak langsung ke server cloud Supabase
     final response = await Supabase.instance.client.auth.signUp(
       email: email,
       password: password,
-      data: {
-        'name': name, // Menyimpan nama di metadata
-      },
+      data: {'name': name},
     );
 
     if (response.user == null) {
@@ -42,40 +40,80 @@ class AuthService {
   // =========================
   // FORGOT PASSWORD
   // =========================
+  // Backend yang generate dan mengirim OTP.
+  // Supabase TIDAK mengirim email.
   static Future<void> forgotPassword(String email) async {
-    // This triggers Supabase to send a recovery email containing an OTP
-    await Supabase.instance.client.auth.resetPasswordForEmail(email);
+    final response = await http.post(
+      Uri.parse('${ApiConfig.baseUrl}/api/auth/forgot-password'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'email': email}),
+    );
+
+    final data = jsonDecode(response.body);
+
+    if (response.statusCode < 200 ||
+        response.statusCode >= 300 ||
+        data['success'] != true) {
+      throw Exception(data['message'] ?? 'Gagal mengirim OTP');
+    }
   }
 
   // =========================
   // VERIFY OTP
   // =========================
-  static Future<void> verifyOTP(String email, String otp) async {
-    // Verifies the OTP. If correct, Supabase creates a temporary authenticated session.
-    final response = await Supabase.instance.client.auth.verifyOTP(
-      type: OtpType.recovery,
-      token: otp,
-      email: email,
+  static Future<String> verifyOTP(String email, String otp) async {
+    final response = await http.post(
+      Uri.parse('${ApiConfig.baseUrl}/api/auth/verify-otp'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'email': email, 'otp': otp}),
     );
 
-    if (response.session == null) {
-      throw Exception('OTP salah atau sudah kedaluwarsa');
+    final data = jsonDecode(response.body);
+
+    print('=== BACKEND RESPONSE ===: $data');
+
+    if (response.statusCode < 200 ||
+        response.statusCode >= 300 ||
+        data['success'] != true) {
+      throw Exception(data['message'] ?? 'OTP salah atau sudah kedaluwarsa');
     }
+
+    // 1. Safely extract the resetId without crashing
+    final resetId =
+        data['reset_id'] ??
+        data['resetId'] ??
+        (data['data'] != null ? data['data']['reset_id'] : null);
+
+    // 2. If the API didn't return a resetId at all, throw a readable error
+    if (resetId == null) {
+      throw Exception(
+        'Server tidak mengembalikan reset_id. Silakan periksa backend API Anda.',
+      );
+    }
+
+    return resetId.toString();
   }
 
   // =========================
   // RESET PASSWORD
   // =========================
-  static Future<void> resetPassword(String email, String newPassword) async {
-    // Because verifyOTP creates a session, we can now safely update the user's password.
-    // Note: Supabase doesn't actually need the 'email' parameter here because it
-    // updates the currently authenticated user, but we leave it to keep your function signature the same.
-    final response = await Supabase.instance.client.auth.updateUser(
-      UserAttributes(password: newPassword),
+  static Future<void> resetPassword(String resetId, String newPassword) async {
+    final response = await http.post(
+      Uri.parse('${ApiConfig.baseUrl}/api/auth/reset-password'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'resetId':
+            resetId, // Ensure this key matches your backend's expected variable name
+        'newPassword': newPassword,
+      }),
     );
 
-    if (response.user == null) {
-      throw Exception('Gagal mengubah password');
+    final data = jsonDecode(response.body);
+
+    if (response.statusCode < 200 ||
+        response.statusCode >= 300 ||
+        data['success'] != true) {
+      throw Exception(data['message'] ?? 'Gagal mengubah password');
     }
   }
 }
