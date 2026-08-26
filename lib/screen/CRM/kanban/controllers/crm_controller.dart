@@ -70,4 +70,40 @@ class CrmController extends ChangeNotifier {
       return false;
     }
   }
+
+  /// Updates the status category of a lead in Supabase
+  Future<void> updateLeadStatus(int id, String newStatus) async {
+    try {
+      await Supabase.instance.client
+          .from('leads')
+          .update({'status': newStatus})
+          .eq('id', id);
+
+      debugPrint('Status updated to $newStatus for lead ID: $id');
+    } catch (e) {
+      debugPrint('Error updating lead status: $e');
+    }
+  }
+
+  /// Updates multiple fields of a lead in Supabase
+  Future<void> updateLead(int id, Map<String, dynamic> updates) async {
+    try {
+      await Supabase.instance.client.from('leads').update(updates).eq('id', id);
+
+      debugPrint('Successfully updated lead ID: $id with data: $updates');
+    } catch (e) {
+      debugPrint('Error updating lead: $e');
+    }
+  }
+
+  /// Deletes a lead from Supabase
+  Future<void> deleteLead(int id) async {
+    try {
+      await Supabase.instance.client.from('leads').delete().eq('id', id);
+
+      debugPrint('Successfully deleted lead ID: $id');
+    } catch (e) {
+      debugPrint('Error deleting lead: $e');
+    }
+  }
 }

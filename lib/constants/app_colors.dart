@@ -5,11 +5,13 @@ abstract class AppColors {
   static const Color white = Color(0xFFF7F3FA);
   static const Color muted = Color(0xFFAAA0B5);
   static const Color border = Color(0xFF81718F);
+  static const Color red = Color.fromARGB(255, 205, 33, 24);
   static const Color green = Color(0xFF00D084);
   static const Color blue = Color(0xFF6577FF);
   static const Color yellow = Color(0xFFFFC400);
   static const Color card = Color(0xFF271642);
   static const Color header = Color(0xFF665579);
+  static const Color redAccent = Color(0xFFFF3B30);
   static const Color purpleAccent = Color(0xFFB04BE6);
   static const Color greenAccent = Color(0xFF00C875);
   static const Color cyanAccent = Color(0xFF00A2FF);

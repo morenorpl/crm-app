@@ -1,13 +1,115 @@
 import 'package:flutter/material.dart';
 import 'package:crm_app/constants/app_colors.dart';
+import 'package:crm_app/screen/CRM/kanban/models/lead_model.dart';
 
 class CrmProspectCard extends StatelessWidget {
-  const CrmProspectCard({super.key});
+  final LeadModel leadData;
+  final VoidCallback onEdit;
+  final VoidCallback onDelete;
+  final Function(String) onStatusChange;
+
+  const CrmProspectCard({
+    super.key,
+    required this.leadData,
+    required this.onEdit,
+    required this.onDelete,
+    required this.onStatusChange,
+  });
+
+  // Helper function to format currency nicely (e.g., to "Rp 1.5 Miliar" or "Rp 750.0 Juta")
+  String _formatCurrency(dynamic amount) {
+    if (amount == null) return 'Rp 0';
+    double val = double.tryParse(amount.toString()) ?? 0;
+
+    if (val >= 1000000000) {
+      return 'Rp ${(val / 1000000000).toStringAsFixed(1)} Miliar';
+    } else if (val >= 1000000) {
+      return 'Rp ${(val / 1000000).toStringAsFixed(1)} Juta';
+    }
+
+    return 'Rp ${val.toStringAsFixed(0)}';
+  }
+
+  // Helper to map DB status to Human Readable UI text
+  String _getStatusText(String? status) {
+    switch (status) {
+      case 'baru':
+        return 'Prospek Baru';
+      case 'dihubungi':
+        return 'Dihubungi';
+      case 'layak':
+        return 'Prospek Layak';
+      case 'closed':
+        return 'Closed';
+      default:
+        return 'Prospek Baru';
+    }
+  }
+
+  void _showDeleteConfirmation(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext ctx) {
+        return AlertDialog(
+          backgroundColor: AppColors.searchPanelBg,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
+          title: const Text(
+            'Konfirmasi Hapus',
+            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+          ),
+          content: Text(
+            'Apakah Anda yakin ingin menghapus data prospek ${leadData.nama}? Data yang dihapus tidak dapat dikembalikan.',
+            style: const TextStyle(color: AppColors.textLight, fontSize: 14),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text(
+                'Batal',
+                style: TextStyle(color: AppColors.textMuted),
+              ),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFFF5252),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              onPressed: () {
+                Navigator.pop(ctx);
+                onDelete(); // Trigger the actual delete callback
+              },
+              child: const Text('Hapus', style: TextStyle(color: Colors.white)),
+            ),
+          ],
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
+    // Safely extract data from model with fallbacks for NULL database values
+    final nama = leadData.nama ?? 'Unknown';
+    final noHp = leadData.noHp ?? '-';
+    final lokasi = leadData.lokasi ?? '-';
+    final instansi = leadData.instansi ?? 'Tidak ada instansi';
+    final catatan = leadData.catatan ?? 'Tidak ada catatan...';
+
+    // Fallbacks for tags
+    final sumberLeads = leadData.sumberLeads ?? 'Manual Input';
+    final tipeLead = leadData.tipeLead ?? 'Umum';
+    final jumlahPax = leadData.jumlahPax != null
+        ? '${leadData.jumlahPax} Pax'
+        : '- Pax';
+    final potensiNilaiFormatted = _formatCurrency(leadData.potensiNilai);
+
     return Container(
       width: double.infinity,
+      margin: const EdgeInsets.only(bottom: 14),
       decoration: BoxDecoration(
         color: AppColors.prospectCardBg,
         borderRadius: BorderRadius.circular(14),
@@ -20,58 +122,73 @@ class CrmProspectCard extends StatelessWidget {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                const Expanded(
+                Expanded(
                   child: Text(
-                    'Ibu Hj. Aminah',
-                    style: TextStyle(
+                    nama,
+                    style: const TextStyle(
                       color: AppColors.white,
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                 ),
-                Container(
-                  width: 26,
-                  height: 26,
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                  child: const Icon(
-                    Icons.edit_outlined,
-                    color: AppColors.textLight,
-                    size: 14,
+                // Edit Button
+                GestureDetector(
+                  onTap: onEdit,
+                  child: Container(
+                    width: 26,
+                    height: 26,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: const Icon(
+                      Icons.edit_outlined,
+                      color: AppColors.textLight,
+                      size: 14,
+                    ),
                   ),
                 ),
                 const SizedBox(width: 6),
-                Container(
-                  width: 26,
-                  height: 26,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFFF3B30).withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(4),
-                    border: Border.all(
-                      color: const Color(0xFFFF3B30).withOpacity(0.5),
+                // Delete Button
+                GestureDetector(
+                  onTap: () => _showDeleteConfirmation(context),
+                  child: Container(
+                    width: 26,
+                    height: 26,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFF3B30).withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(4),
+                      border: Border.all(
+                        color: const Color(0xFFFF3B30).withOpacity(0.5),
+                      ),
                     ),
-                  ),
-                  child: const Icon(
-                    Icons.delete_outline,
-                    color: Color(0xFFFF5252),
-                    size: 14,
+                    child: const Icon(
+                      Icons.delete_outline,
+                      color: Color(0xFFFF5252),
+                      size: 14,
+                    ),
                   ),
                 ),
               ],
             ),
           ),
-          const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 14, vertical: 2),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 2),
             child: Row(
               children: [
-                Icon(Icons.work_outline, color: AppColors.textMuted, size: 12),
-                SizedBox(width: 6),
+                const Icon(
+                  Icons.work_outline,
+                  color: AppColors.textMuted,
+                  size: 12,
+                ),
+                const SizedBox(width: 6),
                 Text(
-                  'Mitra Travel',
-                  style: TextStyle(color: AppColors.textMuted, fontSize: 9.5),
+                  instansi,
+                  style: const TextStyle(
+                    color: AppColors.textMuted,
+                    fontSize: 9.5,
+                  ),
                 ),
               ],
             ),
@@ -83,10 +200,10 @@ class CrmProspectCard extends StatelessWidget {
               spacing: 6,
               runSpacing: 4,
               children: [
-                _cardBadge('Manual Input', AppColors.yellowAccent),
-                _cardBadge('Mitra', AppColors.greenAccent),
-                _cardBadge('25 Pax', AppColors.greenAccent),
-                _cardBadge('Rp 750.0 Juta', AppColors.yellowAccent),
+                _cardBadge(sumberLeads, AppColors.purpleAccent),
+                _cardBadge(tipeLead, AppColors.cyanAccent),
+                _cardBadge(jumlahPax, AppColors.yellowAccent),
+                _cardBadge(potensiNilaiFormatted, AppColors.greenAccent),
               ],
             ),
           ),
@@ -101,9 +218,9 @@ class CrmProspectCard extends StatelessWidget {
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(color: Colors.white.withOpacity(0.1)),
               ),
-              child: const Text(
-                '“Alhamdulillah closing! DP Rp 100 Juta sudah masuk untuk booking seat keberangkatan Maulid Nabi 25 pax.”',
-                style: TextStyle(
+              child: Text(
+                '“$catatan”',
+                style: const TextStyle(
                   color: AppColors.textLight,
                   fontSize: 9.5,
                   fontStyle: FontStyle.italic,
@@ -113,20 +230,30 @@ class CrmProspectCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 10),
-          const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 14),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 14),
             child: Row(
               children: [
-                Icon(Icons.call_outlined, color: AppColors.textMuted, size: 12),
-                SizedBox(width: 4),
-                Text(
-                  '085678901234',
-                  style: TextStyle(color: AppColors.textMuted, fontSize: 9.5),
+                const Icon(
+                  Icons.call_outlined,
+                  color: AppColors.textMuted,
+                  size: 12,
                 ),
-                Spacer(),
+                const SizedBox(width: 4),
                 Text(
-                  'Surabaya',
-                  style: TextStyle(color: AppColors.textMuted, fontSize: 9.5),
+                  noHp,
+                  style: const TextStyle(
+                    color: AppColors.textMuted,
+                    fontSize: 9.5,
+                  ),
+                ),
+                const Spacer(),
+                Text(
+                  lokasi,
+                  style: const TextStyle(
+                    color: AppColors.textMuted,
+                    fontSize: 9.5,
+                  ),
                 ),
               ],
             ),
@@ -173,33 +300,74 @@ class CrmProspectCard extends StatelessWidget {
                   style: TextStyle(color: AppColors.textMuted, fontSize: 8.5),
                 ),
                 const SizedBox(width: 6),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.08),
+
+                // Status Dropdown implemented as a PopupMenuButton to match your exact UI style
+                PopupMenuButton<String>(
+                  color: AppColors.searchPanelBg,
+                  shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.white.withOpacity(0.2)),
                   ),
-                  child: const Row(
-                    children: [
-                      Text(
+                  onSelected: onStatusChange,
+                  itemBuilder: (context) => [
+                    const PopupMenuItem(
+                      value: 'baru',
+                      child: Text(
+                        'Prospek Baru',
+                        style: TextStyle(color: Colors.white, fontSize: 12),
+                      ),
+                    ),
+                    const PopupMenuItem(
+                      value: 'dihubungi',
+                      child: Text(
+                        'Dihubungi',
+                        style: TextStyle(color: Colors.white, fontSize: 12),
+                      ),
+                    ),
+                    const PopupMenuItem(
+                      value: 'layak',
+                      child: Text(
+                        'Prospek Layak',
+                        style: TextStyle(color: Colors.white, fontSize: 12),
+                      ),
+                    ),
+                    const PopupMenuItem(
+                      value: 'closed',
+                      child: Text(
                         'Closed',
-                        style: TextStyle(
-                          color: AppColors.textLight,
-                          fontSize: 8.5,
-                          fontWeight: FontWeight.bold,
+                        style: TextStyle(color: Colors.white, fontSize: 12),
+                      ),
+                    ),
+                  ],
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.08),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Colors.white.withOpacity(0.2)),
+                    ),
+                    child: Row(
+                      children: [
+                        Text(
+                          _getStatusText(
+                            leadData.status,
+                          ), // Shows current category
+                          style: const TextStyle(
+                            color: AppColors.textLight,
+                            fontSize: 8.5,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
-                      ),
-                      SizedBox(width: 2),
-                      Icon(
-                        Icons.keyboard_arrow_down,
-                        color: AppColors.textLight,
-                        size: 12,
-                      ),
-                    ],
+                        const SizedBox(width: 2),
+                        const Icon(
+                          Icons.keyboard_arrow_down,
+                          color: AppColors.textLight,
+                          size: 12,
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ],

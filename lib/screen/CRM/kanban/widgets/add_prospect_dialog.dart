@@ -24,6 +24,10 @@ class AddProspectDialog {
           builder: (context, setDialogState) {
             return AlertDialog(
               backgroundColor: const Color(0xFF1E1735),
+              insetPadding: const EdgeInsets.symmetric(
+                horizontal: 14,
+                vertical: 50,
+              ),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),
               ),

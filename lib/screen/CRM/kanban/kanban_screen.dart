@@ -7,6 +7,7 @@ import 'widgets/crm_search_panel.dart';
 import 'widgets/crm_statistics_grid.dart';
 import 'widgets/crm_kanban_tabs.dart';
 import 'widgets/crm_prospect_card.dart';
+import 'package:crm_app/screen/CRM/kanban/models/lead_model.dart';
 
 class CrmBoardScreen extends StatefulWidget {
   final String avatarLetter;
@@ -20,11 +21,21 @@ class CrmBoardScreen extends StatefulWidget {
 class _CrmBoardScreenState extends State<CrmBoardScreen> {
   late final CrmController _crmController;
 
+  // Track the active tab status. Defaulting to 'baru' as seen in the DB.
+  String _activeStatus = 'baru';
+
+  // Map your tab UI text to the exact string used in your database 'status' column
+  final Map<String, String> _tabCategories = {
+    'Prospek Baru': 'baru',
+    'Dihubungi': 'dihubungi',
+    'Prospek Layak': 'layak',
+    'Closed': 'closed',
+  };
+
   @override
   void initState() {
     super.initState();
     _crmController = CrmController();
-    // Memuat data saat screen pertama kali dibuka
     _crmController.fetchLeads();
   }
 
@@ -52,12 +63,479 @@ class _CrmBoardScreenState extends State<CrmBoardScreen> {
                 const SizedBox(height: 14),
                 const CrmStatisticsGrid(),
                 const SizedBox(height: 14),
-                const CrmKanbanTabs(),
+
+                // 1. Pass the state and callback to the Tabs
+                CrmKanbanTabs(
+                  selectedStatus: _activeStatus,
+                  tabData: _tabCategories,
+                  onTabChanged: (newStatus) {
+                    setState(() {
+                      _activeStatus = newStatus;
+                    });
+                  },
+                ),
+
                 const SizedBox(height: 14),
-                const CrmProspectCard(),
+
+                // 2. Filter and display the lists.
+                // Note: Wrap this part in whatever state observer you use for _crmController
+                // (e.g., Obx if using GetX, Consumer if using Provider, or FutureBuilder)
+                _buildFilteredProspects(),
+
                 const SizedBox(height: 80),
               ],
             ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFilteredProspects() {
+    final allLeads =
+        _crmController.leads; // Adjust if your controller variable is different
+    final filteredLeads = allLeads
+        .where((lead) => lead.status == _activeStatus)
+        .toList();
+
+    if (filteredLeads.isEmpty) {
+      // Find the human-readable UI name for the active tab (e.g., "Prospek Layak")
+      String activeTabName = _tabCategories.entries
+          .firstWhere(
+            (entry) => entry.value == _activeStatus,
+            orElse: () => const MapEntry('Prospek', 'baru'),
+          )
+          .key;
+
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 40.0),
+          child: Text(
+            'belum ada prospek di kategori "$activeTabName"',
+            style: const TextStyle(
+              color: AppColors.textMuted,
+              fontSize: 14,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+        ),
+      );
+    }
+
+    // Map the filtered leads to Prospect Cards
+    return Column(
+      children: filteredLeads.map((leadData) {
+        return CrmProspectCard(
+          leadData: leadData,
+          onEdit: () {
+            // Trigger the edit popup instead of just printing a log
+            _showEditProspectDialog(context, leadData);
+          },
+          onDelete: () async {
+            await _crmController.deleteLead(leadData.id);
+            await _crmController.fetchLeads();
+            setState(() {});
+          },
+          onStatusChange: (newStatus) async {
+            if (leadData.status == newStatus) return;
+
+            await _crmController.updateLeadStatus(leadData.id, newStatus);
+            await _crmController.fetchLeads();
+            setState(() {});
+          },
+        );
+      }).toList(),
+    );
+  }
+
+  void _showEditProspectDialog(BuildContext context, LeadModel lead) {
+    showDialog(
+      context: context,
+      builder: (BuildContext ctx) {
+        return _EditProspectDialog(
+          lead: lead,
+          onSave: (updatedData) async {
+            // 1. Call the new controller method to update Supabase
+            await _crmController.updateLead(lead.id, updatedData);
+
+            // 2. Re-fetch and update UI
+            await _crmController.fetchLeads();
+            setState(() {});
+          },
+        );
+      },
+    );
+  }
+}
+
+class _EditProspectDialog extends StatefulWidget {
+  final LeadModel lead;
+  final Function(Map<String, dynamic>) onSave;
+
+  const _EditProspectDialog({required this.lead, required this.onSave});
+
+  @override
+  State<_EditProspectDialog> createState() => _EditProspectDialogState();
+}
+
+class _EditProspectDialogState extends State<_EditProspectDialog> {
+  late TextEditingController _namaCtrl;
+  late TextEditingController _instansiCtrl;
+  late TextEditingController _noHpCtrl;
+  late TextEditingController _emailCtrl;
+  late TextEditingController _lokasiCtrl;
+  late TextEditingController _jumlahPaxCtrl;
+  late TextEditingController _potensiNilaiCtrl;
+  late TextEditingController _catatanCtrl;
+
+  String _sumberLeads = 'Manual Input';
+  String _tipeLead = 'Umum';
+
+  @override
+  void initState() {
+    super.initState();
+    _namaCtrl = TextEditingController(text: widget.lead.nama);
+    _instansiCtrl = TextEditingController(text: widget.lead.instansi);
+    _noHpCtrl = TextEditingController(text: widget.lead.noHp);
+    _emailCtrl = TextEditingController(text: widget.lead.email);
+    _lokasiCtrl = TextEditingController(text: widget.lead.lokasi);
+    _jumlahPaxCtrl = TextEditingController(
+      text: widget.lead.jumlahPax?.toString() ?? '',
+    );
+
+    // Format numeric value nicely for the input if needed, or just plain string
+    double? val = widget.lead.potensiNilai;
+    String initialPotensi = val != null ? val.toInt().toString() : '';
+    _potensiNilaiCtrl = TextEditingController(text: initialPotensi);
+
+    _catatanCtrl = TextEditingController(text: widget.lead.catatan);
+
+    _sumberLeads = widget.lead.sumberLeads ?? 'Manual Input';
+    _tipeLead = widget.lead.tipeLead ?? 'Jamaah (Individu)';
+  }
+
+  @override
+  void dispose() {
+    _namaCtrl.dispose();
+    _instansiCtrl.dispose();
+    _noHpCtrl.dispose();
+    _emailCtrl.dispose();
+    _lokasiCtrl.dispose();
+    _jumlahPaxCtrl.dispose();
+    _potensiNilaiCtrl.dispose();
+    _catatanCtrl.dispose();
+    super.dispose();
+  }
+
+  void _handleSave() {
+    // Collect all data into a map matching your DB columns
+    final updates = {
+      'nama': _namaCtrl.text,
+      'instansi': _instansiCtrl.text.isNotEmpty ? _instansiCtrl.text : null,
+      'no_hp': _noHpCtrl.text,
+      'email': _emailCtrl.text.isNotEmpty ? _emailCtrl.text : null,
+      'lokasi': _lokasiCtrl.text,
+      'sumber_leads': _sumberLeads,
+      'tipe_lead': _tipeLead,
+      'jumlah_pax': int.tryParse(_jumlahPaxCtrl.text),
+      'potensi_nilai': double.tryParse(_potensiNilaiCtrl.text),
+      'catatan': _catatanCtrl.text.isNotEmpty ? _catatanCtrl.text : null,
+    };
+
+    widget.onSave(updates);
+    Navigator.pop(context);
+  }
+
+  Widget _buildLabel(String text) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 6),
+      child: Text(
+        text,
+        style: const TextStyle(
+          color: AppColors.textMuted,
+          fontSize: 10,
+          fontWeight: FontWeight.bold,
+          letterSpacing: 0.5,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTextField(
+    String label,
+    TextEditingController controller, {
+    String? hint,
+    int maxLines = 1,
+    TextInputType? kbd,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildLabel(label),
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.05),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: Colors.white.withOpacity(0.1)),
+          ),
+          child: TextFormField(
+            controller: controller,
+            maxLines: maxLines,
+            keyboardType: kbd,
+            style: const TextStyle(color: Colors.white, fontSize: 13),
+            decoration: InputDecoration(
+              hintText: hint,
+              hintStyle: TextStyle(
+                color: Colors.white.withOpacity(0.2),
+                fontSize: 13,
+              ),
+              border: InputBorder.none,
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 12,
+                vertical: 12,
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDropdown(
+    String label,
+    String value,
+    List<String> items,
+    Function(String?) onChanged,
+  ) {
+    // Ensure current value exists in items to avoid dropdown errors
+    final safeValue = items.contains(value) ? value : items.first;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildLabel(label),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.05),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: Colors.white.withOpacity(0.1)),
+          ),
+          child: DropdownButtonHideUnderline(
+            child: DropdownButton<String>(
+              value: safeValue,
+              isExpanded: true,
+              dropdownColor: AppColors.searchPanelBg,
+              icon: const Icon(
+                Icons.keyboard_arrow_down,
+                color: AppColors.textMuted,
+                size: 16,
+              ),
+              style: const TextStyle(color: Colors.white, fontSize: 13),
+              items: items.map((String item) {
+                return DropdownMenuItem(value: item, child: Text(item));
+              }).toList(),
+              onChanged: onChanged,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // Use MediaQuery to handle keyboard popups smoothly
+    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+
+    return Dialog(
+      backgroundColor: Colors.transparent,
+      insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: AppColors.searchPanelBg, // The dark purple background
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: SingleChildScrollView(
+          padding: EdgeInsets.only(bottom: bottomInset),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Header
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'Edit Prospek',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  GestureDetector(
+                    onTap: () => Navigator.pop(context),
+                    child: const Icon(
+                      Icons.close,
+                      color: AppColors.textMuted,
+                      size: 20,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 20),
+
+              // Full Width Name
+              _buildTextField(
+                'NAMA KONTAK (PROSPEK) *',
+                _namaCtrl,
+                hint: 'Contoh: H. Syarifudin',
+              ),
+              const SizedBox(height: 14),
+
+              // Row 1: Instansi & No HP
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildTextField(
+                      'INSTANSI / KBIH',
+                      _instansiCtrl,
+                      hint: 'Contoh: Nurul Huda',
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _buildTextField(
+                      'NO. WHATSAPP / HP',
+                      _noHpCtrl,
+                      hint: '081234567890',
+                      kbd: TextInputType.phone,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 14),
+
+              // Row 2: Email & Kota
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildTextField(
+                      'EMAIL KONTAK',
+                      _emailCtrl,
+                      hint: 'syarif@gmail.com',
+                      kbd: TextInputType.emailAddress,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _buildTextField(
+                      'KOTA / ALAMAT',
+                      _lokasiCtrl,
+                      hint: 'Jakarta Timur',
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 14),
+
+              // Row 3: Sumber Leads & Tipe Lead (Dropdowns)
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildDropdown(
+                      'SUMBER LEADS',
+                      _sumberLeads,
+                      ['Manual Input', 'Social Media', 'News Leads'],
+                      (val) => setState(() => _sumberLeads = val!),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _buildDropdown(
+                      'TIPE LEAD',
+                      _tipeLead,
+                      ['Jamaah (Individu)', 'Mitra / Agen', 'Umum'],
+                      (val) => setState(() => _tipeLead = val!),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 14),
+
+              // Row 4: Jumlah Pax & Potensi Nilai
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildTextField(
+                      'JUMLAH PAX JAMAAH',
+                      _jumlahPaxCtrl,
+                      hint: 'Contoh: 20',
+                      kbd: TextInputType.number,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _buildTextField(
+                      'POTENSI NILAI (IDR)',
+                      _potensiNilaiCtrl,
+                      hint: '600000000',
+                      kbd: TextInputType.number,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 14),
+
+              // Textarea
+              _buildTextField(
+                'CATATAN TAMBAHAN & FOLLOW UP',
+                _catatanCtrl,
+                hint: 'Masukkan kebutuhan khusus, catatan...',
+                maxLines: 3,
+              ),
+              const SizedBox(height: 24),
+
+              // Actions
+              Row(
+                children: [
+                  Expanded(
+                    child: TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text(
+                        'Batal',
+                        style: TextStyle(
+                          color: AppColors.textLight,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.greenAccent,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      onPressed: _handleSave,
+                      child: const Text(
+                        'Simpan Perubahan',
+                        style: TextStyle(
+                          color: Colors.black,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ),
         ),
       ),
