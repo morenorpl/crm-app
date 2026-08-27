@@ -1,21 +1,47 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:crm_app/constants/app_colors.dart';
 
-class HeaderBar extends StatelessWidget {
+class HeaderBar extends StatefulWidget {
   final String title;
   final String? subtitle;
-  final String avatarText;
-  final String assetLogoPath; // Parameter opsional untuk path logo asset
+  final String? avatarText;
+  final String assetLogoPath; // Optional path for logo asset
 
   const HeaderBar({
     super.key,
     required this.title,
     this.subtitle,
-    this.avatarText = 'K',
-    this.assetLogoPath =
-        'assets/images/Logo-sejadah.png', // Nilai default logo kamu
+    this.avatarText,
+    this.assetLogoPath = 'assets/images/Logo-sejadah.png',
   });
+
+  @override
+  State<HeaderBar> createState() => _HeaderBarState();
+}
+
+class _HeaderBarState extends State<HeaderBar> {
+  String _avatarLetter = 'U'; // Default fallback letter for "User"
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserAvatarData();
+  }
+
+  Future<void> _loadUserAvatarData() async {
+    final prefs = await SharedPreferences.getInstance();
+    // Get stored username, fallback to 'User' if it doesn't exist
+    final username = prefs.getString('username') ?? 'User';
+
+    if (username.isNotEmpty) {
+      setState(() {
+        // Take the first letter of the username and make it uppercase
+        _avatarLetter = username[0].toUpperCase();
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -28,18 +54,18 @@ class HeaderBar extends StatelessWidget {
       ),
       child: Row(
         children: [
-          // 1. Logo Asset di sebelah kiri
-          Image.asset(assetLogoPath, height: 32, fit: BoxFit.contain),
+          // 1. Logo Asset on the left
+          Image.asset(widget.assetLogoPath, height: 32, fit: BoxFit.contain),
           const SizedBox(width: 10),
 
-          // 2. Title dan Subtitle
+          // 2. Title and Subtitle
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  title,
+                  widget.title,
                   style: const TextStyle(
                     color: AppColors.white,
                     fontSize: 12,
@@ -47,12 +73,12 @@ class HeaderBar extends StatelessWidget {
                   ),
                   overflow: TextOverflow.ellipsis,
                 ),
-                if (subtitle != null) ...[
+                if (widget.subtitle != null) ...[
                   const SizedBox(height: 2),
                   Text(
-                    subtitle!,
+                    widget.subtitle!,
                     style: const TextStyle(
-                      color: AppColors.textMuted, // Mengikuti warna muted kamu
+                      color: AppColors.textMuted,
                       fontSize: 9,
                     ),
                     overflow: TextOverflow.ellipsis,
@@ -63,7 +89,7 @@ class HeaderBar extends StatelessWidget {
           ),
           const SizedBox(width: 8),
 
-          // 3. Avatar dengan PopupMenuButton & Tombol Logout Kustom
+          // 3. Avatar with PopupMenuButton & Custom Logout Button
           PopupMenuButton<String>(
             offset: const Offset(0, 35),
             color: const Color(0xFF2C2245),
@@ -75,6 +101,8 @@ class HeaderBar extends StatelessWidget {
             onSelected: (value) async {
               if (value == 'logout') {
                 await Supabase.instance.client.auth.signOut();
+                final prefs = await SharedPreferences.getInstance();
+                await prefs.clear(); // Wipes cached credentials/username
                 if (context.mounted) {
                   Navigator.pushNamedAndRemoveUntil(
                     context,
@@ -120,7 +148,7 @@ class HeaderBar extends StatelessWidget {
                 shape: BoxShape.circle,
               ),
               child: Text(
-                avatarText,
+                _avatarLetter, // Uses the dynamically loaded letter
                 style: const TextStyle(
                   color: AppColors.white,
                   fontSize: 13,
