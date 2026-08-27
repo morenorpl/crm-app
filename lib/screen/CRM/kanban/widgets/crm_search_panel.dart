@@ -6,6 +6,7 @@ import 'package:excel/excel.dart' as excel_lib;
 import 'package:file_saver/file_saver.dart';
 import '../controllers/crm_controller.dart';
 import 'add_prospect_dialog.dart';
+import 'package:share_plus/share_plus.dart';
 
 class CrmSearchPanel extends StatelessWidget {
   final CrmController crmController;
@@ -39,16 +40,16 @@ class CrmSearchPanel extends StatelessWidget {
       );
 
       // 1. Fetch data dari tabel 'leads' Supabase
-      final response = await Supabase.instance.client
-          .from('leads')
-          .select();
+      final response = await Supabase.instance.client.from('leads').select();
 
       final dataList = response as List<dynamic>;
 
       if (dataList.isEmpty) {
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Tidak ada data leads untuk diekspor.')),
+            const SnackBar(
+              content: Text('Tidak ada data leads untuk diekspor.'),
+            ),
           );
         }
         return;
@@ -80,13 +81,12 @@ class CrmSearchPanel extends StatelessWidget {
         'Tanggal',
       ];
 
-      // Array untuk menyimpan panjang maksimum tiap kolom (untuk auto-width)
       List<int> colLengths = headers.map((h) => h.length).toList();
+      sheetObject.appendRow(
+        headers.map((e) => excel_lib.TextCellValue(e)).toList(),
+      );
 
-      // Masukkan header ke baris pertama Excel
-      sheetObject.appendRow(headers.map((e) => excel_lib.TextCellValue(e)).toList());
-
-      // 4. Masukkan isi data per baris & hitung panjang string maksimum
+      // 4. Masukkan isi data per baris
       for (var item in dataList) {
         List<String> values = [
           '${item['id'] ?? ''}',
@@ -108,21 +108,20 @@ class CrmSearchPanel extends StatelessWidget {
           '${item['tanggal'] ?? ''}',
         ];
 
-        // Update panjang maksimum per kolom jika isi teksnya lebih panjang
         for (int i = 0; i < values.length; i++) {
           if (values[i].length > colLengths[i]) {
             colLengths[i] = values[i].length;
           }
         }
 
-        sheetObject.appendRow(values.map((v) => excel_lib.TextCellValue(v)).toList());
+        sheetObject.appendRow(
+          values.map((v) => excel_lib.TextCellValue(v)).toList(),
+        );
       }
 
       // 5. ATUR LEBAR KOLOM OTOMATIS (AUTO-FIT)
-      // Menambahkan padding spasi ekstra (+3) agar teks tidak mepet dengan batas garis
       for (int i = 0; i < colLengths.length; i++) {
         double calculatedWidth = (colLengths[i] + 4).toDouble();
-        // Batas minimal lebar 12, maksimal 40 agar kolom catatan tidak terlalu melebar
         double finalWidth = calculatedWidth.clamp(12.0, 40.0);
         sheetObject.setColumnWidth(i, finalWidth);
       }
@@ -132,19 +131,27 @@ class CrmSearchPanel extends StatelessWidget {
 
       if (fileBytes != null) {
         Uint8List bytes = Uint8List.fromList(fileBytes);
+        String fileName = 'data_leads_${DateTime.now().millisecondsSinceEpoch}';
 
-        // 7. Simpan file sebagai .xlsx
-        await FileSaver.instance.saveFile(
-          name: 'data_leads_${DateTime.now().millisecondsSinceEpoch}',
+        // 7. Simpan file dan tangkap path/lokasi filenya
+        String? filePath = await FileSaver.instance.saveFile(
+          name: fileName,
           bytes: bytes,
           fileExtension: 'xlsx',
           mimeType: MimeType.microsoftExcel,
         );
 
+        // 8. Segera Munculkan Dialog Share File Begitu Tersimpan
+        if (filePath != null && filePath.isNotEmpty) {
+          await Share.shareXFiles([
+            XFile(filePath),
+          ], text: 'Berikut adalah data ekspor Leads CRM.');
+        }
+
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('Berhasil mengunduh Excel rapi (Auto-Fit)!'),
+              content: Text('Berhasil mengekspor & membagikan file Excel!'),
               backgroundColor: Colors.green,
             ),
           );
@@ -183,13 +190,9 @@ class CrmSearchPanel extends StatelessWidget {
           const SizedBox(height: 8),
           Row(
             children: [
-              Expanded(
-                child: _sourceDropdownField(),
-              ),
+              Expanded(child: _sourceDropdownField()),
               const SizedBox(width: 8),
-              Expanded(
-                child: _typeDropdownField(),
-              ),
+              Expanded(child: _typeDropdownField()),
             ],
           ),
           const SizedBox(height: 10),
@@ -261,8 +264,8 @@ class CrmSearchPanel extends StatelessWidget {
   Widget _sourceDropdownField() {
     final String currentValue =
         _sourceOptions.contains(crmController.selectedSource)
-            ? crmController.selectedSource
-            : 'Semua Sumber';
+        ? crmController.selectedSource
+        : 'Semua Sumber';
 
     return Container(
       height: 28,
@@ -321,8 +324,8 @@ class CrmSearchPanel extends StatelessWidget {
   Widget _typeDropdownField() {
     final String currentValue =
         _typeOptions.contains(crmController.selectedType)
-            ? crmController.selectedType
-            : 'Semua Tipe (Output)';
+        ? crmController.selectedType
+        : 'Semua Tipe (Output)';
 
     return Container(
       height: 28,
