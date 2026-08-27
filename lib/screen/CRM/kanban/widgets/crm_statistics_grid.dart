@@ -1,53 +1,92 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:crm_app/constants/app_colors.dart';
-import 'package:intl/intl.dart'; // Tambahkan package intl untuk format rupiah
+import 'package:intl/intl.dart';
 
 class CrmStatisticsGrid extends StatelessWidget {
   const CrmStatisticsGrid({super.key});
 
-  // Fungsi untuk mengambil dan menghitung data dari Supabase
-  Future<Map<String, dynamic>> _fetchStatistics() async {
-    final response = await Supabase.instance.client
-        .from('leads') // Ganti dengan nama tabel kamu jika berbeda
-        .select('status, jumlah_pax, potensi_nilai');
-
-    final data = response as List<dynamic>;
-
-    int totalProspek = data.length;
-    int totalPax = 0;
-    double nilaiPipeline = 0;
-    double dealClosed = 0;
-
-    for (var item in data) {
-      // Hitung Total Pax
-      totalPax += (item['jumlah_pax'] as num? ?? 0).toInt();
-
-      final nilai = (item['potensi_nilai'] as num? ?? 0).toDouble();
-      nilaiPipeline += nilai;
-
-      // Hitung Deal Closed jika status 'closed'
-      if (item['status']?.toString().toLowerCase() == 'closed') {
-        dealClosed += nilai;
-      }
+  // Safe parsing untuk angka potensi_nilai (Numeric/Double/String/Null)
+  double _parseToDouble(dynamic value) {
+    if (value == null) return 0.0;
+    if (value is num) return value.toDouble();
+    if (value is String) {
+      String cleanStr = value.replaceAll(RegExp(r'[^0-9.]'), '');
+      return double.tryParse(cleanStr) ?? 0.0;
     }
-
-    return {
-      'totalProspek': totalProspek.toString(),
-      'totalPax': '$totalPax Pax',
-      'nilaiPipeline': _formatRupiah(nilaiPipeline),
-      'dealClosed': _formatRupiah(dealClosed),
-    };
+    return 0.0;
   }
 
-  // Helper untuk format angka ke Rupiah ringkas (Juta / Miliar)
+  // Safe parsing untuk jumlah_pax (Int/String/Null)
+  int _parseToInt(dynamic value) {
+    if (value == null) return 0;
+    if (value is num) return value.toInt();
+    if (value is String) {
+      String cleanStr = value.replaceAll(RegExp(r'[^0-9]'), '');
+      return int.tryParse(cleanStr) ?? 0;
+    }
+    return 0;
+  }
+
+  // Fetch data dari Supabase dengan error handling ketat
+  Future<Map<String, dynamic>> _fetchStatistics() async {
+    try {
+      final response = await Supabase.instance.client
+          .from('leads')
+          .select('status, jumlah_pax, potensi_nilai');
+
+      final data = response as List<dynamic>;
+
+      int totalProspek = data.length;
+      int totalPax = 0;
+      double nilaiPipeline = 0;
+      double dealClosed = 0;
+
+      for (var item in data) {
+        int pax = _parseToInt(item['jumlah_pax']);
+        double nilai = _parseToDouble(item['potensi_nilai']);
+
+        totalPax += pax;
+        nilaiPipeline += nilai;
+
+        // Pengecekan status (bebas dari masalah huruf besar/kecil)
+        String statusStr = (item['status'] ?? '').toString().toLowerCase().trim();
+        if (statusStr == 'closed' || statusStr == 'won' || statusStr == 'prospek layak') {
+          dealClosed += nilai;
+        }
+      }
+
+      return {
+        'totalProspek': totalProspek.toString(),
+        'totalPax': '$totalPax Pax',
+        'nilaiPipeline': _formatRupiah(nilaiPipeline),
+        'dealClosed': _formatRupiah(dealClosed),
+      };
+    } catch (e) {
+      debugPrint('Error fetch statistics Supabase: $e');
+      return {
+        'totalProspek': '0',
+        'totalPax': '0 Pax',
+        'nilaiPipeline': 'Rp 0',
+        'dealClosed': 'Rp 0',
+      };
+    }
+  }
+
+  // Helper format Rupiah (Ribuan, Juta, Miliar, Triliun)
   String _formatRupiah(double value) {
-    if (value >= 1000000000) {
+    if (value >= 1000000000000) {
+      return 'Rp ${(value / 1000000000000).toStringAsFixed(2)} Triliun';
+    } else if (value >= 1000000000) {
       return 'Rp ${(value / 1000000000).toStringAsFixed(2)} Miliar';
     } else if (value >= 1000000) {
       return 'Rp ${(value / 1000000).toStringAsFixed(1)} Juta';
     } else {
-      return NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0).format(value);
+      return NumberFormat.currency(
+        locale: 'id_ID',
+        symbol: 'Rp ',
+        decimalDigits: 0,
+      ).format(value);
     }
   }
 
@@ -57,11 +96,10 @@ class CrmStatisticsGrid extends StatelessWidget {
       future: _fetchStatistics(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
-        }
-
-        if (snapshot.hasError) {
-          return const Center(child: Text('Gagal memuat statistik', style: TextStyle(color: Colors.red)));
+          return const Padding(
+            padding: EdgeInsets.symmetric(vertical: 20),
+            child: Center(child: CircularProgressIndicator()),
+          );
         }
 
         final stats = snapshot.data ?? {
