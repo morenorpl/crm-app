@@ -172,7 +172,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       size: 20,
                     ),
                     filled: true,
-                    fillColor: const Color(0xFF4C3F69).withOpacity(0.5),
+                    fillColor: const Color(0xFF4C3F69).withValues(alpha: 0.5),
                     contentPadding: const EdgeInsets.symmetric(vertical: 16),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(14),
@@ -229,7 +229,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       },
                     ),
                     filled: true,
-                    fillColor: const Color(0xFF4C3F69).withOpacity(0.5),
+                    fillColor: const Color(0xFF4C3F69).withValues(alpha: 0.5),
                     contentPadding: const EdgeInsets.symmetric(vertical: 16),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(14),

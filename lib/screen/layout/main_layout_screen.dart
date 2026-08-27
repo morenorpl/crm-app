@@ -6,21 +6,30 @@ import 'package:crm_app/screen/CRM/kanban/kanban_screen.dart';
 import 'package:crm_app/screen/profile/profile_screen.dart';
 import 'package:crm_app/constants/app_colors.dart';
 import 'package:crm_app/widgets/header_bar.dart';
+import 'package:crm_app/screen/CRM/jadwal_screen.dart';
 
 class MainLayoutScreen extends StatefulWidget {
-  const MainLayoutScreen({super.key});
+  final int initialIndex;
+  final DateTime? initialScheduleDate;
+
+  const MainLayoutScreen({
+    super.key,
+    this.initialIndex = 0,
+    this.initialScheduleDate,
+  });
 
   @override
   State<MainLayoutScreen> createState() => _MainLayoutScreenState();
 }
 
 class _MainLayoutScreenState extends State<MainLayoutScreen> {
-  int _currentIndex = 0;
+  late int _currentIndex = 0;
   String _avatarLetter = 'K'; // Default jika data belum dimuat
 
   @override
   void initState() {
     super.initState();
+    _currentIndex = widget.initialIndex;
     _loadUserInitial(); // Ambil inisial saat layout pertama kali dibuka
   }
 
@@ -61,7 +70,10 @@ class _MainLayoutScreenState extends State<MainLayoutScreen> {
     final List<Widget> pages = [
       DashboardScreen(avatarLetter: _avatarLetter),
       CrmBoardScreen(avatarLetter: _avatarLetter),
-      ScheduleScreen(avatarLetter: _avatarLetter),
+      ScheduleScreen(
+        avatarLetter: _avatarLetter,
+        initialDate: widget.initialScheduleDate,
+      ),
       ProfileScreen(avatarLetter: _avatarLetter),
     ];
 
@@ -92,9 +104,12 @@ class _MainLayoutScreenState extends State<MainLayoutScreen> {
       width: 255,
       height: 49,
       decoration: BoxDecoration(
-        color: const Color(0xFF5B4C6D).withOpacity(0.95),
+        color: const Color(0xFF5B4C6D).withValues(alpha: 0.95),
         borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: Colors.white.withOpacity(0.18), width: 0.8),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.18),
+          width: 0.8,
+        ),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,

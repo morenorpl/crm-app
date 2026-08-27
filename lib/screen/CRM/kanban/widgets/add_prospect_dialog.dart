@@ -16,7 +16,7 @@ class AddProspectDialog {
     String selectedStatus = 'baru';
     String selectedSumberLeads = 'Manual Input';
     String selectedTipeLead = 'Jamaah (Individu)';
-    
+
     // Variable untuk menyimpan tanggal Follow Up yang dipilih
     DateTime? selectedFollowUpDate;
 
@@ -203,7 +203,9 @@ class AddProspectDialog {
                                   },
                                   onChanged: (val) {
                                     if (val != null) {
-                                      setDialogState(() => selectedStatus = val);
+                                      setDialogState(
+                                        () => selectedStatus = val,
+                                      );
                                     }
                                   },
                                 ),
@@ -304,7 +306,8 @@ class AddProspectDialog {
                     // Format tanggal yyyy-MM-dd agar kompatibel dengan kolom DATE/TIMESTAMP di Supabase
                     String? formattedDate;
                     if (selectedFollowUpDate != null) {
-                      formattedDate = "${selectedFollowUpDate!.year}-${selectedFollowUpDate!.month.toString().padLeft(2, '0')}-${selectedFollowUpDate!.day.toString().padLeft(2, '0')}";
+                      formattedDate =
+                          "${selectedFollowUpDate!.year}-${selectedFollowUpDate!.month.toString().padLeft(2, '0')}-${selectedFollowUpDate!.day.toString().padLeft(2, '0')}";
                     }
 
                     // Panggil controller untuk menyimpan data ke Supabase
@@ -322,7 +325,8 @@ class AddProspectDialog {
                           double.tryParse(nilaiDealController.text.trim()) ??
                           0.0,
                       catatan: notesController.text.trim(),
-                      jadwalFollowUp: formattedDate, // 👈 Passing string YYYY-MM-DD
+                      jadwalFollowUp:
+                          formattedDate, // 👈 Passing string YYYY-MM-DD
                     );
 
                     if (!context.mounted) return;
@@ -399,9 +403,9 @@ class AddProspectDialog {
         height: 38,
         padding: const EdgeInsets.symmetric(horizontal: 10),
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.06),
+          color: Colors.white.withValues(alpha: 0.06),
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: Colors.white.withOpacity(0.15)),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.15)),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -453,18 +457,18 @@ class AddProspectDialog {
         hintText: hint,
         hintStyle: const TextStyle(color: Colors.white38, fontSize: 11),
         filled: true,
-        fillColor: Colors.white.withOpacity(0.06),
+        fillColor: Colors.white.withValues(alpha: 0.06),
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 10,
           vertical: 10,
         ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide(color: Colors.white.withOpacity(0.15)),
+          borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.15)),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide(color: Colors.white.withOpacity(0.15)),
+          borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.15)),
         ),
       ),
     );
@@ -483,9 +487,9 @@ class AddProspectDialog {
       height: 38,
       padding: const EdgeInsets.symmetric(horizontal: 10),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.06),
+        color: Colors.white.withValues(alpha: 0.06),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.white.withOpacity(0.15)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.15)),
       ),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<String>(

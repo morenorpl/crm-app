@@ -51,7 +51,10 @@ class _CrmBoardScreenState extends State<CrmBoardScreen> {
             return SingleChildScrollView(
               physics: const BouncingScrollPhysics(),
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -98,7 +101,7 @@ class _CrmBoardScreenState extends State<CrmBoardScreen> {
   Widget _buildFilteredProspects() {
     // 🔍 MENGGUNAKAN filteredLeads BUKAN leads
     final allFilteredLeads = _crmController.filteredLeads;
-    
+
     // Memfilter data yang sudah dicari berdasarkan tab kategori aktif
     final filteredLeads = allFilteredLeads
         .where((lead) => lead.status == _activeStatus)
@@ -272,9 +275,9 @@ class _EditProspectDialogState extends State<_EditProspectDialog> {
         _buildLabel(label),
         Container(
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.05),
+            color: Colors.white.withValues(alpha: 0.05),
             borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: Colors.white.withOpacity(0.1)),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
           ),
           child: TextFormField(
             controller: controller,
@@ -284,7 +287,7 @@ class _EditProspectDialogState extends State<_EditProspectDialog> {
             decoration: InputDecoration(
               hintText: hint,
               hintStyle: TextStyle(
-                color: Colors.white.withOpacity(0.2),
+                color: Colors.white.withValues(alpha: 0.2),
                 fontSize: 13,
               ),
               border: InputBorder.none,
@@ -314,9 +317,9 @@ class _EditProspectDialogState extends State<_EditProspectDialog> {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12),
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.05),
+            color: Colors.white.withValues(alpha: 0.05),
             borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: Colors.white.withOpacity(0.1)),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
           ),
           child: DropdownButtonHideUnderline(
             child: DropdownButton<String>(

@@ -15,12 +15,11 @@ class _SplashScreenState extends State<SplashScreen>
   void initState() {
     super.initState();
 
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 3),
-    )..addListener(() {
-        setState(() {});
-      });
+    _controller =
+        AnimationController(vsync: this, duration: const Duration(seconds: 3))
+          ..addListener(() {
+            setState(() {});
+          });
 
     _controller.forward().then((_) {
       if (mounted) {
@@ -56,11 +55,13 @@ class _SplashScreenState extends State<SplashScreen>
                 borderRadius: BorderRadius.circular(10),
                 child: SizedBox(
                   width: 180, // Ukuran lebar garis
-                  height: 10,   // Ketebalan garis
+                  height: 10, // Ketebalan garis
                   child: LinearProgressIndicator(
                     value: _controller.value, // Nilai berjalan (0.0 sampai 1.0)
-                    valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
-                    backgroundColor: Colors.black.withOpacity(0.2),
+                    valueColor: const AlwaysStoppedAnimation<Color>(
+                      Colors.white,
+                    ),
+                    backgroundColor: Colors.black.withValues(alpha: 0.2),
                   ),
                 ),
               ),

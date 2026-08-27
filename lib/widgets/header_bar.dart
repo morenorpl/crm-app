@@ -80,9 +80,9 @@ class _HeaderBarState extends State<HeaderBar> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.06),
+        color: Colors.white.withValues(alpha: 0.06),
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: Colors.white.withOpacity(0.12)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
       ),
       child: Row(
         children: [
@@ -128,7 +128,7 @@ class _HeaderBarState extends State<HeaderBar> {
             constraints: const BoxConstraints(minWidth: 160),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(10),
-              side: BorderSide(color: Colors.white.withOpacity(0.12)),
+              side: BorderSide(color: Colors.white.withValues(alpha: 0.12)),
             ),
             onSelected: (value) async {
               if (value == 'logout') {
@@ -155,7 +155,7 @@ class _HeaderBarState extends State<HeaderBar> {
                   width: double.infinity,
                   padding: const EdgeInsets.symmetric(vertical: 10),
                   decoration: BoxDecoration(
-                    color: Colors.redAccent.withOpacity(0.15),
+                    color: Colors.redAccent.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(8),
                     border: Border.all(color: Colors.redAccent, width: 1.5),
                   ),

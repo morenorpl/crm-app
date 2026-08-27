@@ -50,8 +50,13 @@ class CrmStatisticsGrid extends StatelessWidget {
         nilaiPipeline += nilai;
 
         // Pengecekan status (bebas dari masalah huruf besar/kecil)
-        String statusStr = (item['status'] ?? '').toString().toLowerCase().trim();
-        if (statusStr == 'closed' || statusStr == 'won' || statusStr == 'prospek layak') {
+        String statusStr = (item['status'] ?? '')
+            .toString()
+            .toLowerCase()
+            .trim();
+        if (statusStr == 'closed' ||
+            statusStr == 'won' ||
+            statusStr == 'prospek layak') {
           dealClosed += nilai;
         }
       }
@@ -102,12 +107,14 @@ class CrmStatisticsGrid extends StatelessWidget {
           );
         }
 
-        final stats = snapshot.data ?? {
-          'totalProspek': '0',
-          'totalPax': '0 Pax',
-          'nilaiPipeline': 'Rp 0',
-          'dealClosed': 'Rp 0',
-        };
+        final stats =
+            snapshot.data ??
+            {
+              'totalProspek': '0',
+              'totalPax': '0 Pax',
+              'nilaiPipeline': 'Rp 0',
+              'dealClosed': 'Rp 0',
+            };
 
         return GridView.count(
           crossAxisCount: 2,
@@ -160,7 +167,7 @@ class CrmStatisticsGrid extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(5),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.05),
+              color: Colors.white.withValues(alpha: 0.05),
               borderRadius: BorderRadius.circular(6),
               border: Border.all(color: iconColor, width: 1),
             ),

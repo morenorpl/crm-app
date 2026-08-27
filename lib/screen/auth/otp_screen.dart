@@ -189,7 +189,7 @@ class _VerifyOtpPageState extends State<VerifyOtpPage> {
                     vertical: 14,
                   ),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF61547D).withOpacity(0.5),
+                    color: const Color(0xFF61547D).withValues(alpha: 0.5),
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(color: const Color(0xFF7B6C9B)),
                   ),
@@ -266,7 +266,9 @@ class _VerifyOtpPageState extends State<VerifyOtpPage> {
                         decoration: InputDecoration(
                           counterText: '',
                           filled: true,
-                          fillColor: const Color(0xFF61547D).withOpacity(0.5),
+                          fillColor: const Color(
+                            0xFF61547D,
+                          ).withValues(alpha: 0.5),
                           contentPadding: EdgeInsets.zero,
                           enabledBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(10),

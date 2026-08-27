@@ -189,7 +189,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       color: Color(0xFF948AAB),
                     ),
                     filled: true,
-                    fillColor: const Color(0xFF61547D).withOpacity(0.5),
+                    fillColor: const Color(0xFF61547D).withValues(alpha: 0.5),
                     contentPadding: const EdgeInsets.symmetric(vertical: 16),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
@@ -229,7 +229,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       color: Color(0xFF948AAB),
                     ),
                     filled: true,
-                    fillColor: const Color(0xFF61547D).withOpacity(0.5),
+                    fillColor: const Color(0xFF61547D).withValues(alpha: 0.5),
                     contentPadding: const EdgeInsets.symmetric(vertical: 16),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
@@ -269,7 +269,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       color: Color(0xFF948AAB),
                     ),
                     filled: true,
-                    fillColor: const Color(0xFF61547D).withOpacity(0.5),
+                    fillColor: const Color(0xFF61547D).withValues(alpha: 0.5),
                     contentPadding: const EdgeInsets.symmetric(vertical: 16),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),

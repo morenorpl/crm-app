@@ -43,13 +43,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
         if (response != null) {
           // Mengambil field persis sesuai gambar tabel Supabase
           final String fetchedName = (response['name'] ?? '').toString();
-          final String fetchedEmail = (response['email'] ?? authUser.email ?? '-').toString();
+          final String fetchedEmail =
+              (response['email'] ?? authUser.email ?? '-').toString();
           final String fetchedPhone = (response['no_tlp'] ?? '-').toString();
 
           setState(() {
-            _username = fetchedName.trim().isNotEmpty ? fetchedName : (authUser.email?.split('@').first ?? 'User');
+            _username = fetchedName.trim().isNotEmpty
+                ? fetchedName
+                : (authUser.email?.split('@').first ?? 'User');
             _email = fetchedEmail.trim().isNotEmpty ? fetchedEmail : '-';
-            _phone = (fetchedPhone.trim().isNotEmpty && fetchedPhone != 'null') ? fetchedPhone : '-';
+            _phone = (fetchedPhone.trim().isNotEmpty && fetchedPhone != 'null')
+                ? fetchedPhone
+                : '-';
             _isLoading = false;
           });
           return;
@@ -60,7 +65,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
       if (authUser != null) {
         setState(() {
           _email = authUser.email ?? '-';
-          _username = authUser.email?.contains('@') == true ? authUser.email!.split('@').first : 'User';
+          _username = authUser.email?.contains('@') == true
+              ? authUser.email!.split('@').first
+              : 'User';
           _phone = '-';
           _isLoading = false;
         });
@@ -75,7 +82,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final String initialLetter = _username.isNotEmpty ? _username[0].toUpperCase() : 'U';
+    final String initialLetter = _username.isNotEmpty
+        ? _username[0].toUpperCase()
+        : 'U';
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -104,11 +113,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         ),
                       ),
                       const SizedBox(height: 63),
-                      
+
                       // Menampilkan Nomor Telepon (kolom no_tlp)
                       _buildContact(icon: Icons.phone, text: _phone),
                       const SizedBox(height: 10),
-                      
+
                       // Menampilkan Email (kolom email)
                       _buildContact(
                         icon: Icons.email_outlined,
@@ -129,8 +138,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
       height: 200,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: Colors.white.withOpacity(0.08),
-        border: Border.all(color: Colors.white.withOpacity(0.20), width: 1),
+        color: Colors.white.withValues(alpha: 0.08),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.20),
+          width: 1,
+        ),
       ),
       child: Center(
         child: Text(
@@ -155,7 +167,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       height: 46,
       padding: const EdgeInsets.symmetric(horizontal: 7),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.12),
+        color: Colors.white.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(13),
         border: Border.all(color: AppColors.border, width: 0.8),
       ),
@@ -166,7 +178,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             height: 34,
             alignment: Alignment.center,
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.75),
+              color: Colors.white.withValues(alpha: 0.75),
               borderRadius: BorderRadius.circular(11),
             ),
             child: google
