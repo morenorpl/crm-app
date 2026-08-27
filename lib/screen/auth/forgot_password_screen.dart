@@ -250,7 +250,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                 const SizedBox(height: 4),
                 const Center(
                   child: Text(
-                    'masukkan 4 Angka yang\ntelah di kirim oleh gmail.',
+                    'Anda akan menerima kode 6 digit di email Anda.',
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       color: Color(0xFFA197B4),

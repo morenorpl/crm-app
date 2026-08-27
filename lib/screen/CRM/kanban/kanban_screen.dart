@@ -44,62 +44,67 @@ class _CrmBoardScreenState extends State<CrmBoardScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
-        child: SingleChildScrollView(
-          physics: const BouncingScrollPhysics(),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                HeaderBar(
-                  title: 'Dashboard CRM',
-                  subtitle: 'Selamat datang kembali!',
-                  avatarText: widget.avatarLetter,
+        // ListenableBuilder mendengarkan notifyListeners() dari _crmController
+        child: ListenableBuilder(
+          listenable: _crmController,
+          builder: (context, child) {
+            return SingleChildScrollView(
+              physics: const BouncingScrollPhysics(),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    HeaderBar(
+                      title: 'Dashboard CRM',
+                      subtitle: 'Selamat datang kembali!',
+                      avatarText: widget.avatarLetter,
+                    ),
+                    const SizedBox(height: 12),
+                    const CrmBoardInfo(),
+                    const SizedBox(height: 12),
+                    CrmSearchPanel(crmController: _crmController),
+                    const SizedBox(height: 14),
+                    const CrmStatisticsGrid(),
+                    const SizedBox(height: 14),
+
+                    // 1. Pass the state and callback to the Tabs
+                    CrmKanbanTabs(
+                      selectedStatus: _activeStatus,
+                      tabData: _tabCategories,
+                      onTabChanged: (newStatus) {
+                        setState(() {
+                          _activeStatus = newStatus;
+                        });
+                      },
+                    ),
+
+                    const SizedBox(height: 14),
+
+                    // 2. Filter and display the lists using filteredLeads
+                    _buildFilteredProspects(),
+
+                    const SizedBox(height: 80),
+                  ],
                 ),
-                const SizedBox(height: 12),
-                const CrmBoardInfo(),
-                const SizedBox(height: 12),
-                CrmSearchPanel(crmController: _crmController),
-                const SizedBox(height: 14),
-                const CrmStatisticsGrid(),
-                const SizedBox(height: 14),
-
-                // 1. Pass the state and callback to the Tabs
-                CrmKanbanTabs(
-                  selectedStatus: _activeStatus,
-                  tabData: _tabCategories,
-                  onTabChanged: (newStatus) {
-                    setState(() {
-                      _activeStatus = newStatus;
-                    });
-                  },
-                ),
-
-                const SizedBox(height: 14),
-
-                // 2. Filter and display the lists.
-                // Note: Wrap this part in whatever state observer you use for _crmController
-                // (e.g., Obx if using GetX, Consumer if using Provider, or FutureBuilder)
-                _buildFilteredProspects(),
-
-                const SizedBox(height: 80),
-              ],
-            ),
-          ),
+              ),
+            );
+          },
         ),
       ),
     );
   }
 
   Widget _buildFilteredProspects() {
-    final allLeads =
-        _crmController.leads; // Adjust if your controller variable is different
-    final filteredLeads = allLeads
+    // 🔍 MENGGUNAKAN filteredLeads BUKAN leads
+    final allFilteredLeads = _crmController.filteredLeads;
+    
+    // Memfilter data yang sudah dicari berdasarkan tab kategori aktif
+    final filteredLeads = allFilteredLeads
         .where((lead) => lead.status == _activeStatus)
         .toList();
 
     if (filteredLeads.isEmpty) {
-      // Find the human-readable UI name for the active tab (e.g., "Prospek Layak")
       String activeTabName = _tabCategories.entries
           .firstWhere(
             (entry) => entry.value == _activeStatus,
@@ -107,11 +112,16 @@ class _CrmBoardScreenState extends State<CrmBoardScreen> {
           )
           .key;
 
+      final isSearching = _crmController.searchQuery.isNotEmpty;
+
       return Center(
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 40.0),
           child: Text(
-            'belum ada prospek di kategori "$activeTabName"',
+            isSearching
+                ? 'Tidak ditemukan prospek dengan nama "${_crmController.searchQuery}" di kategori "$activeTabName"'
+                : 'belum ada prospek di kategori "$activeTabName"',
+            textAlign: TextAlign.center,
             style: const TextStyle(
               color: AppColors.textMuted,
               fontSize: 14,
@@ -128,20 +138,15 @@ class _CrmBoardScreenState extends State<CrmBoardScreen> {
         return CrmProspectCard(
           leadData: leadData,
           onEdit: () {
-            // Trigger the edit popup instead of just printing a log
             _showEditProspectDialog(context, leadData);
           },
           onDelete: () async {
             await _crmController.deleteLead(leadData.id);
-            await _crmController.fetchLeads();
-            setState(() {});
           },
           onStatusChange: (newStatus) async {
             if (leadData.status == newStatus) return;
 
             await _crmController.updateLeadStatus(leadData.id, newStatus);
-            await _crmController.fetchLeads();
-            setState(() {});
           },
         );
       }).toList(),
@@ -155,12 +160,7 @@ class _CrmBoardScreenState extends State<CrmBoardScreen> {
         return _EditProspectDialog(
           lead: lead,
           onSave: (updatedData) async {
-            // 1. Call the new controller method to update Supabase
             await _crmController.updateLead(lead.id, updatedData);
-
-            // 2. Re-fetch and update UI
-            await _crmController.fetchLeads();
-            setState(() {});
           },
         );
       },
@@ -203,7 +203,6 @@ class _EditProspectDialogState extends State<_EditProspectDialog> {
       text: widget.lead.jumlahPax?.toString() ?? '',
     );
 
-    // Format numeric value nicely for the input if needed, or just plain string
     double? val = widget.lead.potensiNilai;
     String initialPotensi = val != null ? val.toInt().toString() : '';
     _potensiNilaiCtrl = TextEditingController(text: initialPotensi);
@@ -228,7 +227,6 @@ class _EditProspectDialogState extends State<_EditProspectDialog> {
   }
 
   void _handleSave() {
-    // Collect all data into a map matching your DB columns
     final updates = {
       'nama': _namaCtrl.text,
       'instansi': _instansiCtrl.text.isNotEmpty ? _instansiCtrl.text : null,
@@ -307,7 +305,6 @@ class _EditProspectDialogState extends State<_EditProspectDialog> {
     List<String> items,
     Function(String?) onChanged,
   ) {
-    // Ensure current value exists in items to avoid dropdown errors
     final safeValue = items.contains(value) ? value : items.first;
 
     return Column(
@@ -345,7 +342,6 @@ class _EditProspectDialogState extends State<_EditProspectDialog> {
 
   @override
   Widget build(BuildContext context) {
-    // Use MediaQuery to handle keyboard popups smoothly
     final bottomInset = MediaQuery.of(context).viewInsets.bottom;
 
     return Dialog(
@@ -355,7 +351,7 @@ class _EditProspectDialogState extends State<_EditProspectDialog> {
         width: double.infinity,
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: AppColors.searchPanelBg, // The dark purple background
+          color: AppColors.searchPanelBg,
           borderRadius: BorderRadius.circular(16),
         ),
         child: SingleChildScrollView(
@@ -364,7 +360,6 @@ class _EditProspectDialogState extends State<_EditProspectDialog> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Header
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -388,7 +383,6 @@ class _EditProspectDialogState extends State<_EditProspectDialog> {
               ),
               const SizedBox(height: 20),
 
-              // Full Width Name
               _buildTextField(
                 'NAMA KONTAK (PROSPEK) *',
                 _namaCtrl,
@@ -396,7 +390,6 @@ class _EditProspectDialogState extends State<_EditProspectDialog> {
               ),
               const SizedBox(height: 14),
 
-              // Row 1: Instansi & No HP
               Row(
                 children: [
                   Expanded(
@@ -419,7 +412,6 @@ class _EditProspectDialogState extends State<_EditProspectDialog> {
               ),
               const SizedBox(height: 14),
 
-              // Row 2: Email & Kota
               Row(
                 children: [
                   Expanded(
@@ -442,7 +434,6 @@ class _EditProspectDialogState extends State<_EditProspectDialog> {
               ),
               const SizedBox(height: 14),
 
-              // Row 3: Sumber Leads & Tipe Lead (Dropdowns)
               Row(
                 children: [
                   Expanded(
@@ -466,7 +457,6 @@ class _EditProspectDialogState extends State<_EditProspectDialog> {
               ),
               const SizedBox(height: 14),
 
-              // Row 4: Jumlah Pax & Potensi Nilai
               Row(
                 children: [
                   Expanded(
@@ -490,7 +480,6 @@ class _EditProspectDialogState extends State<_EditProspectDialog> {
               ),
               const SizedBox(height: 14),
 
-              // Textarea
               _buildTextField(
                 'CATATAN TAMBAHAN & FOLLOW UP',
                 _catatanCtrl,
@@ -499,7 +488,6 @@ class _EditProspectDialogState extends State<_EditProspectDialog> {
               ),
               const SizedBox(height: 24),
 
-              // Actions
               Row(
                 children: [
                   Expanded(

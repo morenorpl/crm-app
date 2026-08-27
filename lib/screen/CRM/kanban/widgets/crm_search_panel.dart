@@ -8,6 +8,22 @@ class CrmSearchPanel extends StatelessWidget {
 
   const CrmSearchPanel({super.key, required this.crmController});
 
+  // Opsi pilihan dropdown sumber leads
+  final List<String> _sourceOptions = const [
+    'Semua Sumber',
+    'Google Maps',
+    'Social Media',
+    'News Leads',
+  ];
+
+  // Opsi pilihan dropdown tipe lead
+  final List<String> _typeOptions = const [
+    'Semua Tipe (Output)',
+    'Jamaah (Individu)',
+    'Mitra / Agen',
+    'B2B (Grup/Pengajian)',
+  ];
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -19,16 +35,25 @@ class CrmSearchPanel extends StatelessWidget {
       ),
       child: Column(
         children: [
-          _inputField(Icons.search, 'Cari prospek (nama, KBIH, catatan)...'),
+          // Input Search Aktif
+          _searchInputField(
+            icon: Icons.search,
+            hintText: 'Cari prospek (nama, KBIH, catatan)...',
+            onChanged: (value) {
+              crmController.onSearchQueryChanged(value);
+            },
+          ),
           const SizedBox(height: 8),
           Row(
             children: [
+              // 🔍 Dropdown Filter Sumber
               Expanded(
-                child: _inputField(Icons.filter_alt_outlined, 'Semua Sumber'),
+                child: _sourceDropdownField(),
               ),
               const SizedBox(width: 8),
+              // 👥 Dropdown Filter Tipe Lead
               Expanded(
-                child: _inputField(Icons.people_outline, 'Semua Tipe (Output)'),
+                child: _typeDropdownField(),
               ),
             ],
           ),
@@ -95,7 +120,13 @@ class CrmSearchPanel extends StatelessWidget {
     );
   }
 
-  Widget _inputField(IconData icon, String hintText) {
+  // Widget Dropdown Filter Sumber
+  Widget _sourceDropdownField() {
+    final String currentValue =
+        _sourceOptions.contains(crmController.selectedSource)
+            ? crmController.selectedSource
+            : 'Semua Sumber';
+
     return Container(
       height: 28,
       padding: const EdgeInsets.symmetric(horizontal: 8),
@@ -104,15 +135,146 @@ class CrmSearchPanel extends StatelessWidget {
         borderRadius: BorderRadius.circular(6),
         border: Border.all(color: Colors.white.withOpacity(0.18)),
       ),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<String>(
+          value: currentValue,
+          isExpanded: true,
+          dropdownColor: AppColors.searchPanelBg,
+          icon: const Icon(
+            Icons.keyboard_arrow_down,
+            size: 14,
+            color: AppColors.textLight,
+          ),
+          style: const TextStyle(color: AppColors.white, fontSize: 9.5),
+          items: _sourceOptions.map((String value) {
+            return DropdownMenuItem<String>(
+              value: value,
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.filter_alt_outlined,
+                    size: 12,
+                    color: AppColors.textLight,
+                  ),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      value,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: AppColors.white,
+                        fontSize: 9.5,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }).toList(),
+          onChanged: (newValue) {
+            if (newValue != null) {
+              crmController.onSourceFilterChanged(newValue);
+            }
+          },
+        ),
+      ),
+    );
+  }
+
+  // Widget Dropdown Filter Tipe Lead
+  Widget _typeDropdownField() {
+    final String currentValue =
+        _typeOptions.contains(crmController.selectedType)
+            ? crmController.selectedType
+            : 'Semua Tipe (Output)';
+
+    return Container(
+      height: 28,
+      padding: const EdgeInsets.symmetric(horizontal: 8),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: Colors.white.withOpacity(0.18)),
+      ),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<String>(
+          value: currentValue,
+          isExpanded: true,
+          dropdownColor: AppColors.searchPanelBg,
+          icon: const Icon(
+            Icons.keyboard_arrow_down,
+            size: 14,
+            color: AppColors.textLight,
+          ),
+          style: const TextStyle(color: AppColors.white, fontSize: 9.5),
+          items: _typeOptions.map((String value) {
+            return DropdownMenuItem<String>(
+              value: value,
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.people_outline,
+                    size: 12,
+                    color: AppColors.textLight,
+                  ),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      value,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: AppColors.white,
+                        fontSize: 9.5,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }).toList(),
+          onChanged: (newValue) {
+            if (newValue != null) {
+              crmController.onTypeFilterChanged(newValue);
+            }
+          },
+        ),
+      ),
+    );
+  }
+
+  // Widget TextField untuk Pencarian
+  Widget _searchInputField({
+    required IconData icon,
+    required String hintText,
+    required ValueChanged<String> onChanged,
+  }) {
+    return Container(
+      height: 32,
+      padding: const EdgeInsets.symmetric(horizontal: 8),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: Colors.white.withOpacity(0.18)),
+      ),
       child: Row(
         children: [
-          Icon(icon, size: 12, color: AppColors.textLight),
+          Icon(icon, size: 14, color: AppColors.textLight),
           const SizedBox(width: 6),
           Expanded(
-            child: Text(
-              hintText,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(color: AppColors.textMuted, fontSize: 8.5),
+            child: TextField(
+              onChanged: onChanged,
+              style: const TextStyle(color: AppColors.white, fontSize: 11),
+              cursorColor: AppColors.white,
+              decoration: InputDecoration(
+                hintText: hintText,
+                hintStyle: const TextStyle(
+                  color: AppColors.textMuted,
+                  fontSize: 9.5,
+                ),
+                border: InputBorder.none,
+                isDense: true,
+                contentPadding: const EdgeInsets.symmetric(vertical: 8),
+              ),
             ),
           ),
         ],
