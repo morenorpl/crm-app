@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:crm_app/constants/app_colors.dart';
 import 'package:crm_app/widgets/header_bar.dart';
 
@@ -15,7 +16,8 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> {
   String _username = 'User';
   String _email = 'email@example.com';
-  String _phone = '+62 81345678910';
+  String _phone = '-';
+  bool _isLoading = true;
 
   @override
   void initState() {
@@ -24,12 +26,48 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future<void> _loadUserData() async {
-    final prefs = await SharedPreferences.getInstance();
-    setState(() {
-      _username = prefs.getString('username') ?? 'User';
-      _email = prefs.getString('email') ?? 'email@example.com';
-      _phone = prefs.getString('phone') ?? '+62 81345678910';
-    });
+    try {
+      // 1. Ambil data user aktif dari Supabase Auth
+      final user = Supabase.instance.client.auth.currentUser;
+      final prefs = await SharedPreferences.getInstance();
+
+      if (user != null) {
+        // Ambil email dari Supabase Auth
+        String emailVal = user.email ?? prefs.getString('email') ?? 'email@example.com';
+
+        // Ambil phone dari Supabase Auth / Metadata / SharedPrefs
+        String phoneVal = user.phone ?? 
+            user.userMetadata?['phone'] ?? 
+            prefs.getString('phone') ?? 
+            '-';
+
+        // Ambil nama dari Display Name / User Metadata / Email prefix / SharedPrefs
+        String usernameVal = user.userMetadata?['display_name'] ?? 
+            user.userMetadata?['name'] ?? 
+            prefs.getString('username') ?? 
+            (emailVal.contains('@') ? emailVal.split('@').first : 'User');
+
+        setState(() {
+          _email = emailVal;
+          _phone = phoneVal.isNotEmpty ? phoneVal : '-';
+          _username = usernameVal;
+          _isLoading = false;
+        });
+      } else {
+        // Fallback ke SharedPreferences jika user null
+        setState(() {
+          _username = prefs.getString('username') ?? 'User';
+          _email = prefs.getString('email') ?? 'email@example.com';
+          _phone = prefs.getString('phone') ?? '-';
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      debugPrint('Error loading user profile: $e');
+      setState(() {
+        _isLoading = false;
+      });
+    }
   }
 
   @override
@@ -37,41 +75,43 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
-        child: SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(19, 21, 19, 30),
-            child: Column(
-              children: [
-                HeaderBar(
-                  title: 'Profile - Hi, $_username',
-                  subtitle: 'Siap membuat konten berkah hari ini?',
-                  avatarText: _username.isNotEmpty
-                      ? _username[0].toUpperCase()
-                      : 'U',
-                ),
-                const SizedBox(height: 25),
-                _buildProfilePhoto(),
-                const SizedBox(height: 14),
-                Text(
-                  _username.toUpperCase(),
-                  style: const TextStyle(
-                    color: AppColors.white,
-                    fontSize: 20,
-                    fontWeight: FontWeight.w900,
+        child: _isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : SingleChildScrollView(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(19, 21, 19, 30),
+                  child: Column(
+                    children: [
+                      HeaderBar(
+                        title: 'Profile - Hi, $_username',
+                        subtitle: 'Siap membuat konten berkah hari ini?',
+                        avatarText: _username.isNotEmpty
+                            ? _username[0].toUpperCase()
+                            : 'U',
+                      ),
+                      const SizedBox(height: 25),
+                      _buildProfilePhoto(),
+                      const SizedBox(height: 14),
+                      Text(
+                        _username.toUpperCase(),
+                        style: const TextStyle(
+                          color: AppColors.white,
+                          fontSize: 20,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                      const SizedBox(height: 63),
+                      _buildContact(icon: Icons.phone, text: _phone),
+                      const SizedBox(height: 10),
+                      _buildContact(
+                        icon: Icons.email_outlined,
+                        text: _email,
+                        google: true,
+                      ),
+                    ],
                   ),
                 ),
-                const SizedBox(height: 63),
-                _buildContact(icon: Icons.phone, text: _phone),
-                const SizedBox(height: 10),
-                _buildContact(
-                  icon: Icons.email_outlined,
-                  text: _email,
-                  google: true,
-                ),
-              ],
-            ),
-          ),
-        ),
+              ),
       ),
     );
   }
@@ -85,7 +125,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
         color: Colors.white.withOpacity(0.08),
         border: Border.all(color: Colors.white.withOpacity(0.20), width: 1),
       ),
-      child: const Icon(Icons.person_outline, color: Colors.white24, size: 85),
+      child: Center(
+        child: Text(
+          _username.isNotEmpty ? _username[0].toUpperCase() : 'U',
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 72,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ),
     );
   }
 
