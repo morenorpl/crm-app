@@ -118,6 +118,7 @@ class CrmController extends ChangeNotifier {
     required int jumlahPax,
     required double potensiNilai,
     required String catatan,
+    String? jadwalFollowUp, // 👈 PARAMETER BARU DITAMBAHKAN (Nullable)
   }) async {
     try {
       await _supabase.from('leads').insert({
@@ -133,6 +134,7 @@ class CrmController extends ChangeNotifier {
         'jumlah_pax': jumlahPax,
         'potensi_nilai': potensiNilai,
         'catatan': catatan,
+        'jadwal_follow_up': jadwalFollowUp, // 👈 MAPPING DITAMBAHKAN
         'created_at': DateTime.now().toIso8601String(),
         'updated_at': DateTime.now().toIso8601String(),
       });

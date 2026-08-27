@@ -16,6 +16,9 @@ class AddProspectDialog {
     String selectedStatus = 'baru';
     String selectedSumberLeads = 'Manual Input';
     String selectedTipeLead = 'Jamaah (Individu)';
+    
+    // Variable untuk menyimpan tanggal Follow Up yang dipilih
+    DateTime? selectedFollowUpDate;
 
     showDialog(
       context: context,
@@ -127,7 +130,7 @@ class AddProspectDialog {
                       ),
                       const SizedBox(height: 10),
 
-                      // Dropdown Sumber Leads
+                      // Dropdown Sumber Leads & Tipe Lead
                       Row(
                         children: [
                           Expanded(
@@ -144,17 +147,17 @@ class AddProspectDialog {
                                     'Manual Input',
                                   ],
                                   onChanged: (val) {
-                                    if (val != null)
+                                    if (val != null) {
                                       setDialogState(
                                         () => selectedSumberLeads = val,
                                       );
+                                    }
                                   },
                                 ),
                               ],
                             ),
                           ),
                           const SizedBox(width: 8),
-                          // Dropdown Tipe Lead
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -168,10 +171,11 @@ class AddProspectDialog {
                                     'B2B (Grup/Pengajian)',
                                   ],
                                   onChanged: (val) {
-                                    if (val != null)
+                                    if (val != null) {
                                       setDialogState(
                                         () => selectedTipeLead = val,
                                       );
+                                    }
                                   },
                                 ),
                               ],
@@ -181,19 +185,50 @@ class AddProspectDialog {
                       ),
                       const SizedBox(height: 10),
 
-                      _buildLabel('STATUS TAHAPAN CRM'),
-                      _buildDropdown(
-                        value: selectedStatus,
-                        items: const {
-                          'baru': 'Baru (Prospek Baru)',
-                          'dihubungi': 'Dihubungi',
-                          'prospek': 'Prospek Layak',
-                          'selesai': 'Closed (WON)',
-                        },
-                        onChanged: (val) {
-                          if (val != null)
-                            setDialogState(() => selectedStatus = val);
-                        },
+                      // STATUS CRM & JADWAL FOLLOW UP
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                _buildLabel('STATUS TAHAPAN CRM'),
+                                _buildDropdown(
+                                  value: selectedStatus,
+                                  items: const {
+                                    'baru': 'Baru (Prospek Baru)',
+                                    'dihubungi': 'Dihubungi',
+                                    'prospek': 'Prospek Layak',
+                                    'selesai': 'Closed (WON)',
+                                  },
+                                  onChanged: (val) {
+                                    if (val != null) {
+                                      setDialogState(() => selectedStatus = val);
+                                    }
+                                  },
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                _buildLabel('JADWAL FOLLOW UP'),
+                                _buildDatePickerField(
+                                  context: context,
+                                  selectedDate: selectedFollowUpDate,
+                                  onDateSelected: (date) {
+                                    setDialogState(() {
+                                      selectedFollowUpDate = date;
+                                    });
+                                  },
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
                       ),
                       const SizedBox(height: 10),
 
@@ -266,7 +301,13 @@ class AddProspectDialog {
                       return;
                     }
 
-                    // Panggil controller untuk menyimpan data
+                    // Format tanggal yyyy-MM-dd agar kompatibel dengan kolom DATE/TIMESTAMP di Supabase
+                    String? formattedDate;
+                    if (selectedFollowUpDate != null) {
+                      formattedDate = "${selectedFollowUpDate!.year}-${selectedFollowUpDate!.month.toString().padLeft(2, '0')}-${selectedFollowUpDate!.day.toString().padLeft(2, '0')}";
+                    }
+
+                    // Panggil controller untuk menyimpan data ke Supabase
                     final success = await crmController.addLead(
                       nama: nameController.text.trim(),
                       instansi: instansiController.text.trim(),
@@ -281,6 +322,7 @@ class AddProspectDialog {
                           double.tryParse(nilaiDealController.text.trim()) ??
                           0.0,
                       catatan: notesController.text.trim(),
+                      jadwalFollowUp: formattedDate, // 👈 Passing string YYYY-MM-DD
                     );
 
                     if (!context.mounted) return;
@@ -312,6 +354,73 @@ class AddProspectDialog {
           },
         );
       },
+    );
+  }
+
+  // 📅 Widget khusus untuk Date Picker Field
+  static Widget _buildDatePickerField({
+    required BuildContext context,
+    required DateTime? selectedDate,
+    required Function(DateTime) onDateSelected,
+  }) {
+    String dateText = 'mm/dd/yyyy';
+    if (selectedDate != null) {
+      dateText =
+          "${selectedDate.day.toString().padLeft(2, '0')}/${selectedDate.month.toString().padLeft(2, '0')}/${selectedDate.year}";
+    }
+
+    return GestureDetector(
+      onTap: () async {
+        final picked = await showDatePicker(
+          context: context,
+          initialDate: selectedDate ?? DateTime.now(),
+          firstDate: DateTime(2020),
+          lastDate: DateTime(2035),
+          builder: (context, child) {
+            return Theme(
+              data: Theme.of(context).copyWith(
+                colorScheme: const ColorScheme.dark(
+                  primary: AppColors.greenAccent,
+                  onPrimary: Colors.white,
+                  surface: Color(0xFF2D234A),
+                  onSurface: Colors.white,
+                ),
+                dialogBackgroundColor: const Color(0xFF1E1735),
+              ),
+              child: child!,
+            );
+          },
+        );
+        if (picked != null) {
+          onDateSelected(picked);
+        }
+      },
+      child: Container(
+        height: 38,
+        padding: const EdgeInsets.symmetric(horizontal: 10),
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(0.06),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: Colors.white.withOpacity(0.15)),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              dateText,
+              style: TextStyle(
+                color: selectedDate != null ? Colors.white : Colors.white38,
+                fontSize: 11,
+              ),
+            ),
+            const Icon(
+              Icons.calendar_today_outlined,
+              color: Colors.white54,
+              size: 14,
+            ),
+          ],
+        ),
+      ),
     );
   }
 

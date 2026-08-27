@@ -1,5 +1,6 @@
 import 'package:crm_app/screen/layout/main_layout_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart'; // 👈 Tambahkan Provider
 import 'screen/auth/login_screen.dart';
 import 'screen/auth/register_screen.dart';
 import 'screen/auth/forgot_password_screen.dart';
@@ -13,6 +14,9 @@ import 'screen/splash/splash_screen.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'config/api_config.dart';
 
+// 👈 Import CrmController Anda
+import 'screen/CRM/kanban/controllers/crm_controller.dart'; 
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -22,7 +26,15 @@ Future<void> main() async {
     anonKey: ApiConfig.supabaseAnonKey,
   );
 
-  runApp(const ProjectRetalioneApp());
+  // 👈 Bungkus runApp dengan MultiProvider
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => CrmController()),
+      ],
+      child: const ProjectRetalioneApp(),
+    ),
+  );
 }
 
 class ProjectRetalioneApp extends StatelessWidget {
@@ -37,7 +49,6 @@ class ProjectRetalioneApp extends StatelessWidget {
 
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.indigo),
-
         useMaterial3: true,
       ),
 
