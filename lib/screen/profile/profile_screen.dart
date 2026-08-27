@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:crm_app/constants/app_colors.dart';
 import 'package:crm_app/widgets/header_bar.dart';
@@ -15,63 +14,69 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   String _username = 'User';
-  String _email = 'email@example.com';
+  String _email = '-';
   String _phone = '-';
   bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    _loadUserData();
+    _loadProfileData();
   }
 
-  Future<void> _loadUserData() async {
+  Future<void> _loadProfileData() async {
     try {
-      // 1. Ambil data user aktif dari Supabase Auth
-      final user = Supabase.instance.client.auth.currentUser;
-      final prefs = await SharedPreferences.getInstance();
+      final authUser = Supabase.instance.client.auth.currentUser;
 
-      if (user != null) {
-        // Ambil email dari Supabase Auth
-        String emailVal = user.email ?? prefs.getString('email') ?? 'email@example.com';
+      if (authUser != null) {
+        debugPrint('🔍 [PROFILE] User Auth ID: ${authUser.id}');
 
-        // Ambil phone dari Supabase Auth / Metadata / SharedPrefs
-        String phoneVal = user.phone ?? 
-            user.userMetadata?['phone'] ?? 
-            prefs.getString('phone') ?? 
-            '-';
+        // Query persis ke tabel 'users' berdasarkan kolom 'auth_id' atau 'email'
+        final response = await Supabase.instance.client
+            .from('users')
+            .select()
+            .or('auth_id.eq.${authUser.id},email.eq.${authUser.email}')
+            .maybeSingle();
 
-        // Ambil nama dari Display Name / User Metadata / Email prefix / SharedPrefs
-        String usernameVal = user.userMetadata?['display_name'] ?? 
-            user.userMetadata?['name'] ?? 
-            prefs.getString('username') ?? 
-            (emailVal.contains('@') ? emailVal.split('@').first : 'User');
+        debugPrint('📦 [PROFILE] Data dari tabel users: $response');
 
+        if (response != null) {
+          // Mengambil field persis sesuai gambar tabel Supabase
+          final String fetchedName = (response['name'] ?? '').toString();
+          final String fetchedEmail = (response['email'] ?? authUser.email ?? '-').toString();
+          final String fetchedPhone = (response['no_tlp'] ?? '-').toString();
+
+          setState(() {
+            _username = fetchedName.trim().isNotEmpty ? fetchedName : (authUser.email?.split('@').first ?? 'User');
+            _email = fetchedEmail.trim().isNotEmpty ? fetchedEmail : '-';
+            _phone = (fetchedPhone.trim().isNotEmpty && fetchedPhone != 'null') ? fetchedPhone : '-';
+            _isLoading = false;
+          });
+          return;
+        }
+      }
+
+      // Fallback jika tidak ditemukan data di tabel 'users'
+      if (authUser != null) {
         setState(() {
-          _email = emailVal;
-          _phone = phoneVal.isNotEmpty ? phoneVal : '-';
-          _username = usernameVal;
+          _email = authUser.email ?? '-';
+          _username = authUser.email?.contains('@') == true ? authUser.email!.split('@').first : 'User';
+          _phone = '-';
           _isLoading = false;
         });
       } else {
-        // Fallback ke SharedPreferences jika user null
-        setState(() {
-          _username = prefs.getString('username') ?? 'User';
-          _email = prefs.getString('email') ?? 'email@example.com';
-          _phone = prefs.getString('phone') ?? '-';
-          _isLoading = false;
-        });
+        setState(() => _isLoading = false);
       }
     } catch (e) {
-      debugPrint('Error loading user profile: $e');
-      setState(() {
-        _isLoading = false;
-      });
+      debugPrint('💥 [PROFILE ERROR] Gagal membaca tabel users: $e');
+      setState(() => _isLoading = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final String initialLetter = _username.isNotEmpty ? _username[0].toUpperCase() : 'U';
+
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
@@ -85,12 +90,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       HeaderBar(
                         title: 'Profile - Hi, $_username',
                         subtitle: 'Siap membuat konten berkah hari ini?',
-                        avatarText: _username.isNotEmpty
-                            ? _username[0].toUpperCase()
-                            : 'U',
+                        avatarText: initialLetter,
                       ),
                       const SizedBox(height: 25),
-                      _buildProfilePhoto(),
+                      _buildProfilePhoto(initialLetter),
                       const SizedBox(height: 14),
                       Text(
                         _username.toUpperCase(),
@@ -101,8 +104,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         ),
                       ),
                       const SizedBox(height: 63),
+                      
+                      // Menampilkan Nomor Telepon (kolom no_tlp)
                       _buildContact(icon: Icons.phone, text: _phone),
                       const SizedBox(height: 10),
+                      
+                      // Menampilkan Email (kolom email)
                       _buildContact(
                         icon: Icons.email_outlined,
                         text: _email,
@@ -116,7 +123,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _buildProfilePhoto() {
+  Widget _buildProfilePhoto(String initialLetter) {
     return Container(
       width: 200,
       height: 200,
@@ -127,7 +134,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ),
       child: Center(
         child: Text(
-          _username.isNotEmpty ? _username[0].toUpperCase() : 'U',
+          initialLetter,
           style: const TextStyle(
             color: Colors.white,
             fontSize: 72,
