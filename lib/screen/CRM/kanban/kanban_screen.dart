@@ -193,6 +193,7 @@ class _EditProspectDialogState extends State<_EditProspectDialog> {
 
   String _sumberLeads = 'Manual Input';
   String _tipeLead = 'Umum';
+  DateTime? _selectedJadwal;
 
   @override
   void initState() {
@@ -214,6 +215,9 @@ class _EditProspectDialogState extends State<_EditProspectDialog> {
 
     _sumberLeads = widget.lead.sumberLeads ?? 'Manual Input';
     _tipeLead = widget.lead.tipeLead ?? 'Jamaah (Individu)';
+
+    // 👈 2. Inisialisasi tanggal dari data lead yang ada
+    _selectedJadwal = widget.lead.jadwalFollowUp;
   }
 
   @override
@@ -229,6 +233,15 @@ class _EditProspectDialogState extends State<_EditProspectDialog> {
     super.dispose();
   }
 
+  // 👈 3. Helper untuk format tanggal ke DD/MM/YYYY
+  String _formatDateDDMMYYYY(DateTime? date) {
+    if (date == null) return 'Pilih Tanggal Follow-Up (Opsional)';
+    final d = date.day.toString().padLeft(2, '0');
+    final m = date.month.toString().padLeft(2, '0');
+    final y = date.year.toString();
+    return '$d/$m/$y';
+  }
+
   void _handleSave() {
     final updates = {
       'nama': _namaCtrl.text,
@@ -241,6 +254,8 @@ class _EditProspectDialogState extends State<_EditProspectDialog> {
       'jumlah_pax': int.tryParse(_jumlahPaxCtrl.text),
       'potensi_nilai': double.tryParse(_potensiNilaiCtrl.text),
       'catatan': _catatanCtrl.text.isNotEmpty ? _catatanCtrl.text : null,
+      // 👈 4. Masukkan ke dalam map updates sebagai ISO8601 string atau null
+      'jadwal_follow_up': _selectedJadwal?.toIso8601String(),
     };
 
     widget.onSave(updates);
@@ -477,6 +492,96 @@ class _EditProspectDialogState extends State<_EditProspectDialog> {
                       _potensiNilaiCtrl,
                       hint: '600000000',
                       kbd: TextInputType.number,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 14),
+
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildLabel('JADWAL FOLLOW-UP'),
+                  GestureDetector(
+                    onTap: () async {
+                      final picked = await showDatePicker(
+                        context: context,
+                        initialDate: _selectedJadwal ?? DateTime.now(),
+                        firstDate: DateTime(2020),
+                        lastDate: DateTime(2030),
+                        builder: (context, child) {
+                          return Theme(
+                            data: Theme.of(context).copyWith(
+                              colorScheme: const ColorScheme.dark(
+                                primary: AppColors.greenAccent,
+                                onPrimary: Colors.black,
+                                surface: AppColors.searchPanelBg,
+                                onSurface: Colors.white,
+                              ),
+                              dialogBackgroundColor: AppColors.searchPanelBg,
+                            ),
+                            child: child!,
+                          );
+                        },
+                      );
+
+                      if (picked != null) {
+                        setState(() {
+                          _selectedJadwal = picked;
+                        });
+                      }
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 12,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.05),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: Colors.white.withValues(alpha: 0.1),
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            _formatDateDDMMYYYY(_selectedJadwal),
+                            style: TextStyle(
+                              color: _selectedJadwal == null
+                                  ? Colors.white.withValues(alpha: 0.2)
+                                  : Colors.white,
+                              fontSize: 13,
+                            ),
+                          ),
+                          Row(
+                            children: [
+                              // Tampilkan tombol 'X' jika tanggal sudah dipilih agar bisa dihapus
+                              if (_selectedJadwal != null) ...[
+                                GestureDetector(
+                                  onTap: () {
+                                    setState(() {
+                                      _selectedJadwal = null; // Reset jadi null
+                                    });
+                                  },
+                                  child: const Icon(
+                                    Icons.close,
+                                    color: Colors.redAccent,
+                                    size: 16,
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                              ],
+                              const Icon(
+                                Icons.calendar_month,
+                                color: AppColors.textMuted,
+                                size: 16,
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ],

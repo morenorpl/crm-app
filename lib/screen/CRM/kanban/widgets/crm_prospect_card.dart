@@ -39,6 +39,15 @@ class _CrmProspectCardState extends State<CrmProspectCard> {
     return 'Rp ${val.toStringAsFixed(0)}';
   }
 
+  // Helper to format date into DD/MM/YYYY
+  String _formatDateDDMMYYYY(DateTime? date) {
+    if (date == null) return 'Pilih Tanggal Follow-Up (Opsional)';
+    final d = date.day.toString().padLeft(2, '0');
+    final m = date.month.toString().padLeft(2, '0');
+    final y = date.year.toString();
+    return '$d/$m/$y';
+  }
+
   // Helper to map DB status to Human Readable UI text
   String _getStatusText(String? status) {
     switch (status) {
