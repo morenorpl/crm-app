@@ -6,8 +6,8 @@ import 'package:crm_app/constants/app_colors.dart';
 class HeaderBar extends StatefulWidget {
   final String title;
   final String? subtitle;
-  final String? avatarText;
-  final String assetLogoPath; // Optional path for logo asset
+  final String? avatarText; // Optional manual override
+  final String assetLogoPath;
 
   const HeaderBar({
     super.key,
@@ -22,7 +22,7 @@ class HeaderBar extends StatefulWidget {
 }
 
 class _HeaderBarState extends State<HeaderBar> {
-  String _avatarLetter = 'U'; // Default fallback letter for "User"
+  String _avatarLetter = 'U'; // Default fallback letter
 
   @override
   void initState() {
@@ -31,16 +31,48 @@ class _HeaderBarState extends State<HeaderBar> {
   }
 
   Future<void> _loadUserAvatarData() async {
-    final prefs = await SharedPreferences.getInstance();
-    // Get stored username, fallback to 'User' if it doesn't exist
-    final username = prefs.getString('username') ?? 'User';
-
-    if (username.isNotEmpty) {
+    // 1. If avatarText is passed directly as a parameter, use it
+    if (widget.avatarText != null && widget.avatarText!.isNotEmpty) {
       setState(() {
-        // Take the first letter of the username and make it uppercase
-        _avatarLetter = username[0].toUpperCase();
+        _avatarLetter = widget.avatarText![0].toUpperCase();
       });
+      return;
     }
+
+    try {
+      // 2. Check SharedPreferences across common profile keys
+      final prefs = await SharedPreferences.getInstance();
+      String? foundName =
+          prefs.getString('username') ??
+          prefs.getString('name') ??
+          prefs.getString('full_name');
+
+      // 3. If not found in prefs, check Supabase Auth metadata or email
+      if (foundName == null || foundName.isEmpty || foundName == 'User') {
+        final user = Supabase.instance.client.auth.currentUser;
+        if (user != null) {
+          foundName =
+              user.userMetadata?['username'] ??
+              user.userMetadata?['name'] ??
+              user.email?.split('@').first;
+        }
+      }
+
+      // 4. Extract the first letter and capitalize it
+      if (foundName != null && foundName.isNotEmpty) {
+        setState(() {
+          _avatarLetter = foundName![0].toUpperCase();
+        });
+        return;
+      }
+    } catch (e) {
+      debugPrint('Error loading avatar letter: $e');
+    }
+
+    // Fallback default
+    setState(() {
+      _avatarLetter = 'U';
+    });
   }
 
   @override
@@ -102,7 +134,7 @@ class _HeaderBarState extends State<HeaderBar> {
               if (value == 'logout') {
                 await Supabase.instance.client.auth.signOut();
                 final prefs = await SharedPreferences.getInstance();
-                await prefs.clear(); // Wipes cached credentials/username
+                await prefs.clear();
                 if (context.mounted) {
                   Navigator.pushNamedAndRemoveUntil(
                     context,
@@ -148,7 +180,7 @@ class _HeaderBarState extends State<HeaderBar> {
                 shape: BoxShape.circle,
               ),
               child: Text(
-                _avatarLetter, // Uses the dynamically loaded letter
+                _avatarLetter, // Displays the capitalized initial (e.g. 'K')
                 style: const TextStyle(
                   color: AppColors.white,
                   fontSize: 13,
