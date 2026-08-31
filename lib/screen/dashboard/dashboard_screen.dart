@@ -21,24 +21,24 @@ class _DashboardScreenState extends State<DashboardScreen> {
   String _selectedTeamFilter = 'Tim Bawahanku';
   String _selectedTimeFilter = 'Semua waktu';
 
-  // State Pipeline CRM Kanban
+  // State Pipeline CRM Kanban (Pastikan menggunakan key singkat yang sesuai dengan tab data)
   String _selectedPipelineStatus = 'baru';
-  
+
   // Instance Supabase Client
   final _supabase = Supabase.instance.client;
 
-  // Stream data langsung dari Supabase tabel 'leads' (Sudah diperbaiki dari error json)
+  // Stream data langsung dari Supabase tabel 'leads'
   Stream<List<LeadModel>> _getLeadsStream() {
-  return _supabase
-      .from('leads')
-      .stream(primaryKey: ['id'])
-      .order('id', ascending: false)
-      .map((data) {
-        return data
-            .map((json) => LeadModel.fromMap(Map<String, dynamic>.from(json)))
-            .toList();
-      });
-}
+    return _supabase
+        .from('leads')
+        .stream(primaryKey: ['id'])
+        .order('id', ascending: false)
+        .map((data) {
+          return data
+              .map((json) => LeadModel.fromMap(Map<String, dynamic>.from(json)))
+              .toList();
+        });
+  }
 
   // Map Data Tab Kanban
   final Map<String, String> _kanbanTabsData = {
@@ -57,9 +57,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
           .eq('id', leadId);
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Gagal memperbarui status: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Gagal memperbarui status: $e')));
       }
     }
   }
@@ -70,9 +70,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
       await _supabase.from('leads').delete().eq('id', leadId);
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Gagal menghapus data: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Gagal menghapus data: $e')));
       }
     }
   }
@@ -227,6 +227,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 _buildProduktifitasHarianCard(),
                 const SizedBox(height: 16),
 
+                // Dynamic Laporan Harian Terperinci Card
                 _buildLaporanHarianCard(),
                 const SizedBox(height: 16),
 
@@ -341,16 +342,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  // Stream khusus untuk chart Produktifitas Harian.
-  // Data diambil dari tabel leads berdasarkan created_at.
   Stream<List<Map<String, dynamic>>> _getProductivityLeadsStream() {
     return _supabase
         .from('leads')
         .stream(primaryKey: ['id'])
         .map(
-          (data) => data
-              .map((json) => Map<String, dynamic>.from(json))
-              .toList(),
+          (data) =>
+              data.map((json) => Map<String, dynamic>.from(json)).toList(),
         );
   }
 
@@ -359,9 +357,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       stream: _getProductivityLeadsStream(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return _buildProduktifitasCardContent(
-            isLoading: true,
-          );
+          return _buildProduktifitasCardContent(isLoading: true);
         }
 
         if (snapshot.hasError) {
@@ -372,36 +368,20 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
         final leads = snapshot.data ?? [];
         final now = DateTime.now();
-
-        final today = DateTime(
-          now.year,
-          now.month,
-          now.day,
-        );
-
+        final today = DateTime(now.year, now.month, now.day);
         final List<Map<String, dynamic>> dailyData = [];
 
-        // Mengambil 7 hari terakhir, termasuk hari ini.
         for (int i = 6; i >= 0; i--) {
-          final date = today.subtract(
-            Duration(days: i),
-          );
-
+          final date = today.subtract(Duration(days: i));
           int total = 0;
 
           for (final lead in leads) {
             final createdAtValue = lead['created_at'];
-
-            if (createdAtValue == null) {
-              continue;
-            }
+            if (createdAtValue == null) continue;
 
             DateTime? createdAt;
-
             try {
-              createdAt = DateTime.parse(
-                createdAtValue.toString(),
-              ).toLocal();
+              createdAt = DateTime.parse(createdAtValue.toString()).toLocal();
             } catch (_) {
               continue;
             }
@@ -427,10 +407,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
         }
 
         int maxTotal = 0;
-
         for (final item in dailyData) {
           final total = item['total'] as int;
-
           if (total > maxTotal) {
             maxTotal = total;
           }
@@ -512,10 +490,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           else if (errorText != null)
             Text(
               errorText,
-              style: const TextStyle(
-                color: Colors.redAccent,
-                fontSize: 10,
-              ),
+              style: const TextStyle(color: Colors.redAccent, fontSize: 10),
             )
           else
             Text(
@@ -526,8 +501,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ),
             ),
           const SizedBox(height: 10),
-
-          // Tinggi area chart diperbesar agar bar tidak overflow.
           SizedBox(
             height: 125,
             child: isLoading || errorText != null
@@ -539,11 +512,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       final total = item['total'] as int;
                       final label = item['label'] as String;
                       final date = item['date'] as DateTime;
-
-                      final isToday = _isSameDate(
-                        date,
-                        DateTime.now(),
-                      );
+                      final isToday = _isSameDate(date, DateTime.now());
 
                       return _buildBarItem(
                         label,
@@ -568,10 +537,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               const SizedBox(width: 6),
               const Text(
                 'Hari ini',
-                style: TextStyle(
-                  color: Color(0xFFA197B4),
-                  fontSize: 10,
-                ),
+                style: TextStyle(color: Color(0xFFA197B4), fontSize: 10),
               ),
               const Spacer(),
               Flexible(
@@ -600,8 +566,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
     double barHeight = 0;
 
     if (maxTotal > 0 && total > 0) {
-      // Tinggi maksimum bar = 75 px.
-      // Tinggi minimum ketika ada data = 10 px.
       barHeight = 10 + ((total / maxTotal) * 65);
     } else if (total > 0) {
       barHeight = 10;
@@ -633,9 +597,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             decoration: BoxDecoration(
               color: isToday
                   ? const Color(0xFF10B981)
-                  : Colors.white.withOpacity(
-                      total > 0 ? 0.45 : 0.12,
-                    ),
+                  : Colors.white.withOpacity(total > 0 ? 0.45 : 0.12),
               borderRadius: BorderRadius.circular(5),
             ),
           ),
@@ -652,8 +614,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     ? const Color(0xFF10B981)
                     : Colors.white.withOpacity(0.7),
                 fontSize: 10,
-                fontWeight:
-                    isToday ? FontWeight.bold : FontWeight.normal,
+                fontWeight: isToday ? FontWeight.bold : FontWeight.normal,
               ),
             ),
           ),
@@ -677,7 +638,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
       'Nov',
       'Des',
     ];
-
     return '${date.day} ${months[date.month - 1]}';
   }
 
@@ -687,7 +647,141 @@ class _DashboardScreenState extends State<DashboardScreen> {
         first.day == second.day;
   }
 
+  // --- Dynamic Laporan Harian Terperinci Card ---
   Widget _buildLaporanHarianCard() {
+    return StreamBuilder<List<Map<String, dynamic>>>(
+      stream: _getProductivityLeadsStream(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return _buildLaporanContainer(
+            child: const Text(
+              'Memuat laporan...',
+              style: TextStyle(color: Colors.white70, fontSize: 11),
+            ),
+          );
+        }
+
+        final leads = snapshot.data ?? [];
+        Map<String, Map<String, int>> groupedData = {};
+
+        for (final lead in leads) {
+          final createdAtValue = lead['created_at'];
+          if (createdAtValue == null) continue;
+
+          DateTime? createdAt;
+          try {
+            createdAt = DateTime.parse(createdAtValue.toString()).toLocal();
+          } catch (_) {
+            continue;
+          }
+
+          // Format tanggal tampilan, misal: "Kamis, 9 Juli 2026"
+          String dateKey = _formatLongDate(createdAt);
+          String status = lead['status'] ?? 'baru';
+
+          if (!groupedData.containsKey(dateKey)) {
+            groupedData[dateKey] = {
+              'baru': 0,
+              'dihubungi': 0,
+              'layak': 0,
+              'closed': 0,
+            };
+          }
+
+          if (groupedData[dateKey]!.containsKey(status)) {
+            groupedData[dateKey]![status] = groupedData[dateKey]![status]! + 1;
+          }
+        }
+
+        // Ambil maksimal 3 hari terakhir yang memiliki data (atau hari-hari terkini)
+        final sortedKeys = groupedData.keys.take(3).toList();
+
+        return _buildLaporanContainer(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Laporan Harian Terperinci',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 15,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'Daftar rinci dari prospek-prospek yang ditambah per hari.',
+                style: TextStyle(
+                  color: Colors.white.withOpacity(0.5),
+                  fontSize: 11,
+                ),
+              ),
+              const SizedBox(height: 14),
+              if (sortedKeys.isEmpty)
+                Text(
+                  'Belum ada data laporan harian.',
+                  style: TextStyle(
+                    color: Colors.white.withOpacity(0.4),
+                    fontSize: 11,
+                  ),
+                )
+              else
+                ...sortedKeys.map((dateStr) {
+                  final counts = groupedData[dateStr]!;
+                  final total = counts.values.fold(0, (sum, val) => sum + val);
+
+                  List<Widget> dynamicBadges = [];
+
+                  if ((counts['baru'] ?? 0) > 0) {
+                    dynamicBadges.add(
+                      _buildBadge(
+                        'Baru : ${counts['baru']}',
+                        const Color(0xFF3B82F6),
+                      ),
+                    );
+                  }
+                  if ((counts['dihubungi'] ?? 0) > 0) {
+                    dynamicBadges.add(
+                      _buildBadge(
+                        'Dihubungi : ${counts['dihubungi']}',
+                        const Color(0xFF0284C7),
+                      ),
+                    );
+                  }
+                  if ((counts['layak'] ?? 0) > 0) {
+                    dynamicBadges.add(
+                      _buildBadge(
+                        'Prospek Layak : ${counts['layak']}',
+                        const Color(0xFF10B981),
+                      ),
+                    );
+                  }
+                  if ((counts['closed'] ?? 0) > 0) {
+                    dynamicBadges.add(
+                      _buildBadge(
+                        'Closed : ${counts['closed']}',
+                        const Color(0xFF8B5CF6),
+                      ),
+                    );
+                  }
+
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 8.0),
+                    child: _buildDailyReportItem(
+                      date: dateStr,
+                      total: total,
+                      badges: dynamicBadges,
+                    ),
+                  );
+                }),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildLaporanContainer({required Widget child}) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
@@ -696,54 +790,38 @@ class _DashboardScreenState extends State<DashboardScreen> {
         borderRadius: BorderRadius.circular(18),
         border: Border.all(color: Colors.white.withOpacity(0.12)),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Laporan Harian',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 15,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            'Daftar lengkap hitungan generator per hari.',
-            style: TextStyle(
-              color: Colors.white.withOpacity(0.5),
-              fontSize: 11,
-            ),
-          ),
-          const SizedBox(height: 14),
-          _buildDailyReportItem(
-            date: 'Kamis, 9 Juli 2026',
-            total: 23,
-            badges: [
-              _buildBadge('Social : 1', const Color(0xFF3B82F6)),
-              _buildBadge('Social : 1', const Color(0xFF10B981)),
-              _buildBadge('Leads : 17', const Color(0xFF0284C7)),
-            ],
-          ),
-          const SizedBox(height: 8),
-          _buildDailyReportItem(
-            date: 'Jumat, 10 Juli 2026',
-            total: 10,
-            badges: [
-              _buildBadge('Social : 1', const Color(0xFF3B82F6)),
-              _buildBadge('Social : 4', const Color(0xFF10B981)),
-              _buildBadge('Leads : 5', const Color(0xFF0284C7)),
-            ],
-          ),
-          const SizedBox(height: 8),
-          _buildDailyReportItem(
-            date: 'Sabtu, 11 Juli 2026',
-            total: 15,
-            badges: [_buildBadge('Social : 1', const Color(0xFF10B981))],
-          ),
-        ],
-      ),
+      child: child,
     );
+  }
+
+  String _formatLongDate(DateTime date) {
+    const days = [
+      'Senin',
+      'Selasa',
+      'Rabu',
+      'Kamis',
+      'Jumat',
+      'Sabtu',
+      'Minggu',
+    ];
+    const months = [
+      'Januari',
+      'Februari',
+      'Maret',
+      'April',
+      'Mei',
+      'Juni',
+      'Juli',
+      'Agustus',
+      'September',
+      'Oktober',
+      'November',
+      'Desember',
+    ];
+    // weekday returns 1 for Monday through 7 for Sunday
+    String dayName = days[date.weekday - 1];
+    String monthName = months[date.month - 1];
+    return '$dayName, ${date.day} $monthName ${date.year}';
   }
 
   Widget _buildDailyReportItem({
@@ -781,8 +859,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ),
             ],
           ),
-          const SizedBox(height: 8),
-          Wrap(spacing: 6, runSpacing: 4, children: badges),
+          if (badges.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Wrap(spacing: 6, runSpacing: 4, children: badges),
+          ],
         ],
       ),
     );
@@ -870,10 +950,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               children: [
                 _buildSearchInput(),
                 const SizedBox(height: 8),
-                _buildDropdownFilter(
-                  Icons.filter_list_rounded,
-                  'Semua Sumber',
-                ),
+                _buildDropdownFilter(Icons.filter_list_rounded, 'Semua Sumber'),
                 const SizedBox(height: 8),
                 _buildDropdownFilter(
                   Icons.people_outline_rounded,
@@ -938,7 +1015,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ),
           const SizedBox(height: 12),
 
-          // Realtime Stream Data Supabase (Padding & JSON di-fix)
+          // Realtime Stream Data Supabase
           StreamBuilder<List<LeadModel>>(
             stream: _getLeadsStream(),
             builder: (context, snapshot) {
@@ -957,7 +1034,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   child: Center(
                     child: Text(
                       'Terjadi kesalahan: ${snapshot.error}',
-                      style: const TextStyle(color: Colors.redAccent, fontSize: 11),
+                      style: const TextStyle(
+                        color: Colors.redAccent,
+                        fontSize: 11,
+                      ),
                     ),
                   ),
                 );
