@@ -72,7 +72,7 @@ class AddProspectDialog {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                _buildLabel('INSTANSI / KBIH'),
+                                _buildLabel('INSTANSI / KBIH *'),
                                 _buildTextField(
                                   instansiController,
                                   'Contoh: Nurul Huda',
@@ -85,7 +85,7 @@ class AddProspectDialog {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                _buildLabel('NO. WHATSAPP / HP'),
+                                _buildLabel('NO. WHATSAPP / HP *'),
                                 _buildTextField(
                                   phoneController,
                                   '081234567890',
@@ -104,7 +104,7 @@ class AddProspectDialog {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                _buildLabel('EMAIL KONTAK'),
+                                _buildLabel('EMAIL KONTAK *'),
                                 _buildTextField(
                                   emailController,
                                   'syarif@gmail.com',
@@ -118,7 +118,7 @@ class AddProspectDialog {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                _buildLabel('KOTA / ALAMAT'),
+                                _buildLabel('KOTA / ALAMAT *'),
                                 _buildTextField(
                                   cityController,
                                   'Jakarta Timur',
@@ -297,6 +297,42 @@ class AddProspectDialog {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
                           content: Text('Nama kontak wajib diisi!'),
+                          backgroundColor: Colors.redAccent,
+                        ),
+                      );
+                      return;
+                    }
+                    if (instansiController.text.trim().isEmpty) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Instansi/KBIH wajib diisi!'),
+                          backgroundColor: Colors.redAccent,
+                        ),
+                      );
+                      return;
+                    }
+                    if (phoneController.text.trim().isEmpty) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Nomor HP wajib diisi!'),
+                          backgroundColor: Colors.redAccent,
+                        ),
+                      );
+                      return;
+                    }
+                    if (emailController.text.trim().isEmpty) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Email wajib diisi!'),
+                          backgroundColor: Colors.redAccent,
+                        ),
+                      );
+                      return;
+                    }
+                    if (cityController.text.trim().isEmpty) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Kota/Alamat wajib diisi!'),
                           backgroundColor: Colors.redAccent,
                         ),
                       );
