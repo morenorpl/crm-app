@@ -6,6 +6,8 @@ import 'package:crm_app/widgets/header_bar.dart';
 import '../CRM/kanban/widgets/crm_kanban_tabs.dart';
 import '../CRM/kanban/widgets/crm_prospect_card.dart';
 import '../CRM/kanban/models/lead_model.dart';
+import '../CRM/kanban/widgets/crm_search_panel.dart'; // Import CrmSearchPanel
+import '../CRM/kanban/controllers/crm_controller.dart';
 
 class DashboardScreen extends StatefulWidget {
   final String avatarLetter;
@@ -16,13 +18,21 @@ class DashboardScreen extends StatefulWidget {
   State<DashboardScreen> createState() => _DashboardScreenState();
 }
 
+
 class _DashboardScreenState extends State<DashboardScreen> {
+  final CrmController _crmController = CrmController();
+
   // State filter umum dashboard
   String _selectedTeamFilter = 'Tim Bawahanku';
   String _selectedTimeFilter = 'Semua waktu';
 
   // State Pipeline CRM Kanban (Pastikan menggunakan key singkat yang sesuai dengan tab data)
   String _selectedPipelineStatus = 'baru';
+
+  // State pencarian & filter CRM
+  String _searchQuery = '';
+  String _selectedSourceFilter = 'Semua Sumber';
+  String _selectedTypeFilter = 'Semua Tipe (Output)';
 
   // Instance Supabase Client
   final _supabase = Supabase.instance.client;
@@ -886,6 +896,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
+  // --- Pipeline CRM Card dengan Supabase Stream & CrmSearchPanel ---
   // --- Pipeline CRM Card dengan Supabase Stream ---
   Widget _buildPipelineCrmCard() {
     return Container(
@@ -939,194 +950,97 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ),
           const SizedBox(height: 14),
 
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.04),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.white.withOpacity(0.08)),
-            ),
-            child: Column(
-              children: [
-                _buildSearchInput(),
-                const SizedBox(height: 8),
-                _buildDropdownFilter(Icons.filter_list_rounded, 'Semua Sumber'),
-                const SizedBox(height: 8),
-                _buildDropdownFilter(
-                  Icons.people_outline_rounded,
-                  'Semua Tipe (Output)',
-                ),
-                const SizedBox(height: 12),
-
-                ElevatedButton.icon(
-                  onPressed: () {},
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.white.withOpacity(0.12),
-                    minimumSize: const Size(double.infinity, 40),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                  icon: const Icon(
-                    Icons.file_download_outlined,
-                    size: 16,
-                    color: Colors.white,
-                  ),
-                  label: const Text(
-                    'Ekspor CSV',
-                    style: TextStyle(color: Colors.white, fontSize: 12),
-                  ),
-                ),
-                const SizedBox(height: 8),
-
-                ElevatedButton.icon(
-                  onPressed: () {},
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF10B981),
-                    minimumSize: const Size(double.infinity, 40),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                  icon: const Icon(Icons.add, size: 16, color: Colors.white),
-                  label: const Text(
-                    'Tambah Prospek Baru',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ],
-            ),
+          // 1. CrmSearchPanel (Disambungkan dengan state dashboard)
+         CrmSearchPanel(
+            crmController: _crmController, // Sesuaikan nama instance controller milikmu
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 14),
 
-          // Kanban Tabs
+          // 2. CrmKanbanTabs (Menggunakan 3 parameter wajib)
           CrmKanbanTabs(
-            selectedStatus: _selectedPipelineStatus,
             tabData: _kanbanTabsData,
-            onTabChanged: (newStatus) {
+            selectedStatus: _selectedPipelineStatus,
+            onTabChanged: (statusKey) {
               setState(() {
-                _selectedPipelineStatus = newStatus;
+                _selectedPipelineStatus = statusKey;
               });
             },
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 14),
 
-          // Realtime Stream Data Supabase
+          // 3. List Data Prospek dari Supabase Stream
           StreamBuilder<List<LeadModel>>(
             stream: _getLeadsStream(),
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
-                return const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 24),
-                  child: Center(
+                return const Center(
+                  child: Padding(
+                    padding: EdgeInsets.all(24.0),
                     child: CircularProgressIndicator(color: Colors.white),
                   ),
                 );
               }
 
               if (snapshot.hasError) {
-                return Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 24),
-                  child: Center(
-                    child: Text(
-                      'Terjadi kesalahan: ${snapshot.error}',
-                      style: const TextStyle(
-                        color: Colors.redAccent,
-                        fontSize: 11,
-                      ),
-                    ),
+                return Center(
+                  child: Text(
+                    'Gagal memuat data: ${snapshot.error}',
+                    style: const TextStyle(color: Colors.redAccent, fontSize: 12),
                   ),
                 );
               }
 
               final allLeads = snapshot.data ?? [];
-              final filteredLeads = allLeads
-                  .where((lead) => lead.status == _selectedPipelineStatus)
-                  .toList();
+
+              // Filter menggunakan variabel milik LeadModel
+              final filteredLeads = allLeads.where((lead) {
+                final matchStatus = lead.status.toLowerCase() == _selectedPipelineStatus.toLowerCase();
+                
+                final matchSearch = _searchQuery.isEmpty ||
+                    lead.nama.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+                    (lead.noHp?.contains(_searchQuery) ?? false) ||
+                    (lead.lokasi?.toLowerCase().contains(_searchQuery.toLowerCase()) ?? false);
+
+                final matchSource = _selectedSourceFilter == 'Semua Sumber' ||
+                    (lead.sumberLeads?.toLowerCase() == _selectedSourceFilter.toLowerCase());
+
+                return matchStatus && matchSearch && matchSource;
+              }).toList();
 
               if (filteredLeads.isEmpty) {
                 return Container(
                   width: double.infinity,
-                  padding: const EdgeInsets.symmetric(vertical: 24),
-                  alignment: Alignment.center,
-                  child: Text(
-                    'Belum ada prospek pada kategori ini.',
-                    style: TextStyle(
-                      color: Colors.white.withOpacity(0.4),
-                      fontSize: 11,
+                  padding: const EdgeInsets.all(24),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.04),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Center(
+                    child: Text(
+                      'Tidak ada prospek ditemukan.',
+                      style: TextStyle(color: Colors.white54, fontSize: 12),
                     ),
                   ),
                 );
               }
 
-              return Column(
-                children: filteredLeads.map((lead) {
+              return ListView.separated(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: filteredLeads.length,
+                separatorBuilder: (context, index) => const SizedBox(height: 10),
+                itemBuilder: (context, index) {
+                  final lead = filteredLeads[index];
+
                   return CrmProspectCard(
                     leadData: lead,
-                    onEdit: () {
-                      // Action Edit
-                    },
+                    onStatusChange: (newStatus) => _updateLeadStatus(lead.id, newStatus),
+                    onEdit: () {},
                     onDelete: () => _deleteLead(lead.id),
-                    onStatusChange: (newStatus) =>
-                        _updateLeadStatus(lead.id, newStatus),
                   );
-                }).toList(),
+                },
               );
             },
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSearchInput() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.08),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Row(
-        children: [
-          Icon(
-            Icons.search_rounded,
-            size: 16,
-            color: Colors.white.withOpacity(0.4),
-          ),
-          const SizedBox(width: 8),
-          Text(
-            'Cari prospek (nama, KTP, catatan)...',
-            style: TextStyle(
-              color: Colors.white.withOpacity(0.3),
-              fontSize: 11,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildDropdownFilter(IconData icon, String label) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.08),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Row(
-        children: [
-          Icon(icon, size: 14, color: Colors.white.withOpacity(0.5)),
-          const SizedBox(width: 8),
-          Text(
-            label,
-            style: TextStyle(
-              color: Colors.white.withOpacity(0.6),
-              fontSize: 11,
-            ),
           ),
         ],
       ),
