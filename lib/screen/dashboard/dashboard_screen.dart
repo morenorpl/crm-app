@@ -341,7 +341,115 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
+  // Stream khusus untuk chart Produktifitas Harian.
+  // Data diambil dari tabel leads berdasarkan created_at.
+  Stream<List<Map<String, dynamic>>> _getProductivityLeadsStream() {
+    return _supabase
+        .from('leads')
+        .stream(primaryKey: ['id'])
+        .map(
+          (data) => data
+              .map((json) => Map<String, dynamic>.from(json))
+              .toList(),
+        );
+  }
+
   Widget _buildProduktifitasHarianCard() {
+    return StreamBuilder<List<Map<String, dynamic>>>(
+      stream: _getProductivityLeadsStream(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return _buildProduktifitasCardContent(
+            isLoading: true,
+          );
+        }
+
+        if (snapshot.hasError) {
+          return _buildProduktifitasCardContent(
+            errorText: 'Gagal mengambil data leads: ${snapshot.error}',
+          );
+        }
+
+        final leads = snapshot.data ?? [];
+        final now = DateTime.now();
+
+        final today = DateTime(
+          now.year,
+          now.month,
+          now.day,
+        );
+
+        final List<Map<String, dynamic>> dailyData = [];
+
+        // Mengambil 7 hari terakhir, termasuk hari ini.
+        for (int i = 6; i >= 0; i--) {
+          final date = today.subtract(
+            Duration(days: i),
+          );
+
+          int total = 0;
+
+          for (final lead in leads) {
+            final createdAtValue = lead['created_at'];
+
+            if (createdAtValue == null) {
+              continue;
+            }
+
+            DateTime? createdAt;
+
+            try {
+              createdAt = DateTime.parse(
+                createdAtValue.toString(),
+              ).toLocal();
+            } catch (_) {
+              continue;
+            }
+
+            final createdDate = DateTime(
+              createdAt.year,
+              createdAt.month,
+              createdAt.day,
+            );
+
+            if (createdDate.year == date.year &&
+                createdDate.month == date.month &&
+                createdDate.day == date.day) {
+              total++;
+            }
+          }
+
+          dailyData.add({
+            'date': date,
+            'total': total,
+            'label': _formatChartDate(date),
+          });
+        }
+
+        int maxTotal = 0;
+
+        for (final item in dailyData) {
+          final total = item['total'] as int;
+
+          if (total > maxTotal) {
+            maxTotal = total;
+          }
+        }
+
+        return _buildProduktifitasCardContent(
+          dailyData: dailyData,
+          maxTotal: maxTotal,
+        );
+      },
+    );
+  }
+
+  Widget _buildProduktifitasCardContent({
+    bool isLoading = false,
+    String? errorText,
+    List<Map<String, dynamic>>? dailyData,
+    int maxTotal = 0,
+  }) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
@@ -386,37 +494,67 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ),
           const SizedBox(height: 4),
           Text(
-            'Total item tergenerate harian (Gabungan social post, gambar, video, tts, dan leads).',
+            'Jumlah leads yang dibuat setiap hari berdasarkan data Supabase.',
             style: TextStyle(
               color: Colors.white.withOpacity(0.5),
               fontSize: 11,
             ),
           ),
           const SizedBox(height: 16),
-          Text(
-            'Max (1)',
-            style: TextStyle(
-              color: Colors.white.withOpacity(0.4),
-              fontSize: 10,
+          if (isLoading)
+            Text(
+              'Memuat data...',
+              style: TextStyle(
+                color: Colors.white.withOpacity(0.4),
+                fontSize: 10,
+              ),
+            )
+          else if (errorText != null)
+            Text(
+              errorText,
+              style: const TextStyle(
+                color: Colors.redAccent,
+                fontSize: 10,
+              ),
+            )
+          else
+            Text(
+              'Max ($maxTotal)',
+              style: TextStyle(
+                color: Colors.white.withOpacity(0.4),
+                fontSize: 10,
+              ),
             ),
-          ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 10),
+
+          // Tinggi area chart diperbesar agar bar tidak overflow.
           SizedBox(
-            height: 90,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                _buildBarItem('7 Agu'),
-                _buildBarItem('8 Agu'),
-                _buildBarItem('9 Agu'),
-                _buildBarItem('10 Agu'),
-                _buildBarItem('11 Agu'),
-                _buildBarItem('12 Agu'),
-              ],
-            ),
+            height: 125,
+            child: isLoading || errorText != null
+                ? const SizedBox()
+                : Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: dailyData!.map((item) {
+                      final total = item['total'] as int;
+                      final label = item['label'] as String;
+                      final date = item['date'] as DateTime;
+
+                      final isToday = _isSameDate(
+                        date,
+                        DateTime.now(),
+                      );
+
+                      return _buildBarItem(
+                        label,
+                        total,
+                        maxTotal,
+                        isToday: isToday,
+                      );
+                    }).toList(),
+                  ),
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 8),
           Row(
             children: [
               Container(
@@ -430,13 +568,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
               const SizedBox(width: 6),
               const Text(
                 'Hari ini',
-                style: TextStyle(color: Color(0xFFA197B4), fontSize: 10),
+                style: TextStyle(
+                  color: Color(0xFFA197B4),
+                  fontSize: 10,
+                ),
               ),
               const Spacer(),
-              Expanded(
-                flex: 4,
+              Flexible(
                 child: Text(
-                  'Ujung kolom dapat di-hover untuk melihat rincian item',
+                  'Jumlah bar mengikuti jumlah leads yang dibuat pada hari tersebut.',
                   textAlign: TextAlign.right,
                   style: TextStyle(
                     color: Colors.white.withOpacity(0.4),
@@ -451,28 +591,100 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _buildBarItem(String label) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.end,
-      children: [
-        Container(
-          height: 8,
-          width: 38,
-          decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.18),
-            borderRadius: BorderRadius.circular(4),
+  Widget _buildBarItem(
+    String label,
+    int total,
+    int maxTotal, {
+    bool isToday = false,
+  }) {
+    double barHeight = 0;
+
+    if (maxTotal > 0 && total > 0) {
+      // Tinggi maksimum bar = 75 px.
+      // Tinggi minimum ketika ada data = 10 px.
+      barHeight = 10 + ((total / maxTotal) * 65);
+    } else if (total > 0) {
+      barHeight = 10;
+    }
+
+    return SizedBox(
+      width: 40,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          SizedBox(
+            height: 16,
+            child: Text(
+              '$total',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: isToday
+                    ? const Color(0xFF10B981)
+                    : Colors.white.withOpacity(0.55),
+                fontSize: 9,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          label,
-          style: TextStyle(
-            color: Colors.white.withOpacity(0.7),
-            fontSize: 10,
+          const SizedBox(height: 4),
+          Container(
+            height: barHeight > 0 ? barHeight : 4,
+            width: 38,
+            decoration: BoxDecoration(
+              color: isToday
+                  ? const Color(0xFF10B981)
+                  : Colors.white.withOpacity(
+                      total > 0 ? 0.45 : 0.12,
+                    ),
+              borderRadius: BorderRadius.circular(5),
+            ),
           ),
-        ),
-      ],
+          const SizedBox(height: 8),
+          SizedBox(
+            height: 16,
+            child: Text(
+              label,
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.visible,
+              style: TextStyle(
+                color: isToday
+                    ? const Color(0xFF10B981)
+                    : Colors.white.withOpacity(0.7),
+                fontSize: 10,
+                fontWeight:
+                    isToday ? FontWeight.bold : FontWeight.normal,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
+  }
+
+  String _formatChartDate(DateTime date) {
+    const months = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'Mei',
+      'Jun',
+      'Jul',
+      'Agu',
+      'Sep',
+      'Okt',
+      'Nov',
+      'Des',
+    ];
+
+    return '${date.day} ${months[date.month - 1]}';
+  }
+
+  bool _isSameDate(DateTime first, DateTime second) {
+    return first.year == second.year &&
+        first.month == second.month &&
+        first.day == second.day;
   }
 
   Widget _buildLaporanHarianCard() {
