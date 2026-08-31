@@ -68,7 +68,14 @@ class _MainLayoutScreenState extends State<MainLayoutScreen> {
   Widget build(BuildContext context) {
     // Daftar halaman yang diberi akses membawa variabel _avatarLetter jika dibutuhkan
     final List<Widget> pages = [
-      DashboardScreen(avatarLetter: _avatarLetter),
+      DashboardScreen(
+        avatarLetter: _avatarLetter,
+        onNavigateToPipeline: () {
+          setState(() {
+            _currentIndex = 1;
+          });
+        },
+      ),
       CrmBoardScreen(avatarLetter: _avatarLetter),
       ScheduleScreen(
         avatarLetter: _avatarLetter,

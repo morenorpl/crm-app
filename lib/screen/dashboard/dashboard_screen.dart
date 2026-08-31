@@ -12,8 +12,13 @@ import '../CRM/kanban/controllers/crm_controller.dart';
 
 class DashboardScreen extends StatefulWidget {
   final String avatarLetter;
+  final VoidCallback? onNavigateToPipeline;
 
-  const DashboardScreen({super.key, required this.avatarLetter});
+  const DashboardScreen({
+    super.key,
+    required this.avatarLetter,
+    required this.onNavigateToPipeline,
+  });
 
   @override
   State<DashboardScreen> createState() => _DashboardScreenState();
@@ -1099,7 +1104,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
           const SizedBox(height: 12),
 
           ElevatedButton.icon(
-            onPressed: () {},
+            onPressed: () {
+              if (widget.onNavigateToPipeline != null) {
+                widget.onNavigateToPipeline!();
+              }
+            },
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.white.withOpacity(0.1),
               elevation: 0,
@@ -1118,7 +1127,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
               color: Colors.white,
             ),
           ),
-
           const SizedBox(height: 14),
 
           // ==========================================
