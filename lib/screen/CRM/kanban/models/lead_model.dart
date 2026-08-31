@@ -1,30 +1,30 @@
 class LeadModel {
   final int id;
   final String nama;
-  final String? email;
-  final String? noHp;
-  final String? lokasi;
+  final String email;
+  final String noHp;
+  final String lokasi;
   final String status;
 
   // Fields mapped from the Supabase table
-  final String? instansi;
+  final String instansi;
   final String? sumberLeads;
   final String? tipeLead;
   final int? jumlahPax;
   final double? potensiNilai;
   final String? catatan;
-  
+
   // 📅 New field untuk Jadwal Follow Up
   final DateTime? jadwalFollowUp;
 
   LeadModel({
     required this.id,
     required this.nama,
-    this.email,
-    this.noHp,
-    this.lokasi,
+    required this.email,
+    required this.noHp,
+    required this.lokasi,
     required this.status,
-    this.instansi,
+    required this.instansi,
     this.sumberLeads,
     this.tipeLead,
     this.jumlahPax,
@@ -37,9 +37,9 @@ class LeadModel {
     return LeadModel(
       id: map['id'],
       nama: map['nama'] ?? '',
-      email: map['email'],
-      noHp: map['no_hp'],
-      lokasi: map['lokasi'],
+      email: map['email'] ?? '',
+      noHp: map['no_hp'] ?? '',
+      lokasi: map['lokasi'] ?? '',
       status: map['status'] ?? 'baru',
 
       // Mapping snake_case DB columns to camelCase Dart variables
