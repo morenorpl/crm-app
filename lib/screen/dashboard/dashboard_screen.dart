@@ -2,55 +2,72 @@
 
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+
 import 'package:crm_app/widgets/header_bar.dart';
 import '../CRM/kanban/widgets/crm_kanban_tabs.dart';
 import '../CRM/kanban/widgets/crm_prospect_card.dart';
 import '../CRM/kanban/models/lead_model.dart';
-import '../CRM/kanban/widgets/crm_search_panel.dart'; // Import CrmSearchPanel
+import '../CRM/kanban/widgets/crm_search_panel.dart';
 import '../CRM/kanban/controllers/crm_controller.dart';
 
 class DashboardScreen extends StatefulWidget {
   final String avatarLetter;
 
-  const DashboardScreen({super.key, required this.avatarLetter});
+  const DashboardScreen({
+    super.key,
+    required this.avatarLetter,
+  });
 
   @override
   State<DashboardScreen> createState() => _DashboardScreenState();
 }
 
-
 class _DashboardScreenState extends State<DashboardScreen> {
   final CrmController _crmController = CrmController();
 
-  // State filter umum dashboard
+  // ==========================================
+  // FILTER DASHBOARD
+  // ==========================================
+
   String _selectedTeamFilter = 'Tim Bawahanku';
   String _selectedTimeFilter = 'Semua waktu';
 
-  // State Pipeline CRM Kanban (Pastikan menggunakan key singkat yang sesuai dengan tab data)
+  // ==========================================
+  // FILTER PIPELINE CRM
+  // ==========================================
+
   String _selectedPipelineStatus = 'baru';
 
-  // State pencarian & filter CRM
-  String _searchQuery = '';
-  String _selectedSourceFilter = 'Semua Sumber';
-  String _selectedTypeFilter = 'Semua Tipe (Output)';
+  // ==========================================
+  // SUPABASE
+  // ==========================================
 
-  // Instance Supabase Client
   final _supabase = Supabase.instance.client;
 
-  // Stream data langsung dari Supabase tabel 'leads'
+  // ==========================================
+  // STREAM LEADS
+  // ==========================================
+
   Stream<List<LeadModel>> _getLeadsStream() {
     return _supabase
         .from('leads')
         .stream(primaryKey: ['id'])
         .order('id', ascending: false)
         .map((data) {
-          return data
-              .map((json) => LeadModel.fromMap(Map<String, dynamic>.from(json)))
-              .toList();
-        });
+      return data
+          .map(
+            (json) => LeadModel.fromMap(
+              Map<String, dynamic>.from(json),
+            ),
+          )
+          .toList();
+    });
   }
 
-  // Map Data Tab Kanban
+  // ==========================================
+  // DATA TAB KANBAN
+  // ==========================================
+
   final Map<String, String> _kanbanTabsData = {
     'Prospek Baru': 'baru',
     'Dihubungi': 'dihubungi',
@@ -58,34 +75,60 @@ class _DashboardScreenState extends State<DashboardScreen> {
     'Closed': 'closed',
   };
 
-  // Function untuk Update Status Lead ke Supabase
-  Future<void> _updateLeadStatus(dynamic leadId, String newStatus) async {
+  // ==========================================
+  // UPDATE STATUS LEAD
+  // ==========================================
+
+  Future<void> _updateLeadStatus(
+    dynamic leadId,
+    String newStatus,
+  ) async {
     try {
       await _supabase
           .from('leads')
-          .update({'status': newStatus})
+          .update({
+            'status': newStatus,
+          })
           .eq('id', leadId);
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Gagal memperbarui status: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Gagal memperbarui status: $e',
+            ),
+          ),
+        );
       }
     }
   }
 
-  // Function untuk Hapus Lead di Supabase
+  // ==========================================
+  // DELETE LEAD
+  // ==========================================
+
   Future<void> _deleteLead(dynamic leadId) async {
     try {
-      await _supabase.from('leads').delete().eq('id', leadId);
+      await _supabase
+          .from('leads')
+          .delete()
+          .eq('id', leadId);
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Gagal menghapus data: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Gagal menghapus data: $e',
+            ),
+          ),
+        );
       }
     }
   }
+
+  // ==========================================
+  // BUILD
+  // ==========================================
 
   @override
   Widget build(BuildContext context) {
@@ -94,7 +137,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
-            colors: [Color(0xFF382D54), Color(0xFF1E1735)],
+            colors: [
+              Color(0xFF382D54),
+              Color(0xFF1E1735),
+            ],
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
           ),
@@ -105,14 +151,22 @@ class _DashboardScreenState extends State<DashboardScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // ==========================================
+                // HEADER
+                // ==========================================
+
                 HeaderBar(
                   title: 'Dashboard CRM',
                   subtitle: 'Selamat datang kembali!',
                   avatarText: widget.avatarLetter,
                 ),
+
                 const SizedBox(height: 16),
 
-                // Filter Pills
+                // ==========================================
+                // FILTER PILLS
+                // ==========================================
+
                 SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
                   child: Row(
@@ -131,24 +185,37 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             _buildFilterChip(
                               'Tim Bawahanku',
                               _selectedTeamFilter == 'Tim Bawahanku',
-                              () => setState(
-                                () => _selectedTeamFilter = 'Tim Bawahanku',
-                              ),
-                              activeColor: const Color(0xFF3B82F6),
+                              () {
+                                setState(() {
+                                  _selectedTeamFilter =
+                                      'Tim Bawahanku';
+                                });
+                              },
+                              activeColor:
+                                  const Color(0xFF3B82F6),
                             ),
+
                             const SizedBox(width: 4),
+
                             _buildFilterChip(
                               'Kinerja Ku Saja',
-                              _selectedTeamFilter == 'Kinerja Ku Saja',
-                              () => setState(
-                                () => _selectedTeamFilter = 'Kinerja Ku Saja',
-                              ),
-                              activeColor: const Color(0xFF3B82F6),
+                              _selectedTeamFilter ==
+                                  'Kinerja Ku Saja',
+                              () {
+                                setState(() {
+                                  _selectedTeamFilter =
+                                      'Kinerja Ku Saja';
+                                });
+                              },
+                              activeColor:
+                                  const Color(0xFF3B82F6),
                             ),
                           ],
                         ),
                       ),
+
                       const SizedBox(width: 12),
+
                       Container(
                         padding: const EdgeInsets.all(4),
                         decoration: BoxDecoration(
@@ -162,20 +229,31 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           children: [
                             _buildFilterChip(
                               'Semua waktu',
-                              _selectedTimeFilter == 'Semua waktu',
-                              () => setState(
-                                () => _selectedTimeFilter = 'Semua waktu',
-                              ),
-                              activeColor: const Color(0xFF10B981),
+                              _selectedTimeFilter ==
+                                  'Semua waktu',
+                              () {
+                                setState(() {
+                                  _selectedTimeFilter =
+                                      'Semua waktu';
+                                });
+                              },
+                              activeColor:
+                                  const Color(0xFF10B981),
                             ),
+
                             const SizedBox(width: 4),
+
                             _buildFilterChip(
                               'Hari ini',
                               _selectedTimeFilter == 'Hari ini',
-                              () => setState(
-                                () => _selectedTimeFilter = 'Hari ini',
-                              ),
-                              activeColor: const Color(0xFF10B981),
+                              () {
+                                setState(() {
+                                  _selectedTimeFilter =
+                                      'Hari ini';
+                                });
+                              },
+                              activeColor:
+                                  const Color(0xFF10B981),
                             ),
                           ],
                         ),
@@ -183,9 +261,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     ],
                   ),
                 ),
+
                 const SizedBox(height: 16),
 
-                // Metric Cards
+                // ==========================================
+                // METRIC CARDS
+                // ==========================================
+
                 _buildMetricCard(
                   title: 'Kalender Posting',
                   titleColor: const Color(0xFF10B981),
@@ -193,55 +275,80 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   subtitle: 'Jadwal Konten Tersimpan',
                   actionText: 'Sinkronisasi Otomatis',
                   icon: Icons.calendar_month_rounded,
-                  iconBgColor: const Color(0xFF10B981).withOpacity(0.2),
+                  iconBgColor:
+                      const Color(0xFF10B981).withOpacity(0.2),
                   iconColor: const Color(0xFF10B981),
                 ),
+
                 const SizedBox(height: 12),
 
                 _buildMetricCard(
                   title: 'Maps Leads Terkumpul',
                   titleColor: const Color(0xFFF43F5E),
                   value: '80',
-                  subtitle: 'Calon Jamaah travel terdekat',
+                  subtitle:
+                      'Calon Jamaah travel terdekat',
                   actionText: 'Sinkronisasi Otomatis',
                   icon: Icons.calendar_month_rounded,
-                  iconBgColor: const Color(0xFFF43F5E).withOpacity(0.2),
+                  iconBgColor:
+                      const Color(0xFFF43F5E).withOpacity(0.2),
                   iconColor: const Color(0xFFF43F5E),
                 ),
+
                 const SizedBox(height: 12),
 
                 _buildMetricCard(
                   title: 'Total Generasi Media',
                   titleColor: const Color(0xFF38BDF8),
                   value: '156',
-                  subtitle: 'Text, Gambar, Video & TTS',
+                  subtitle:
+                      'Text, Gambar, Video & TTS',
                   actionText: 'Status Generator',
                   icon: Icons.calendar_month_rounded,
-                  iconBgColor: const Color(0xFF38BDF8).withOpacity(0.2),
+                  iconBgColor:
+                      const Color(0xFF38BDF8).withOpacity(0.2),
                   iconColor: const Color(0xFF38BDF8),
                 ),
+
                 const SizedBox(height: 12),
 
                 _buildMetricCard(
                   title: 'Total Generasi Media',
                   titleColor: const Color(0xFFF59E0B),
                   value: '156',
-                  subtitle: 'Text, Gambar, Video & TTS',
+                  subtitle:
+                      'Text, Gambar, Video & TTS',
                   actionText: null,
                   icon: Icons.calendar_month_rounded,
-                  iconBgColor: const Color(0xFFF59E0B).withOpacity(0.2),
+                  iconBgColor:
+                      const Color(0xFFF59E0B).withOpacity(0.2),
                   iconColor: const Color(0xFFF59E0B),
                 ),
+
                 const SizedBox(height: 16),
+
+                // ==========================================
+                // PRODUKTIFITAS
+                // ==========================================
 
                 _buildProduktifitasHarianCard(),
+
                 const SizedBox(height: 16),
 
-                // Dynamic Laporan Harian Terperinci Card
+                // ==========================================
+                // LAPORAN HARIAN
+                // ==========================================
+
                 _buildLaporanHarianCard(),
+
                 const SizedBox(height: 16),
+
+                // ==========================================
+                // PIPELINE CRM
+                // ==========================================
 
                 _buildPipelineCrmCard(),
+
                 const SizedBox(height: 24),
               ],
             ),
@@ -250,6 +357,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
       ),
     );
   }
+
+  // ==========================================
+  // FILTER CHIP
+  // ==========================================
 
   Widget _buildFilterChip(
     String label,
@@ -261,22 +372,34 @@ class _DashboardScreenState extends State<DashboardScreen> {
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        padding: const EdgeInsets.symmetric(
+          horizontal: 14,
+          vertical: 8,
+        ),
         decoration: BoxDecoration(
-          color: isActive ? activeColor : Colors.transparent,
+          color:
+              isActive ? activeColor : Colors.transparent,
           borderRadius: BorderRadius.circular(18),
         ),
         child: Text(
           label,
           style: TextStyle(
-            color: isActive ? Colors.white : const Color(0xFFA197B4),
+            color:
+                isActive ? Colors.white : const Color(0xFFA197B4),
             fontSize: 12,
-            fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
+            fontWeight:
+                isActive
+                    ? FontWeight.bold
+                    : FontWeight.normal,
           ),
         ),
       ),
     );
   }
+
+  // ==========================================
+  // METRIC CARD
+  // ==========================================
 
   Widget _buildMetricCard({
     required String title,
@@ -292,15 +415,20 @@ class _DashboardScreenState extends State<DashboardScreen> {
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFF4A3B69).withOpacity(0.45),
+        color:
+            const Color(0xFF4A3B69).withOpacity(0.45),
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: Colors.white.withOpacity(0.12)),
+        border: Border.all(
+          color: Colors.white.withOpacity(0.12),
+        ),
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment:
+            CrossAxisAlignment.start,
         children: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            mainAxisAlignment:
+                MainAxisAlignment.spaceBetween,
             children: [
               Text(
                 title,
@@ -310,17 +438,24 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   fontWeight: FontWeight.bold,
                 ),
               ),
+
               Container(
                 width: 36,
                 height: 36,
                 decoration: BoxDecoration(
                   color: iconBgColor,
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius:
+                      BorderRadius.circular(10),
                 ),
-                child: Icon(icon, color: iconColor, size: 18),
+                child: Icon(
+                  icon,
+                  color: iconColor,
+                  size: 18,
+                ),
               ),
             ],
           ),
+
           Text(
             value,
             style: const TextStyle(
@@ -329,7 +464,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
               fontWeight: FontWeight.w900,
             ),
           ),
+
           const SizedBox(height: 2),
+
           Text(
             subtitle,
             style: TextStyle(
@@ -337,8 +474,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
               fontSize: 12,
             ),
           ),
+
           if (actionText != null) ...[
             const SizedBox(height: 14),
+
             Text(
               actionText,
               style: TextStyle(
@@ -352,46 +491,80 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Stream<List<Map<String, dynamic>>> _getProductivityLeadsStream() {
+  // ==========================================
+  // PRODUCTIVITY STREAM
+  // ==========================================
+
+  Stream<List<Map<String, dynamic>>>
+      _getProductivityLeadsStream() {
     return _supabase
         .from('leads')
         .stream(primaryKey: ['id'])
         .map(
-          (data) =>
-              data.map((json) => Map<String, dynamic>.from(json)).toList(),
+          (data) => data
+              .map(
+                (json) =>
+                    Map<String, dynamic>.from(json),
+              )
+              .toList(),
         );
   }
+
+  // ==========================================
+  // PRODUKTIFITAS HARIAN
+  // ==========================================
 
   Widget _buildProduktifitasHarianCard() {
     return StreamBuilder<List<Map<String, dynamic>>>(
       stream: _getProductivityLeadsStream(),
       builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return _buildProduktifitasCardContent(isLoading: true);
+        if (snapshot.connectionState ==
+            ConnectionState.waiting) {
+          return _buildProduktifitasCardContent(
+            isLoading: true,
+          );
         }
 
         if (snapshot.hasError) {
           return _buildProduktifitasCardContent(
-            errorText: 'Gagal mengambil data leads: ${snapshot.error}',
+            errorText:
+                'Gagal mengambil data leads: ${snapshot.error}',
           );
         }
 
         final leads = snapshot.data ?? [];
+
         final now = DateTime.now();
-        final today = DateTime(now.year, now.month, now.day);
-        final List<Map<String, dynamic>> dailyData = [];
+
+        final today = DateTime(
+          now.year,
+          now.month,
+          now.day,
+        );
+
+        final List<Map<String, dynamic>>
+            dailyData = [];
 
         for (int i = 6; i >= 0; i--) {
-          final date = today.subtract(Duration(days: i));
+          final date =
+              today.subtract(Duration(days: i));
+
           int total = 0;
 
           for (final lead in leads) {
-            final createdAtValue = lead['created_at'];
-            if (createdAtValue == null) continue;
+            final createdAtValue =
+                lead['created_at'];
+
+            if (createdAtValue == null) {
+              continue;
+            }
 
             DateTime? createdAt;
+
             try {
-              createdAt = DateTime.parse(createdAtValue.toString()).toLocal();
+              createdAt = DateTime.parse(
+                createdAtValue.toString(),
+              ).toLocal();
             } catch (_) {
               continue;
             }
@@ -417,8 +590,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
         }
 
         int maxTotal = 0;
+
         for (final item in dailyData) {
           final total = item['total'] as int;
+
           if (total > maxTotal) {
             maxTotal = total;
           }
@@ -432,6 +607,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
+  // ==========================================
+  // PRODUKTIFITAS CONTENT
+  // ==========================================
+
   Widget _buildProduktifitasCardContent({
     bool isLoading = false,
     String? errorText,
@@ -442,15 +621,20 @@ class _DashboardScreenState extends State<DashboardScreen> {
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFF4A3B69).withOpacity(0.45),
+        color:
+            const Color(0xFF4A3B69).withOpacity(0.45),
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: Colors.white.withOpacity(0.12)),
+        border: Border.all(
+          color: Colors.white.withOpacity(0.12),
+        ),
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment:
+            CrossAxisAlignment.start,
         children: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            mainAxisAlignment:
+                MainAxisAlignment.spaceBetween,
             children: [
               const Text(
                 'Produktifitas Harian',
@@ -460,14 +644,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   fontWeight: FontWeight.bold,
                 ),
               ),
+
               Container(
-                padding: const EdgeInsets.symmetric(
+                padding:
+                    const EdgeInsets.symmetric(
                   horizontal: 10,
                   vertical: 4,
                 ),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF10B981).withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(12),
+                  color:
+                      const Color(0xFF10B981)
+                          .withOpacity(0.2),
+                  borderRadius:
+                      BorderRadius.circular(12),
                 ),
                 child: const Text(
                   '7 Hari Terakhir',
@@ -480,7 +669,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ),
             ],
           ),
+
           const SizedBox(height: 4),
+
           Text(
             'Jumlah leads yang dibuat setiap hari berdasarkan data Supabase.',
             style: TextStyle(
@@ -488,7 +679,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
               fontSize: 11,
             ),
           ),
+
           const SizedBox(height: 16),
+
           if (isLoading)
             Text(
               'Memuat data...',
@@ -500,7 +693,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
           else if (errorText != null)
             Text(
               errorText,
-              style: const TextStyle(color: Colors.redAccent, fontSize: 10),
+              style: const TextStyle(
+                color: Colors.redAccent,
+                fontSize: 10,
+              ),
             )
           else
             Text(
@@ -510,19 +706,34 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 fontSize: 10,
               ),
             ),
+
           const SizedBox(height: 10),
+
           SizedBox(
             height: 125,
             child: isLoading || errorText != null
                 ? const SizedBox()
                 : Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: dailyData!.map((item) {
-                      final total = item['total'] as int;
-                      final label = item['label'] as String;
-                      final date = item['date'] as DateTime;
-                      final isToday = _isSameDate(date, DateTime.now());
+                    mainAxisAlignment:
+                        MainAxisAlignment.spaceEvenly,
+                    crossAxisAlignment:
+                        CrossAxisAlignment.end,
+                    children:
+                        dailyData!.map((item) {
+                      final total =
+                          item['total'] as int;
+
+                      final label =
+                          item['label'] as String;
+
+                      final date =
+                          item['date'] as DateTime;
+
+                      final isToday =
+                          _isSameDate(
+                        date,
+                        DateTime.now(),
+                      );
 
                       return _buildBarItem(
                         label,
@@ -533,29 +744,40 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     }).toList(),
                   ),
           ),
+
           const SizedBox(height: 8),
+
           Row(
             children: [
               Container(
                 width: 8,
                 height: 8,
-                decoration: const BoxDecoration(
+                decoration:
+                    const BoxDecoration(
                   color: Color(0xFF10B981),
                   shape: BoxShape.circle,
                 ),
               ),
+
               const SizedBox(width: 6),
+
               const Text(
                 'Hari ini',
-                style: TextStyle(color: Color(0xFFA197B4), fontSize: 10),
+                style: TextStyle(
+                  color: Color(0xFFA197B4),
+                  fontSize: 10,
+                ),
               ),
+
               const Spacer(),
+
               Flexible(
                 child: Text(
                   'Jumlah bar mengikuti jumlah leads yang dibuat pada hari tersebut.',
                   textAlign: TextAlign.right,
                   style: TextStyle(
-                    color: Colors.white.withOpacity(0.4),
+                    color:
+                        Colors.white.withOpacity(0.4),
                     fontSize: 9,
                   ),
                 ),
@@ -567,6 +789,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
+  // ==========================================
+  // BAR ITEM
+  // ==========================================
+
   Widget _buildBarItem(
     String label,
     int total,
@@ -576,7 +802,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
     double barHeight = 0;
 
     if (maxTotal > 0 && total > 0) {
-      barHeight = 10 + ((total / maxTotal) * 65);
+      barHeight =
+          10 + ((total / maxTotal) * 65);
     } else if (total > 0) {
       barHeight = 10;
     }
@@ -584,7 +811,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return SizedBox(
       width: 40,
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.end,
+        mainAxisAlignment:
+            MainAxisAlignment.end,
         children: [
           SizedBox(
             height: 16,
@@ -600,18 +828,26 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ),
             ),
           ),
+
           const SizedBox(height: 4),
+
           Container(
-            height: barHeight > 0 ? barHeight : 4,
+            height:
+                barHeight > 0 ? barHeight : 4,
             width: 38,
             decoration: BoxDecoration(
               color: isToday
                   ? const Color(0xFF10B981)
-                  : Colors.white.withOpacity(total > 0 ? 0.45 : 0.12),
-              borderRadius: BorderRadius.circular(5),
+                  : Colors.white.withOpacity(
+                      total > 0 ? 0.45 : 0.12,
+                    ),
+              borderRadius:
+                  BorderRadius.circular(5),
             ),
           ),
+
           const SizedBox(height: 8),
+
           SizedBox(
             height: 16,
             child: Text(
@@ -624,7 +860,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     ? const Color(0xFF10B981)
                     : Colors.white.withOpacity(0.7),
                 fontSize: 10,
-                fontWeight: isToday ? FontWeight.bold : FontWeight.normal,
+                fontWeight: isToday
+                    ? FontWeight.bold
+                    : FontWeight.normal,
               ),
             ),
           ),
@@ -632,6 +870,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
       ),
     );
   }
+
+  // ==========================================
+  // FORMAT CHART DATE
+  // ==========================================
 
   String _formatChartDate(DateTime date) {
     const months = [
@@ -648,46 +890,73 @@ class _DashboardScreenState extends State<DashboardScreen> {
       'Nov',
       'Des',
     ];
+
     return '${date.day} ${months[date.month - 1]}';
   }
 
-  bool _isSameDate(DateTime first, DateTime second) {
+  // ==========================================
+  // SAME DATE
+  // ==========================================
+
+  bool _isSameDate(
+    DateTime first,
+    DateTime second,
+  ) {
     return first.year == second.year &&
         first.month == second.month &&
         first.day == second.day;
   }
 
-  // --- Dynamic Laporan Harian Terperinci Card ---
+  // ==========================================
+  // LAPORAN HARIAN
+  // ==========================================
+
   Widget _buildLaporanHarianCard() {
     return StreamBuilder<List<Map<String, dynamic>>>(
       stream: _getProductivityLeadsStream(),
       builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
+        if (snapshot.connectionState ==
+            ConnectionState.waiting) {
           return _buildLaporanContainer(
             child: const Text(
               'Memuat laporan...',
-              style: TextStyle(color: Colors.white70, fontSize: 11),
+              style: TextStyle(
+                color: Colors.white70,
+                fontSize: 11,
+              ),
             ),
           );
         }
 
         final leads = snapshot.data ?? [];
-        Map<String, Map<String, int>> groupedData = {};
+
+        Map<String, Map<String, int>>
+            groupedData = {};
 
         for (final lead in leads) {
-          final createdAtValue = lead['created_at'];
-          if (createdAtValue == null) continue;
+          final createdAtValue =
+              lead['created_at'];
+
+          if (createdAtValue == null) {
+            continue;
+          }
 
           DateTime? createdAt;
+
           try {
-            createdAt = DateTime.parse(createdAtValue.toString()).toLocal();
+            createdAt = DateTime.parse(
+              createdAtValue.toString(),
+            ).toLocal();
           } catch (_) {
             continue;
           }
 
-          // Format tanggal tampilan, misal: "Kamis, 9 Juli 2026"
-          String dateKey = _formatLongDate(createdAt);
-          String status = lead['status'] ?? 'baru';
+          final dateKey =
+              _formatLongDate(createdAt);
+
+          final String status =
+              lead['status']?.toString() ??
+                  'baru';
 
           if (!groupedData.containsKey(dateKey)) {
             groupedData[dateKey] = {
@@ -698,17 +967,20 @@ class _DashboardScreenState extends State<DashboardScreen> {
             };
           }
 
-          if (groupedData[dateKey]!.containsKey(status)) {
-            groupedData[dateKey]![status] = groupedData[dateKey]![status]! + 1;
+          if (groupedData[dateKey]!
+              .containsKey(status)) {
+            groupedData[dateKey]![status] =
+                groupedData[dateKey]![status]! + 1;
           }
         }
 
-        // Ambil maksimal 3 hari terakhir yang memiliki data (atau hari-hari terkini)
-        final sortedKeys = groupedData.keys.take(3).toList();
+        final sortedKeys =
+            groupedData.keys.take(3).toList();
 
         return _buildLaporanContainer(
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment:
+                CrossAxisAlignment.start,
             children: [
               const Text(
                 'Laporan Harian Terperinci',
@@ -718,31 +990,45 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   fontWeight: FontWeight.bold,
                 ),
               ),
+
               const SizedBox(height: 4),
+
               Text(
                 'Daftar rinci dari prospek-prospek yang ditambah per hari.',
                 style: TextStyle(
-                  color: Colors.white.withOpacity(0.5),
+                  color:
+                      Colors.white.withOpacity(0.5),
                   fontSize: 11,
                 ),
               ),
+
               const SizedBox(height: 14),
+
               if (sortedKeys.isEmpty)
                 Text(
                   'Belum ada data laporan harian.',
                   style: TextStyle(
-                    color: Colors.white.withOpacity(0.4),
+                    color:
+                        Colors.white.withOpacity(0.4),
                     fontSize: 11,
                   ),
                 )
               else
                 ...sortedKeys.map((dateStr) {
-                  final counts = groupedData[dateStr]!;
-                  final total = counts.values.fold(0, (sum, val) => sum + val);
+                  final counts =
+                      groupedData[dateStr]!;
 
-                  List<Widget> dynamicBadges = [];
+                  final total =
+                      counts.values.fold(
+                    0,
+                    (sum, val) => sum + val,
+                  );
 
-                  if ((counts['baru'] ?? 0) > 0) {
+                  List<Widget> dynamicBadges =
+                      [];
+
+                  if ((counts['baru'] ?? 0) >
+                      0) {
                     dynamicBadges.add(
                       _buildBadge(
                         'Baru : ${counts['baru']}',
@@ -750,7 +1036,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       ),
                     );
                   }
-                  if ((counts['dihubungi'] ?? 0) > 0) {
+
+                  if ((counts['dihubungi'] ??
+                          0) >
+                      0) {
                     dynamicBadges.add(
                       _buildBadge(
                         'Dihubungi : ${counts['dihubungi']}',
@@ -758,7 +1047,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       ),
                     );
                   }
-                  if ((counts['layak'] ?? 0) > 0) {
+
+                  if ((counts['layak'] ?? 0) >
+                      0) {
                     dynamicBadges.add(
                       _buildBadge(
                         'Prospek Layak : ${counts['layak']}',
@@ -766,7 +1057,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       ),
                     );
                   }
-                  if ((counts['closed'] ?? 0) > 0) {
+
+                  if ((counts['closed'] ?? 0) >
+                      0) {
                     dynamicBadges.add(
                       _buildBadge(
                         'Closed : ${counts['closed']}',
@@ -776,7 +1069,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   }
 
                   return Padding(
-                    padding: const EdgeInsets.only(bottom: 8.0),
+                    padding:
+                        const EdgeInsets.only(
+                      bottom: 8.0,
+                    ),
                     child: _buildDailyReportItem(
                       date: dateStr,
                       total: total,
@@ -791,18 +1087,31 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _buildLaporanContainer({required Widget child}) {
+  // ==========================================
+  // LAPORAN CONTAINER
+  // ==========================================
+
+  Widget _buildLaporanContainer({
+    required Widget child,
+  }) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFF4A3B69).withOpacity(0.45),
+        color:
+            const Color(0xFF4A3B69).withOpacity(0.45),
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: Colors.white.withOpacity(0.12)),
+        border: Border.all(
+          color: Colors.white.withOpacity(0.12),
+        ),
       ),
       child: child,
     );
   }
+
+  // ==========================================
+  // FORMAT LONG DATE
+  // ==========================================
 
   String _formatLongDate(DateTime date) {
     const days = [
@@ -814,6 +1123,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       'Sabtu',
       'Minggu',
     ];
+
     const months = [
       'Januari',
       'Februari',
@@ -828,11 +1138,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
       'November',
       'Desember',
     ];
-    // weekday returns 1 for Monday through 7 for Sunday
-    String dayName = days[date.weekday - 1];
-    String monthName = months[date.month - 1];
+
+    String dayName =
+        days[date.weekday - 1];
+
+    String monthName =
+        months[date.month - 1];
+
     return '$dayName, ${date.day} $monthName ${date.year}';
   }
+
+  // ==========================================
+  // DAILY REPORT ITEM
+  // ==========================================
 
   Widget _buildDailyReportItem({
     required String date,
@@ -844,13 +1162,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
       decoration: BoxDecoration(
         color: Colors.white.withOpacity(0.06),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.white.withOpacity(0.08)),
+        border: Border.all(
+          color: Colors.white.withOpacity(0.08),
+        ),
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment:
+            CrossAxisAlignment.start,
         children: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            mainAxisAlignment:
+                MainAxisAlignment.spaceBetween,
             children: [
               Text(
                 date,
@@ -860,30 +1182,50 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   fontWeight: FontWeight.bold,
                 ),
               ),
+
               Text(
                 'Total : $total item',
                 style: TextStyle(
-                  color: Colors.white.withOpacity(0.7),
+                  color:
+                      Colors.white.withOpacity(0.7),
                   fontSize: 11,
                 ),
               ),
             ],
           ),
+
           if (badges.isNotEmpty) ...[
             const SizedBox(height: 8),
-            Wrap(spacing: 6, runSpacing: 4, children: badges),
+
+            Wrap(
+              spacing: 6,
+              runSpacing: 4,
+              children: badges,
+            ),
           ],
         ],
       ),
     );
   }
 
-  Widget _buildBadge(String text, Color color) {
+  // ==========================================
+  // BADGE
+  // ==========================================
+
+  Widget _buildBadge(
+    String text,
+    Color color,
+  ) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      padding:
+          const EdgeInsets.symmetric(
+        horizontal: 8,
+        vertical: 3,
+      ),
       decoration: BoxDecoration(
         color: color.withOpacity(0.85),
-        borderRadius: BorderRadius.circular(6),
+        borderRadius:
+            BorderRadius.circular(6),
       ),
       child: Text(
         text,
@@ -896,19 +1238,25 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  // --- Pipeline CRM Card dengan Supabase Stream & CrmSearchPanel ---
-  // --- Pipeline CRM Card dengan Supabase Stream ---
+  // ==========================================
+  // PIPELINE CRM
+  // ==========================================
+
   Widget _buildPipelineCrmCard() {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFF4A3B69).withOpacity(0.45),
+        color:
+            const Color(0xFF4A3B69).withOpacity(0.45),
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: Colors.white.withOpacity(0.12)),
+        border: Border.all(
+          color: Colors.white.withOpacity(0.12),
+        ),
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment:
+            CrossAxisAlignment.start,
         children: [
           const Text(
             'Pipeline CRM Calon Jemaah',
@@ -918,7 +1266,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
               fontWeight: FontWeight.bold,
             ),
           ),
+
           const SizedBox(height: 4),
+
           Text(
             'Pantau dan kelola prospek jamaah umrah dari berbagai sumber secara terintegrasi.',
             style: TextStyle(
@@ -926,21 +1276,32 @@ class _DashboardScreenState extends State<DashboardScreen> {
               fontSize: 11,
             ),
           ),
+
           const SizedBox(height: 12),
 
           ElevatedButton.icon(
             onPressed: () {},
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.white.withOpacity(0.1),
+              backgroundColor:
+                  Colors.white.withOpacity(0.1),
               elevation: 0,
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
+              padding:
+                  const EdgeInsets.symmetric(
+                horizontal: 12,
+                vertical: 8,
+              ),
+              shape:
+                  RoundedRectangleBorder(
+                borderRadius:
+                    BorderRadius.circular(8),
               ),
             ),
             icon: const Text(
               'Buka Board Crm',
-              style: TextStyle(color: Colors.white, fontSize: 11),
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 11,
+              ),
             ),
             label: const Icon(
               Icons.north_east_rounded,
@@ -948,95 +1309,343 @@ class _DashboardScreenState extends State<DashboardScreen> {
               color: Colors.white,
             ),
           ),
+
           const SizedBox(height: 14),
 
-          // 1. CrmSearchPanel (Disambungkan dengan state dashboard)
-         CrmSearchPanel(
-            crmController: _crmController, // Sesuaikan nama instance controller milikmu
+          // ==========================================
+          // SEARCH + FILTER
+          // ==========================================
+
+          CrmSearchPanel(
+            crmController: _crmController,
           ),
+
           const SizedBox(height: 14),
 
-          // 2. CrmKanbanTabs (Menggunakan 3 parameter wajib)
+          // ==========================================
+          // KANBAN TABS
+          // ==========================================
+
           CrmKanbanTabs(
             tabData: _kanbanTabsData,
-            selectedStatus: _selectedPipelineStatus,
+            selectedStatus:
+                _selectedPipelineStatus,
             onTabChanged: (statusKey) {
               setState(() {
-                _selectedPipelineStatus = statusKey;
+                _selectedPipelineStatus =
+                    statusKey;
               });
             },
           ),
+
           const SizedBox(height: 14),
 
-          // 3. List Data Prospek dari Supabase Stream
-          StreamBuilder<List<LeadModel>>(
-            stream: _getLeadsStream(),
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return const Center(
-                  child: Padding(
-                    padding: EdgeInsets.all(24.0),
-                    child: CircularProgressIndicator(color: Colors.white),
-                  ),
-                );
-              }
+          // ==========================================
+          // BAGIAN INI PENTING
+          //
+          // AnimatedBuilder membuat Dashboard
+          // rebuild setiap kali:
+          //
+          // search berubah
+          // source berubah
+          // type berubah
+          //
+          // ==========================================
 
-              if (snapshot.hasError) {
-                return Center(
-                  child: Text(
-                    'Gagal memuat data: ${snapshot.error}',
-                    style: const TextStyle(color: Colors.redAccent, fontSize: 12),
-                  ),
-                );
-              }
+          AnimatedBuilder(
+            animation: _crmController,
+            builder: (context, _) {
+              return StreamBuilder<List<LeadModel>>(
+                stream: _getLeadsStream(),
+                builder: (context, snapshot) {
+                  // ==========================================
+                  // LOADING
+                  // ==========================================
 
-              final allLeads = snapshot.data ?? [];
+                  if (snapshot.connectionState ==
+                      ConnectionState.waiting) {
+                    return const Center(
+                      child: Padding(
+                        padding:
+                            EdgeInsets.all(24.0),
+                        child:
+                            CircularProgressIndicator(
+                          color: Colors.white,
+                        ),
+                      ),
+                    );
+                  }
 
-              // Filter menggunakan variabel milik LeadModel
-              final filteredLeads = allLeads.where((lead) {
-                final matchStatus = lead.status.toLowerCase() == _selectedPipelineStatus.toLowerCase();
-                
-                final matchSearch = _searchQuery.isEmpty ||
-                    lead.nama.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-                    (lead.noHp?.contains(_searchQuery) ?? false) ||
-                    (lead.lokasi?.toLowerCase().contains(_searchQuery.toLowerCase()) ?? false);
+                  // ==========================================
+                  // ERROR
+                  // ==========================================
 
-                final matchSource = _selectedSourceFilter == 'Semua Sumber' ||
-                    (lead.sumberLeads?.toLowerCase() == _selectedSourceFilter.toLowerCase());
+                  if (snapshot.hasError) {
+                    return Center(
+                      child: Text(
+                        'Gagal memuat data: ${snapshot.error}',
+                        style:
+                            const TextStyle(
+                          color:
+                              Colors.redAccent,
+                          fontSize: 12,
+                        ),
+                      ),
+                    );
+                  }
 
-                return matchStatus && matchSearch && matchSource;
-              }).toList();
+                  // ==========================================
+                  // SEMUA DATA DARI SUPABASE
+                  // ==========================================
 
-              if (filteredLeads.isEmpty) {
-                return Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(24),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.04),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: const Center(
-                    child: Text(
-                      'Tidak ada prospek ditemukan.',
-                      style: TextStyle(color: Colors.white54, fontSize: 12),
+                  final allLeads =
+                      snapshot.data ?? [];
+
+                  // ==========================================
+                  // FILTER DATA
+                  // ==========================================
+
+                  final searchQuery =
+                      _crmController.searchQuery
+                          .toLowerCase()
+                          .trim();
+
+                  final selectedSource =
+                      _crmController.selectedSource;
+
+                  final selectedType =
+                      _crmController.selectedType;
+
+                  final filteredLeads =
+                      allLeads.where((lead) {
+                    // ======================================
+                    // 1. STATUS KANBAN
+                    // ======================================
+
+                    final matchStatus =
+                        lead.status
+                                .toLowerCase() ==
+                            _selectedPipelineStatus
+                                .toLowerCase();
+
+                    // ======================================
+                    // 2. SEARCH
+                    // ======================================
+
+                    bool matchSearch = true;
+
+                    if (searchQuery.isNotEmpty) {
+                      final namaMatch = lead.nama
+                          .toLowerCase()
+                          .contains(searchQuery);
+
+                      final instansiMatch =
+                          lead.instansi
+                                  ?.toLowerCase()
+                                  .contains(
+                                    searchQuery,
+                                  ) ??
+                              false;
+
+                      final catatanMatch =
+                          lead.catatan
+                                  ?.toLowerCase()
+                                  .contains(
+                                    searchQuery,
+                                  ) ??
+                              false;
+
+                      final emailMatch =
+                          lead.email
+                                  ?.toLowerCase()
+                                  .contains(
+                                    searchQuery,
+                                  ) ??
+                              false;
+
+                      final noHpMatch =
+                          lead.noHp
+                                  ?.toLowerCase()
+                                  .contains(
+                                    searchQuery,
+                                  ) ??
+                              false;
+
+                      final lokasiMatch =
+                          lead.lokasi
+                                  ?.toLowerCase()
+                                  .contains(
+                                    searchQuery,
+                                  ) ??
+                              false;
+
+                      final sumberMatch =
+                          lead.sumberLeads
+                                  ?.toLowerCase()
+                                  .contains(
+                                    searchQuery,
+                                  ) ??
+                              false;
+
+                      final tipeMatch =
+                          lead.tipeLead
+                                  ?.toLowerCase()
+                                  .contains(
+                                    searchQuery,
+                                  ) ??
+                              false;
+
+                      matchSearch =
+                          namaMatch ||
+                          instansiMatch ||
+                          catatanMatch ||
+                          emailMatch ||
+                          noHpMatch ||
+                          lokasiMatch ||
+                          sumberMatch ||
+                          tipeMatch;
+                    }
+
+                    // ======================================
+                    // 3. FILTER SUMBER
+                    // ======================================
+
+                    bool matchSource = true;
+
+                    if (selectedSource !=
+                        'Semua Sumber') {
+                      matchSource =
+                          lead.sumberLeads
+                                  ?.toLowerCase() ==
+                              selectedSource
+                                  .toLowerCase();
+                    }
+
+                    // ======================================
+                    // 4. FILTER TIPE
+                    // ======================================
+
+                    bool matchType = true;
+
+                    if (selectedType !=
+                        'Semua Tipe (Output)') {
+                      matchType =
+                          lead.tipeLead
+                                  ?.toLowerCase() ==
+                              selectedType
+                                  .toLowerCase();
+                    }
+
+                    // ======================================
+                    // GABUNG SEMUA FILTER
+                    // ======================================
+
+                    return matchStatus &&
+                        matchSearch &&
+                        matchSource &&
+                        matchType;
+                  }).toList();
+
+                  // ==========================================
+                  // TIDAK ADA DATA
+                  // ==========================================
+
+                  if (filteredLeads.isEmpty) {
+                    return Container(
+                      width: double.infinity,
+                      padding:
+                          const EdgeInsets.all(24),
+                      decoration:
+                          BoxDecoration(
+                        color: Colors.white
+                            .withOpacity(0.04),
+                        borderRadius:
+                            BorderRadius.circular(
+                          12,
+                        ),
+                      ),
+                      child: Column(
+                        children: [
+                          Icon(
+                            Icons.search_off_rounded,
+                            color: Colors.white
+                                .withOpacity(0.35),
+                            size: 30,
+                          ),
+
+                          const SizedBox(height: 8),
+
+                          const Text(
+                            'Tidak ada prospek ditemukan.',
+                            style: TextStyle(
+                              color:
+                                  Colors.white54,
+                              fontSize: 12,
+                            ),
+                          ),
+
+                          const SizedBox(height: 4),
+
+                          Text(
+                            searchQuery.isNotEmpty
+                                ? 'Coba gunakan kata kunci lain.'
+                                : 'Belum ada data pada filter ini.',
+                            textAlign:
+                                TextAlign.center,
+                            style: TextStyle(
+                              color: Colors.white
+                                  .withOpacity(
+                                0.35,
+                              ),
+                              fontSize: 10,
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  }
+
+                  // ==========================================
+                  // LIST HASIL FILTER
+                  // ==========================================
+
+                  return ListView.separated(
+                    shrinkWrap: true,
+                    physics:
+                        const NeverScrollableScrollPhysics(),
+                    itemCount:
+                        filteredLeads.length,
+                    separatorBuilder:
+                        (context, index) =>
+                            const SizedBox(
+                      height: 10,
                     ),
-                  ),
-                );
-              }
+                    itemBuilder:
+                        (context, index) {
+                      final lead =
+                          filteredLeads[index];
 
-              return ListView.separated(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: filteredLeads.length,
-                separatorBuilder: (context, index) => const SizedBox(height: 10),
-                itemBuilder: (context, index) {
-                  final lead = filteredLeads[index];
+                      return CrmProspectCard(
+                        leadData: lead,
 
-                  return CrmProspectCard(
-                    leadData: lead,
-                    onStatusChange: (newStatus) => _updateLeadStatus(lead.id, newStatus),
-                    onEdit: () {},
-                    onDelete: () => _deleteLead(lead.id),
+                        // UPDATE STATUS
+                        onStatusChange:
+                            (newStatus) {
+                          _updateLeadStatus(
+                            lead.id,
+                            newStatus,
+                          );
+                        },
+
+                        // EDIT
+                        onEdit: () {},
+
+                        // DELETE
+                        onDelete: () {
+                          _deleteLead(lead.id);
+                        },
+                      );
+                    },
                   );
                 },
               );
