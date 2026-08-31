@@ -1,7 +1,11 @@
 // ignore_for_file: deprecated_member_use
 
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:crm_app/widgets/header_bar.dart';
+import '../CRM/kanban/widgets/crm_kanban_tabs.dart';
+import '../CRM/kanban/widgets/crm_prospect_card.dart';
+import '../CRM/kanban/models/lead_model.dart';
 
 class DashboardScreen extends StatefulWidget {
   final String avatarLetter;
@@ -13,9 +17,65 @@ class DashboardScreen extends StatefulWidget {
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
-  // State sederhana hanya untuk perpindahan visual tab filter
+  // State filter umum dashboard
   String _selectedTeamFilter = 'Tim Bawahanku';
   String _selectedTimeFilter = 'Semua waktu';
+
+  // State Pipeline CRM Kanban
+  String _selectedPipelineStatus = 'baru';
+  
+  // Instance Supabase Client
+  final _supabase = Supabase.instance.client;
+
+  // Stream data langsung dari Supabase tabel 'leads' (Sudah diperbaiki dari error json)
+  Stream<List<LeadModel>> _getLeadsStream() {
+  return _supabase
+      .from('leads')
+      .stream(primaryKey: ['id'])
+      .order('id', ascending: false)
+      .map((data) {
+        return data
+            .map((json) => LeadModel.fromMap(Map<String, dynamic>.from(json)))
+            .toList();
+      });
+}
+
+  // Map Data Tab Kanban
+  final Map<String, String> _kanbanTabsData = {
+    'Prospek Baru': 'baru',
+    'Dihubungi': 'dihubungi',
+    'Prospek Layak': 'layak',
+    'Closed': 'closed',
+  };
+
+  // Function untuk Update Status Lead ke Supabase
+  Future<void> _updateLeadStatus(dynamic leadId, String newStatus) async {
+    try {
+      await _supabase
+          .from('leads')
+          .update({'status': newStatus})
+          .eq('id', leadId);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Gagal memperbarui status: $e')),
+        );
+      }
+    }
+  }
+
+  // Function untuk Hapus Lead di Supabase
+  Future<void> _deleteLead(dynamic leadId) async {
+    try {
+      await _supabase.from('leads').delete().eq('id', leadId);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Gagal menghapus data: $e')),
+        );
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -35,7 +95,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // --- Top Bar Header (Tidak Diubah) ---
                 HeaderBar(
                   title: 'Dashboard CRM',
                   subtitle: 'Selamat datang kembali!',
@@ -43,7 +102,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ),
                 const SizedBox(height: 16),
 
-                // --- Filter Pills ---
+                // Filter Pills
                 SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
                   child: Row(
@@ -51,10 +110,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       Container(
                         padding: const EdgeInsets.all(4),
                         decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.06),
+                          color: Colors.white.withOpacity(0.06),
                           borderRadius: BorderRadius.circular(24),
                           border: Border.all(
-                            color: Colors.white.withValues(alpha: 0.12),
+                            color: Colors.white.withOpacity(0.12),
                           ),
                         ),
                         child: Row(
@@ -83,10 +142,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       Container(
                         padding: const EdgeInsets.all(4),
                         decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.06),
+                          color: Colors.white.withOpacity(0.06),
                           borderRadius: BorderRadius.circular(24),
                           border: Border.all(
-                            color: Colors.white.withValues(alpha: 0.12),
+                            color: Colors.white.withOpacity(0.12),
                           ),
                         ),
                         child: Row(
@@ -116,7 +175,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ),
                 const SizedBox(height: 16),
 
-                // --- 4 Card Metrik Utama ---
+                // Metric Cards
                 _buildMetricCard(
                   title: 'Kalender Posting',
                   titleColor: const Color(0xFF10B981),
@@ -124,7 +183,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   subtitle: 'Jadwal Konten Tersimpan',
                   actionText: 'Sinkronisasi Otomatis',
                   icon: Icons.calendar_month_rounded,
-                  iconBgColor: const Color(0xFF10B981).withValues(alpha: 0.2),
+                  iconBgColor: const Color(0xFF10B981).withOpacity(0.2),
                   iconColor: const Color(0xFF10B981),
                 ),
                 const SizedBox(height: 12),
@@ -136,7 +195,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   subtitle: 'Calon Jamaah travel terdekat',
                   actionText: 'Sinkronisasi Otomatis',
                   icon: Icons.calendar_month_rounded,
-                  iconBgColor: const Color(0xFFF43F5E).withValues(alpha: 0.2),
+                  iconBgColor: const Color(0xFFF43F5E).withOpacity(0.2),
                   iconColor: const Color(0xFFF43F5E),
                 ),
                 const SizedBox(height: 12),
@@ -148,7 +207,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   subtitle: 'Text, Gambar, Video & TTS',
                   actionText: 'Status Generator',
                   icon: Icons.calendar_month_rounded,
-                  iconBgColor: const Color(0xFF38BDF8).withValues(alpha: 0.2),
+                  iconBgColor: const Color(0xFF38BDF8).withOpacity(0.2),
                   iconColor: const Color(0xFF38BDF8),
                 ),
                 const SizedBox(height: 12),
@@ -160,20 +219,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   subtitle: 'Text, Gambar, Video & TTS',
                   actionText: null,
                   icon: Icons.calendar_month_rounded,
-                  iconBgColor: const Color(0xFFF59E0B).withValues(alpha: 0.2),
+                  iconBgColor: const Color(0xFFF59E0B).withOpacity(0.2),
                   iconColor: const Color(0xFFF59E0B),
                 ),
                 const SizedBox(height: 16),
 
-                // --- Section 1: Produktifitas Harian ---
                 _buildProduktifitasHarianCard(),
                 const SizedBox(height: 16),
 
-                // --- Section 2: Laporan Harian ---
                 _buildLaporanHarianCard(),
                 const SizedBox(height: 16),
 
-                // --- Section 3: Pipeline CRM Calon Jemaah ---
                 _buildPipelineCrmCard(),
                 const SizedBox(height: 24),
               ],
@@ -184,7 +240,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  // Helper Filter Chip
   Widget _buildFilterChip(
     String label,
     bool isActive,
@@ -212,7 +267,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  // Helper Card Metrik
   Widget _buildMetricCard({
     required String title,
     required Color titleColor,
@@ -227,9 +281,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFF4A3B69).withValues(alpha: 0.45),
+        color: const Color(0xFF4A3B69).withOpacity(0.45),
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
+        border: Border.all(color: Colors.white.withOpacity(0.12)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -268,7 +322,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           Text(
             subtitle,
             style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.6),
+              color: Colors.white.withOpacity(0.6),
               fontSize: 12,
             ),
           ),
@@ -277,7 +331,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             Text(
               actionText,
               style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.45),
+                color: Colors.white.withOpacity(0.45),
                 fontSize: 11,
               ),
             ),
@@ -287,15 +341,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  // Card Produktifitas Harian
   Widget _buildProduktifitasHarianCard() {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFF4A3B69).withValues(alpha: 0.45),
+        color: const Color(0xFF4A3B69).withOpacity(0.45),
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
+        border: Border.all(color: Colors.white.withOpacity(0.12)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -317,7 +370,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   vertical: 4,
                 ),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF10B981).withValues(alpha: 0.2),
+                  color: const Color(0xFF10B981).withOpacity(0.2),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: const Text(
@@ -335,7 +388,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           Text(
             'Total item tergenerate harian (Gabungan social post, gambar, video, tts, dan leads).',
             style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.5),
+              color: Colors.white.withOpacity(0.5),
               fontSize: 11,
             ),
           ),
@@ -343,13 +396,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
           Text(
             'Max (1)',
             style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.4),
+              color: Colors.white.withOpacity(0.4),
               fontSize: 10,
             ),
           ),
           const SizedBox(height: 12),
-
-          // Visual Bar Chart Horizontal Lines & Items
           SizedBox(
             height: 90,
             child: Row(
@@ -388,7 +439,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   'Ujung kolom dapat di-hover untuk melihat rincian item',
                   textAlign: TextAlign.right,
                   style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.4),
+                    color: Colors.white.withOpacity(0.4),
                     fontSize: 9,
                   ),
                 ),
@@ -408,7 +459,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           height: 8,
           width: 38,
           decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.18),
+            color: Colors.white.withOpacity(0.18),
             borderRadius: BorderRadius.circular(4),
           ),
         ),
@@ -416,7 +467,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         Text(
           label,
           style: TextStyle(
-            color: Colors.white.withValues(alpha: 0.7),
+            color: Colors.white.withOpacity(0.7),
             fontSize: 10,
           ),
         ),
@@ -424,15 +475,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  // Card Laporan Harian
   Widget _buildLaporanHarianCard() {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFF4A3B69).withValues(alpha: 0.45),
+        color: const Color(0xFF4A3B69).withOpacity(0.45),
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
+        border: Border.all(color: Colors.white.withOpacity(0.12)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -449,12 +499,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
           Text(
             'Daftar lengkap hitungan generator per hari.',
             style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.5),
+              color: Colors.white.withOpacity(0.5),
               fontSize: 11,
             ),
           ),
           const SizedBox(height: 14),
-
           _buildDailyReportItem(
             date: 'Kamis, 9 Juli 2026',
             total: 23,
@@ -465,7 +514,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ],
           ),
           const SizedBox(height: 8),
-
           _buildDailyReportItem(
             date: 'Jumat, 10 Juli 2026',
             total: 10,
@@ -476,7 +524,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ],
           ),
           const SizedBox(height: 8),
-
           _buildDailyReportItem(
             date: 'Sabtu, 11 Juli 2026',
             total: 15,
@@ -495,9 +542,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.06),
+        color: Colors.white.withOpacity(0.06),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+        border: Border.all(color: Colors.white.withOpacity(0.08)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -516,7 +563,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               Text(
                 'Total : $total item',
                 style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.7),
+                  color: Colors.white.withOpacity(0.7),
                   fontSize: 11,
                 ),
               ),
@@ -533,7 +580,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.85),
+        color: color.withOpacity(0.85),
         borderRadius: BorderRadius.circular(6),
       ),
       child: Text(
@@ -547,21 +594,21 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  // Card Pipeline CRM
+  // --- Pipeline CRM Card dengan Supabase Stream ---
   Widget _buildPipelineCrmCard() {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFF4A3B69).withValues(alpha: 0.45),
+        color: const Color(0xFF4A3B69).withOpacity(0.45),
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
+        border: Border.all(color: Colors.white.withOpacity(0.12)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
-            'Papeline CRM Calon Jemaah',
+            'Pipeline CRM Calon Jemaah',
             style: TextStyle(
               color: Colors.white,
               fontSize: 15,
@@ -572,7 +619,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           Text(
             'Pantau dan kelola prospek jamaah umrah dari berbagai sumber secara terintegrasi.',
             style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.5),
+              color: Colors.white.withOpacity(0.5),
               fontSize: 11,
             ),
           ),
@@ -581,7 +628,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ElevatedButton.icon(
             onPressed: () {},
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.white.withValues(alpha: 0.1),
+              backgroundColor: Colors.white.withOpacity(0.1),
               elevation: 0,
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               shape: RoundedRectangleBorder(
@@ -603,15 +650,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.04),
+              color: Colors.white.withOpacity(0.04),
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+              border: Border.all(color: Colors.white.withOpacity(0.08)),
             ),
             child: Column(
               children: [
                 _buildSearchInput(),
                 const SizedBox(height: 8),
-                _buildDropdownFilter(Icons.filter_list_rounded, 'Semua Sumber'),
+                _buildDropdownFilter(
+                  Icons.filter_list_rounded,
+                  'Semua Sumber',
+                ),
                 const SizedBox(height: 8),
                 _buildDropdownFilter(
                   Icons.people_outline_rounded,
@@ -622,7 +672,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ElevatedButton.icon(
                   onPressed: () {},
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.white.withValues(alpha: 0.12),
+                    backgroundColor: Colors.white.withOpacity(0.12),
                     minimumSize: const Size(double.infinity, 40),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),
@@ -662,6 +712,80 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ],
             ),
           ),
+          const SizedBox(height: 16),
+
+          // Kanban Tabs
+          CrmKanbanTabs(
+            selectedStatus: _selectedPipelineStatus,
+            tabData: _kanbanTabsData,
+            onTabChanged: (newStatus) {
+              setState(() {
+                _selectedPipelineStatus = newStatus;
+              });
+            },
+          ),
+          const SizedBox(height: 12),
+
+          // Realtime Stream Data Supabase (Padding & JSON di-fix)
+          StreamBuilder<List<LeadModel>>(
+            stream: _getLeadsStream(),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 24),
+                  child: Center(
+                    child: CircularProgressIndicator(color: Colors.white),
+                  ),
+                );
+              }
+
+              if (snapshot.hasError) {
+                return Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 24),
+                  child: Center(
+                    child: Text(
+                      'Terjadi kesalahan: ${snapshot.error}',
+                      style: const TextStyle(color: Colors.redAccent, fontSize: 11),
+                    ),
+                  ),
+                );
+              }
+
+              final allLeads = snapshot.data ?? [];
+              final filteredLeads = allLeads
+                  .where((lead) => lead.status == _selectedPipelineStatus)
+                  .toList();
+
+              if (filteredLeads.isEmpty) {
+                return Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(vertical: 24),
+                  alignment: Alignment.center,
+                  child: Text(
+                    'Belum ada prospek pada kategori ini.',
+                    style: TextStyle(
+                      color: Colors.white.withOpacity(0.4),
+                      fontSize: 11,
+                    ),
+                  ),
+                );
+              }
+
+              return Column(
+                children: filteredLeads.map((lead) {
+                  return CrmProspectCard(
+                    leadData: lead,
+                    onEdit: () {
+                      // Action Edit
+                    },
+                    onDelete: () => _deleteLead(lead.id),
+                    onStatusChange: (newStatus) =>
+                        _updateLeadStatus(lead.id, newStatus),
+                  );
+                }).toList(),
+              );
+            },
+          ),
         ],
       ),
     );
@@ -671,7 +795,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.08),
+        color: Colors.white.withOpacity(0.08),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
@@ -679,13 +803,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
           Icon(
             Icons.search_rounded,
             size: 16,
-            color: Colors.white.withValues(alpha: 0.4),
+            color: Colors.white.withOpacity(0.4),
           ),
           const SizedBox(width: 8),
           Text(
             'Cari prospek (nama, KTP, catatan)...',
             style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.3),
+              color: Colors.white.withOpacity(0.3),
               fontSize: 11,
             ),
           ),
@@ -698,17 +822,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.08),
+        color: Colors.white.withOpacity(0.08),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
         children: [
-          Icon(icon, size: 14, color: Colors.white.withValues(alpha: 0.5)),
+          Icon(icon, size: 14, color: Colors.white.withOpacity(0.5)),
           const SizedBox(width: 8),
           Text(
             label,
             style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.6),
+              color: Colors.white.withOpacity(0.6),
               fontSize: 11,
             ),
           ),
