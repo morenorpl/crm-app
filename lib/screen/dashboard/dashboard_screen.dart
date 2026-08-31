@@ -233,58 +233,89 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 const SizedBox(height: 16),
 
                 // ==========================================
-                // METRIC CARDS
+                // METRIC CARDS (DYNAMIC ALL-TIME CRM STAGES)
                 // ==========================================
-                _buildMetricCard(
-                  title: 'Kalender Posting',
-                  titleColor: const Color(0xFF10B981),
-                  value: '4',
-                  subtitle: 'Jadwal Konten Tersimpan',
-                  actionText: 'Sinkronisasi Otomatis',
-                  icon: Icons.calendar_month_rounded,
-                  iconBgColor: const Color(0xFF10B981).withOpacity(0.2),
-                  iconColor: const Color(0xFF10B981),
+                StreamBuilder<List<Map<String, dynamic>>>(
+                  stream: _getProductivityLeadsStream(),
+                  builder: (context, snapshot) {
+                    int totalBaru = 0;
+                    int totalDihubungi = 0;
+                    int totalLayak = 0;
+                    int totalClosed = 0;
+
+                    if (snapshot.hasData) {
+                      final leads = snapshot.data!;
+                      for (var lead in leads) {
+                        final String status = lead['status'] ?? 'baru';
+
+                        if (status == 'baru') {
+                          totalBaru++;
+                        } else if (status == 'dihubungi') {
+                          totalDihubungi++;
+                        } else if (status == 'layak') {
+                          totalLayak++;
+                        } else if (status == 'closed' || status == 'selesai') {
+                          totalClosed++;
+                        }
+                      }
+                    }
+
+                    return Column(
+                      children: [
+                        // 1. Prospek Baru -> Blue (Icon: Fiber New / Sparkle for new leads)
+                        _buildMetricCard(
+                          title: 'Prospek Baru',
+                          titleColor: const Color(0xFF3B82F6),
+                          value: '$totalBaru',
+                          subtitle: 'Total semua prospek baru',
+                          actionText: 'Tahap Awal Pipeline',
+                          icon: Icons.fiber_new_rounded,
+                          iconBgColor: const Color(0xFF3B82F6).withOpacity(0.2),
+                          iconColor: const Color(0xFF3B82F6),
+                        ),
+                        const SizedBox(height: 12),
+
+                        // 2. Dihubungi -> Orange (Icon: Phone Callback / Call for communication)
+                        _buildMetricCard(
+                          title: 'Dihubungi',
+                          titleColor: const Color(0xFFF59E0B),
+                          value: '$totalDihubungi',
+                          subtitle: 'Total prospek dihubungi',
+                          actionText: 'Dalam Proses Follow Up',
+                          icon: Icons.phone_callback_rounded,
+                          iconBgColor: const Color(0xFFF59E0B).withOpacity(0.2),
+                          iconColor: const Color(0xFFF59E0B),
+                        ),
+                        const SizedBox(height: 12),
+
+                        // 3. Prospek Layak -> Green (Icon: Check Circle / Verified for qualified leads)
+                        _buildMetricCard(
+                          title: 'Prospek Layak',
+                          titleColor: const Color(0xFF10B981),
+                          value: '$totalLayak',
+                          subtitle: 'Total prospek memenuhi syarat',
+                          actionText: 'Siap Menuju Closing',
+                          icon: Icons.check_circle_outline_rounded,
+                          iconBgColor: const Color(0xFF10B981).withOpacity(0.2),
+                          iconColor: const Color(0xFF10B981),
+                        ),
+                        const SizedBox(height: 12),
+
+                        // 4. Closed (WON) -> Purple (Icon: Workspace Premium / Handshake for closed deals)
+                        _buildMetricCard(
+                          title: 'Closed (WON)',
+                          titleColor: const Color(0xFF8B5CF6),
+                          value: '$totalClosed',
+                          subtitle: 'Total deal berhasil',
+                          actionText: null,
+                          icon: Icons.workspace_premium_rounded,
+                          iconBgColor: const Color(0xFF8B5CF6).withOpacity(0.2),
+                          iconColor: const Color(0xFF8B5CF6),
+                        ),
+                      ],
+                    );
+                  },
                 ),
-
-                const SizedBox(height: 12),
-
-                _buildMetricCard(
-                  title: 'Maps Leads Terkumpul',
-                  titleColor: const Color(0xFFF43F5E),
-                  value: '80',
-                  subtitle: 'Calon Jamaah travel terdekat',
-                  actionText: 'Sinkronisasi Otomatis',
-                  icon: Icons.calendar_month_rounded,
-                  iconBgColor: const Color(0xFFF43F5E).withOpacity(0.2),
-                  iconColor: const Color(0xFFF43F5E),
-                ),
-
-                const SizedBox(height: 12),
-
-                _buildMetricCard(
-                  title: 'Total Generasi Media',
-                  titleColor: const Color(0xFF38BDF8),
-                  value: '156',
-                  subtitle: 'Text, Gambar, Video & TTS',
-                  actionText: 'Status Generator',
-                  icon: Icons.calendar_month_rounded,
-                  iconBgColor: const Color(0xFF38BDF8).withOpacity(0.2),
-                  iconColor: const Color(0xFF38BDF8),
-                ),
-
-                const SizedBox(height: 12),
-
-                _buildMetricCard(
-                  title: 'Total Generasi Media',
-                  titleColor: const Color(0xFFF59E0B),
-                  value: '156',
-                  subtitle: 'Text, Gambar, Video & TTS',
-                  actionText: null,
-                  icon: Icons.calendar_month_rounded,
-                  iconBgColor: const Color(0xFFF59E0B).withOpacity(0.2),
-                  iconColor: const Color(0xFFF59E0B),
-                ),
-
                 const SizedBox(height: 16),
 
                 // ==========================================
@@ -900,7 +931,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     dynamicBadges.add(
                       _buildBadge(
                         'Dihubungi : ${counts['dihubungi']}',
-                        const Color(0xFF0284C7),
+                        const Color(0xFFF59E0B),
                       ),
                     );
                   }

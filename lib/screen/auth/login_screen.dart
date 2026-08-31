@@ -310,108 +310,105 @@ class _LoginScreenState extends State<LoginScreen> {
                 const SizedBox(height: 24),
 
                 // --- REGISTER LINK ---
-                Center(
-                  child: GestureDetector(
-                    onTap: () {
-                      if (Navigator.canPop(context)) {
-                        Navigator.pop(context);
-                      } else {
-                        Navigator.pushReplacement(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const RegisterScreen(),
-                          ),
-                        );
-                      }
-                    },
-                    child: RichText(
-                      text: const TextSpan(
-                        text: 'Ingin mendaftar ',
-                        style: TextStyle(color: Colors.white70, fontSize: 13),
-                        children: [
-                          TextSpan(
-                            text: 'sebagai Pengguna baru? Klik disini',
-                            style: TextStyle(
-                              color: Color(0xFF34D399),
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-
-                const SizedBox(height: 24),
+                // Center(
+                //   child: GestureDetector(
+                //     onTap: () {
+                //       if (Navigator.canPop(context)) {
+                //         Navigator.pop(context);
+                //       } else {
+                //         Navigator.pushReplacement(
+                //           context,
+                //           MaterialPageRoute(
+                //             builder: (context) => const RegisterScreen(),
+                //           ),
+                //         );
+                //       }
+                //     },
+                //     child: RichText(
+                //       text: const TextSpan(
+                //         text: 'Ingin mendaftar ',
+                //         style: TextStyle(color: Colors.white70, fontSize: 13),
+                //         children: [
+                //           TextSpan(
+                //             text: 'sebagai Pengguna baru? Klik disini',
+                //             style: TextStyle(
+                //               color: Color(0xFF34D399),
+                //               fontWeight: FontWeight.bold,
+                //             ),
+                //           ),
+                //         ],
+                //       ),
+                //     ),
+                //   ),
+                // ),
+                // const SizedBox(height: 24),
 
                 // --- DIVIDER WITH "ATAU" ---
-                Row(
-                  children: const [
-                    Expanded(
-                      child: Divider(color: Color(0xFF4C3F69), thickness: 1),
-                    ),
-                    Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 12),
-                      child: Text(
-                        'ATAU',
-                        style: TextStyle(
-                          color: Color(0xFF887D9F),
-                          fontSize: 11,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                    Expanded(
-                      child: Divider(color: Color(0xFF4C3F69), thickness: 1),
-                    ),
-                  ],
-                ),
-
-                const SizedBox(height: 24),
+                // Row(
+                //   children: const [
+                //     Expanded(
+                //       child: Divider(color: Color(0xFF4C3F69), thickness: 1),
+                //     ),
+                //     Padding(
+                //       padding: EdgeInsets.symmetric(horizontal: 12),
+                //       child: Text(
+                //         'ATAU',
+                //         style: TextStyle(
+                //           color: Color(0xFF887D9F),
+                //           fontSize: 11,
+                //           fontWeight: FontWeight.bold,
+                //         ),
+                //       ),
+                //     ),
+                //     Expanded(
+                //       child: Divider(color: Color(0xFF4C3F69), thickness: 1),
+                //     ),
+                //   ],
+                // ),
+                // const SizedBox(height: 24),
 
                 // --- GOOGLE SIGN IN BUTTON ---
-                SizedBox(
-                  height: 52,
-                  child: ElevatedButton(
-                    onPressed: () {
-                      // Handle Google Login
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.white,
-                      elevation: 0,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        // Google 'G' icon or image placeholder
-                        Image.network(
-                          'https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg',
-                          height: 20,
-                          errorBuilder: (context, error, stackTrace) =>
-                              const Icon(
-                                Icons.g_mobiledata,
-                                color: Colors.blue,
-                                size: 28,
-                              ),
-                        ),
-                        const SizedBox(width: 10),
-                        const Text(
-                          'Masuk dengan Google',
-                          style: TextStyle(
-                            color: Colors.black87,
-                            fontSize: 15,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-
-                const SizedBox(height: 32),
+                // SizedBox(
+                //   height: 52,
+                //   child: ElevatedButton(
+                //     onPressed: () {
+                //       // Handle Google Login
+                //     },
+                //     style: ElevatedButton.styleFrom(
+                //       backgroundColor: Colors.white,
+                //       elevation: 0,
+                //       shape: RoundedRectangleBorder(
+                //         borderRadius: BorderRadius.circular(16),
+                //       ),
+                //     ),
+                //     child: Row(
+                //       mainAxisAlignment: MainAxisAlignment.center,
+                //       children: [
+                //         // Google 'G' icon or image placeholder
+                //         Image.network(
+                //           'https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg',
+                //           height: 20,
+                //           errorBuilder: (context, error, stackTrace) =>
+                //               const Icon(
+                //                 Icons.g_mobiledata,
+                //                 color: Colors.blue,
+                //                 size: 28,
+                //               ),
+                //         ),
+                //         const SizedBox(width: 10),
+                //         const Text(
+                //           'Masuk dengan Google',
+                //           style: TextStyle(
+                //             color: Colors.black87,
+                //             fontSize: 15,
+                //             fontWeight: FontWeight.bold,
+                //           ),
+                //         ),
+                //       ],
+                //     ),
+                //   ),
+                // ),
+                // const SizedBox(height: 32),
 
                 // --- FOOTER DESCRIPTION ---
                 const Text(

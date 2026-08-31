@@ -18,6 +18,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
   String _phone = '-';
   bool _isLoading = true;
 
+  // Track expanded state for the 6 FAQ items
+  final List<bool> _faqExpanded = [false, false, false, false, false, false];
+
   @override
   void initState() {
     super.initState();
@@ -31,7 +34,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
       if (authUser != null) {
         debugPrint('🔍 [PROFILE] User Auth ID: ${authUser.id}');
 
-        // Query persis ke tabel 'users' berdasarkan kolom 'auth_id' atau 'email'
         final response = await Supabase.instance.client
             .from('users')
             .select()
@@ -41,7 +43,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
         debugPrint('📦 [PROFILE] Data dari tabel users: $response');
 
         if (response != null) {
-          // Mengambil field persis sesuai gambar tabel Supabase
           final String fetchedName = (response['name'] ?? '').toString();
           final String fetchedEmail =
               (response['email'] ?? authUser.email ?? '-').toString();
@@ -61,7 +62,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
         }
       }
 
-      // Fallback jika tidak ditemukan data di tabel 'users'
       if (authUser != null) {
         setState(() {
           _email = authUser.email ?? '-';
@@ -95,6 +95,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(19, 21, 19, 30),
                   child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       HeaderBar(
                         title: 'Profile - Hi, $_username',
@@ -102,27 +103,97 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         avatarText: initialLetter,
                       ),
                       const SizedBox(height: 25),
-                      _buildProfilePhoto(initialLetter),
+                      Center(child: _buildProfilePhoto(initialLetter)),
                       const SizedBox(height: 14),
-                      Text(
-                        _username.toUpperCase(),
-                        style: const TextStyle(
-                          color: AppColors.white,
-                          fontSize: 20,
-                          fontWeight: FontWeight.w900,
+                      Center(
+                        child: Text(
+                          _username.toUpperCase(),
+                          style: const TextStyle(
+                            color: AppColors.white,
+                            fontSize: 20,
+                            fontWeight: FontWeight.w900,
+                          ),
                         ),
                       ),
-                      const SizedBox(height: 63),
+                      const SizedBox(height: 40),
 
-                      // Menampilkan Nomor Telepon (kolom no_tlp)
-                      _buildContact(icon: Icons.phone, text: _phone),
-                      const SizedBox(height: 10),
+                      // Contact details centered
+                      Center(
+                        child: Column(
+                          children: [
+                            _buildContact(icon: Icons.phone, text: _phone),
+                            const SizedBox(height: 10),
+                            _buildContact(
+                              icon: Icons.email_outlined,
+                              text: _email,
+                              google: true,
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 35),
 
-                      // Menampilkan Email (kolom email)
-                      _buildContact(
-                        icon: Icons.email_outlined,
-                        text: _email,
-                        google: true,
+                      // ==================== FAQ SECTION ====================
+                      const Text(
+                        'FAQ (Pertanyaan Umum)',
+                        style: TextStyle(
+                          color: AppColors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Panduan cepat seputar penggunaan aplikasi CRM.',
+                        style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.5),
+                          fontSize: 11,
+                        ),
+                      ),
+                      const SizedBox(height: 14),
+
+                      _buildFaqItem(
+                        index: 0,
+                        question: 'Bagaimana cara menambahkan prospek baru?',
+                        answer:
+                            'Anda dapat pergi ke halaman Dashboard atau Pipeline, lalu klik tombol hijau bertuliskan "Tambah Prospek Baru". Isi form yang muncul lalu simpan.',
+                      ),
+                      const SizedBox(height: 8),
+                      _buildFaqItem(
+                        index: 1,
+                        question: 'Bagaimana cara mengubah tahapan status CRM?',
+                        answer:
+                            'Di halaman Pipeline Kanban, Anda bisa menggeser kartu prospek atau mengubah statusnya langsung melalui opsi edit/status change pada kartu prospek.',
+                      ),
+                      const SizedBox(height: 8),
+                      _buildFaqItem(
+                        index: 2,
+                        question: 'Apa fungsi dari fitur Jadwal Follow Up?',
+                        answer:
+                            'Fitur ini membantu Anda melacak tanggal penting kapan harus menghubungi kembali calon jamaah agar tidak terlewat.',
+                      ),
+                      const SizedBox(height: 8),
+                      _buildFaqItem(
+                        index: 3,
+                        question: 'Bagaimana cara melihat laporan harian?',
+                        answer:
+                            'Laporan harian terperinci dan grafik produktifitas dapat dipantau secara langsung melalui widget ringkasan di halaman utama Dashboard.',
+                      ),
+                      const SizedBox(height: 8),
+                      _buildFaqItem(
+                        index: 4,
+                        question:
+                            'Apakah data prospek tersinkronisasi otomatis?',
+                        answer:
+                            'Ya, semua perubahan data baik penambahan, perubahan status, maupun penghapusan terhubung secara real-time dengan database Supabase.',
+                      ),
+                      const SizedBox(height: 8),
+                      _buildFaqItem(
+                        index: 5,
+                        question:
+                            'Bagaimana jika lupa atau ingin mengubah nomor HP?',
+                        answer:
+                            'Informasi profil akun diambil langsung dari data registrasi sistem. Silakan hubungi administrator tim IT jika ada data profil yang perlu diperbarui.',
                       ),
                     ],
                   ),
@@ -134,8 +205,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Widget _buildProfilePhoto(String initialLetter) {
     return Container(
-      width: 200,
-      height: 200,
+      width: 140,
+      height: 140,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         color: Colors.white.withValues(alpha: 0.08),
@@ -149,7 +220,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           initialLetter,
           style: const TextStyle(
             color: Colors.white,
-            fontSize: 72,
+            fontSize: 54,
             fontWeight: FontWeight.bold,
           ),
         ),
@@ -206,6 +277,80 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  // FAQ Dropdown Row Widget
+  Widget _buildFaqItem({
+    required int index,
+    required String question,
+    required String answer,
+  }) {
+    final bool isExpanded = _faqExpanded[index];
+
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          _faqExpanded[index] = !isExpanded;
+        });
+      },
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 250),
+        width: double.infinity,
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: isExpanded ? 0.09 : 0.06),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: Colors.white.withValues(alpha: isExpanded ? 0.2 : 0.08),
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Text(
+                    question,
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 12,
+                      fontWeight: isExpanded
+                          ? FontWeight.bold
+                          : FontWeight.w600,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                AnimatedRotation(
+                  turns: isExpanded ? 0.5 : 0.0, // Rotates arrow 180 degrees
+                  duration: const Duration(milliseconds: 200),
+                  child: const Icon(
+                    Icons.keyboard_arrow_down_rounded,
+                    color: Colors.white70,
+                    size: 20,
+                  ),
+                ),
+              ],
+            ),
+            if (isExpanded) ...[
+              const SizedBox(height: 10),
+              const Divider(color: Colors.white12, height: 1),
+              const SizedBox(height: 10),
+              Text(
+                answer,
+                style: TextStyle(
+                  color: Colors.white.withValues(alpha: 0.7),
+                  fontSize: 11,
+                  height: 1.4,
+                ),
+              ),
+            ],
+          ],
+        ),
       ),
     );
   }
