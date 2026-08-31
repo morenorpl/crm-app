@@ -198,7 +198,7 @@ class AddProspectDialog {
                                   items: const {
                                     'baru': 'Baru (Prospek Baru)',
                                     'dihubungi': 'Dihubungi',
-                                    'prospek': 'Prospek Layak',
+                                    'layak': 'Prospek Layak',
                                     'selesai': 'Closed (WON)',
                                   },
                                   onChanged: (val) {

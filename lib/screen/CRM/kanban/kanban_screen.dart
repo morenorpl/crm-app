@@ -111,7 +111,7 @@ class _CrmBoardScreenState extends State<CrmBoardScreen> {
       String activeTabName = _tabCategories.entries
           .firstWhere(
             (entry) => entry.value == _activeStatus,
-            orElse: () => const MapEntry('Prospek', 'baru'),
+            orElse: () => const MapEntry('Layak', 'baru'),
           )
           .key;
 
@@ -455,21 +455,19 @@ class _EditProspectDialogState extends State<_EditProspectDialog> {
               Row(
                 children: [
                   Expanded(
-                    child: _buildDropdown(
-                      'SUMBER LEADS',
-                      _sumberLeads,
-                      ['Manual Input', 'Social Media', 'News Leads'],
-                      (val) => setState(() => _sumberLeads = val!),
-                    ),
+                    child: _buildDropdown('SUMBER LEADS', _sumberLeads, [
+                      'Manual Input',
+                      'Social Media',
+                      'News Leads',
+                    ], (val) => setState(() => _sumberLeads = val!)),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
-                    child: _buildDropdown(
-                      'TIPE LEAD',
-                      _tipeLead,
-                      ['Jamaah (Individu)', 'Mitra / Agen', 'Umum'],
-                      (val) => setState(() => _tipeLead = val!),
-                    ),
+                    child: _buildDropdown('TIPE LEAD', _tipeLead, [
+                      'Jamaah (Individu)',
+                      'Mitra / Agen',
+                      'Umum',
+                    ], (val) => setState(() => _tipeLead = val!)),
                   ),
                 ],
               ),
