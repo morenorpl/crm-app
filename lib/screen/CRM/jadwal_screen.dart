@@ -510,6 +510,23 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
     final jumlahPax = lead.jumlahPax != null ? '${lead.jumlahPax} Pax' : '-';
     final potensiNilai = _formatCurrency(lead.potensiNilai);
 
+    Color getStatusColor(String status) {
+      switch (status.toLowerCase()) {
+        case 'baru':
+          return AppColors.cyanAccent;
+        case 'dihubungi':
+          return AppColors.yellowAccent;
+        case 'layak':
+          return AppColors.greenAccent;
+        case 'closed':
+          return AppColors.purpleAccent;
+        default:
+          return AppColors.textMuted;
+      }
+    }
+
+    final statusColor = getStatusColor(lead.status);
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(14),
@@ -558,17 +575,17 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                   vertical: 4,
                 ),
                 decoration: BoxDecoration(
-                  color: AppColors.yellow.withValues(alpha: 0.12),
+                  color: statusColor.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(6),
                   border: Border.all(
-                    color: AppColors.yellow.withValues(alpha: 0.6),
+                    color: statusColor.withValues(alpha: 0.6),
                     width: 0.8,
                   ),
                 ),
                 child: Text(
                   lead.status.toUpperCase(),
-                  style: const TextStyle(
-                    color: AppColors.yellow,
+                  style: TextStyle(
+                    color: statusColor,
                     fontSize: 8.5,
                     fontWeight: FontWeight.w900,
                   ),
@@ -714,7 +731,9 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                               surface: AppColors.card,
                               onSurface: AppColors.white,
                             ),
-                            dialogBackgroundColor: AppColors.background,
+                            dialogTheme: DialogThemeData(
+                              backgroundColor: AppColors.background,
+                            ),
                           ),
                           child: child!,
                         );

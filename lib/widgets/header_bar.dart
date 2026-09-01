@@ -108,7 +108,7 @@ class _HeaderBarState extends State<HeaderBar> {
       child: Row(
         children: [
           // 1. Logo Asset on the left
-          Image.asset(widget.assetLogoPath, height: 32, fit: BoxFit.contain),
+          Image.asset(widget.assetLogoPath, height: 42, fit: BoxFit.fill),
           const SizedBox(width: 10),
 
           // 2. Title and Subtitle
