@@ -7,6 +7,7 @@ import 'package:crm_app/screen/layout/main_layout_screen.dart';
 import 'package:flutter/material.dart';
 import '../../services/auth_service.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:crm_app/constants/app_colors.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -88,6 +89,7 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppColors.background,
       body: Container(
         width: double.infinity,
         height: double.infinity,
@@ -96,9 +98,11 @@ class _LoginScreenState extends State<LoginScreen> {
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              Color(0xFF53456F), // Purple gradient top
-              Color(0xFF221A3B), // Deep dark purple bottom
+              Color(0xFF261943), // atas - warna dasar Kanban
+              Color(0xFF30204A), // mulai naik
+              Color(0xFF493260), // bawah - ungu lebih terang
             ],
+            stops: [0.0, 0.45, 1.0],
           ),
         ),
         child: SafeArea(
@@ -114,7 +118,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   child: Image.asset(
                     AppAssets
                         .sejadahLogo, // Ensure asset is added in pubspec.yaml
-                    height: 110,
+                    height: 200,
                     errorBuilder: (context, error, stackTrace) => const Icon(
                       Icons.stars_rounded,
                       size: 90,
