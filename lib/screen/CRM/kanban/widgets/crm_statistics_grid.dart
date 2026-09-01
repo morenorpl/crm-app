@@ -120,9 +120,9 @@ class CrmStatisticsGrid extends StatelessWidget {
           crossAxisCount: 2,
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
-          crossAxisSpacing: 10,
-          mainAxisSpacing: 10,
-          childAspectRatio: 2.8,
+          crossAxisSpacing: 12,
+          mainAxisSpacing: 12,
+          childAspectRatio: 1.55, // Balanced proportions for metric cards
           children: [
             _statCard(
               Icons.group_outlined,
@@ -140,13 +140,13 @@ class CrmStatisticsGrid extends StatelessWidget {
               Icons.attach_money,
               'Nilai Pipeline',
               stats['nilaiPipeline']!,
-              AppColors.yellowAccent,
+              AppColors.greenAccent,
             ),
             _statCard(
               Icons.check_circle_outline,
-              'Deal Closed ( WON )',
+              'Deal Closed (Won)',
               stats['dealClosed']!,
-              AppColors.greenAccent,
+              AppColors.yellowAccent,
             ),
           ],
         );
@@ -156,53 +156,65 @@ class CrmStatisticsGrid extends StatelessWidget {
 
   Widget _statCard(IconData icon, String title, String value, Color iconColor) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: AppColors.searchPanelBg,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: AppColors.border, width: 0.8),
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(5),
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.05),
-              borderRadius: BorderRadius.circular(6),
-              border: Border.all(color: iconColor, width: 1),
-            ),
-            child: Icon(icon, color: iconColor, size: 16),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.08),
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.15),
+            blurRadius: 6,
+            offset: const Offset(0, 3),
           ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          // Top row: Icon & Title
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: iconColor.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(icon, color: iconColor, size: 15),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
                   title,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
                     color: AppColors.textMuted,
-                    fontSize: 7.5,
-                    fontWeight: FontWeight.w500,
+                    fontSize: 10.5,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
-                const SizedBox(height: 1),
-                Text(
-                  value,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    color: (iconColor == AppColors.textLight)
-                        ? AppColors.white
-                        : iconColor,
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
+              ),
+            ],
+          ),
+
+          // Bottom section: Large Highlighted Value
+          Text(
+            value,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              color: (iconColor == AppColors.textLight)
+                  ? AppColors.white
+                  : iconColor,
+              fontSize: 14.5,
+              fontWeight: FontWeight.bold,
+              letterSpacing: 0.2,
             ),
           ),
         ],

@@ -515,7 +515,9 @@ class _EditProspectDialogState extends State<_EditProspectDialog> {
                                 surface: AppColors.searchPanelBg,
                                 onSurface: Colors.white,
                               ),
-                              dialogBackgroundColor: AppColors.searchPanelBg,
+                              dialogTheme: DialogThemeData(
+                                backgroundColor: AppColors.searchPanelBg,
+                              ),
                             ),
                             child: child!,
                           );

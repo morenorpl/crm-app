@@ -309,9 +309,9 @@ class _CrmProspectCardState extends State<CrmProspectCard> {
                   spacing: 6,
                   runSpacing: 4,
                   children: [
-                    _cardBadge(sumberLeads, AppColors.purpleAccent),
+                    _cardBadge(sumberLeads, AppColors.yellowAccent),
                     _cardBadge(tipeLead, AppColors.cyanAccent),
-                    _cardBadge(jumlahPax, AppColors.yellowAccent),
+                    _cardBadge(jumlahPax, AppColors.textLight),
                     _cardBadge(potensiNilaiFormatted, AppColors.greenAccent),
                   ],
                 ),
