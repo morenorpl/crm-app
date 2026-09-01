@@ -175,9 +175,8 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   HeaderBar(
-                    title: 'Dashboard CRM',
-                    subtitle: 'Selamat datang kembali!',
-                    avatarText: widget.avatarLetter,
+                    title: 'Manajemen Schedule Project Leads',
+                    subtitle: 'Jadwal follow-up prospek mingguan...',
                   ),
                   const SizedBox(height: 20),
                   _buildTitle(),

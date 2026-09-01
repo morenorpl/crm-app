@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:crm_app/constants/app_colors.dart';
 import 'package:crm_app/widgets/header_bar.dart';
+import 'package:crm_app/models/user_session.dart';
 
 class ProfileScreen extends StatefulWidget {
   final String avatarLetter;
@@ -116,8 +117,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final String initialLetter =
-        _username.isNotEmpty ? _username[0].toUpperCase() : 'U';
+    final String initialLetter = _username.isNotEmpty
+        ? _username[0].toUpperCase()
+        : 'U';
+
+    UserSession.globalInitial = initialLetter;
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -243,7 +247,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             color: Colors.black.withValues(alpha: 0.15),
             blurRadius: 15,
             spreadRadius: 2,
-          )
+          ),
         ],
       ),
       child: Center(
@@ -260,10 +264,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   // Clean Contact Tile (Tanpa Kotak Abu-abu Pada Icon)
-  Widget _buildContact({
-    required IconData icon,
-    required String text,
-  }) {
+  Widget _buildContact({required IconData icon, required String text}) {
     return Container(
       width: double.infinity,
       height: 48,
@@ -279,11 +280,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       child: Row(
         children: [
           // Icon langsung tanpa wrapper Container kotak
-          Icon(
-            icon,
-            color: Colors.white.withValues(alpha: 0.85),
-            size: 20,
-          ),
+          Icon(icon, color: Colors.white.withValues(alpha: 0.85), size: 20),
           const SizedBox(width: 14),
           Expanded(
             child: Text(
@@ -313,14 +310,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
       duration: const Duration(milliseconds: 250),
       curve: Curves.easeInOut,
       decoration: BoxDecoration(
-        color: Colors.white.withValues(
-          alpha: isExpanded ? 0.08 : 0.04,
-        ),
+        color: Colors.white.withValues(alpha: isExpanded ? 0.08 : 0.04),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: Colors.white.withValues(
-            alpha: isExpanded ? 0.18 : 0.06,
-          ),
+          color: Colors.white.withValues(alpha: isExpanded ? 0.18 : 0.06),
         ),
       ),
       child: Material(

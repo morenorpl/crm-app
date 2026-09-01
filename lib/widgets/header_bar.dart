@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:crm_app/constants/app_colors.dart';
+import 'package:crm_app/models/user_session.dart';
 
 class HeaderBar extends StatefulWidget {
   final String title;
@@ -27,10 +28,27 @@ class _HeaderBarState extends State<HeaderBar> {
   @override
   void initState() {
     super.initState();
-    _loadUserAvatarData();
+    _updateAvatarLetter();
+  }
+
+  @override
+  void didUpdateWidget(covariant HeaderBar oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    _updateAvatarLetter();
+  }
+
+  void _updateAvatarLetter() {
+    if (widget.avatarText != null && widget.avatarText!.isNotEmpty) {
+      _avatarLetter = widget.avatarText![0].toUpperCase();
+    } else {
+      _avatarLetter = UserSession.globalInitial.toUpperCase();
+    }
   }
 
   Future<void> _loadUserAvatarData() async {
+    print('--- DEBUG AVATAR ---');
+    print('widget.avatarText: ${widget.avatarText}');
+
     // 1. If avatarText is passed directly as a parameter, use it
     if (widget.avatarText != null && widget.avatarText!.isNotEmpty) {
       setState(() {
@@ -40,25 +58,28 @@ class _HeaderBarState extends State<HeaderBar> {
     }
 
     try {
-      // 2. Check SharedPreferences across common profile keys
-      final prefs = await SharedPreferences.getInstance();
-      String? foundName =
-          prefs.getString('username') ??
-          prefs.getString('name') ??
-          prefs.getString('full_name');
+      String? foundName;
 
-      // 3. If not found in prefs, check Supabase Auth metadata or email
-      if (foundName == null || foundName.isEmpty || foundName == 'User') {
-        final user = Supabase.instance.client.auth.currentUser;
-        if (user != null) {
-          foundName =
-              user.userMetadata?['username'] ??
-              user.userMetadata?['name'] ??
-              user.email?.split('@').first;
-        }
+      // 1st Priority: Check Supabase Auth current user metadata or email (Most reliable)
+      final user = Supabase.instance.client.auth.currentUser;
+      if (user != null) {
+        foundName =
+            user.userMetadata?['username'] ??
+            user.userMetadata?['name'] ??
+            user.userMetadata?['full_name'] ??
+            user.email?.split('@').first;
       }
 
-      // 4. Extract the first letter and capitalize it
+      // 2nd Priority: Fallback to SharedPreferences if Supabase is empty
+      if (foundName == null || foundName.isEmpty || foundName == 'User') {
+        final prefs = await SharedPreferences.getInstance();
+        foundName =
+            prefs.getString('username') ??
+            prefs.getString('name') ??
+            prefs.getString('full_name');
+      }
+
+      // Extract the first letter and capitalize it
       if (foundName != null && foundName.isNotEmpty) {
         setState(() {
           _avatarLetter = foundName![0].toUpperCase();
@@ -180,7 +201,7 @@ class _HeaderBarState extends State<HeaderBar> {
                 shape: BoxShape.circle,
               ),
               child: Text(
-                _avatarLetter, // Displays the capitalized initial (e.g. 'K')
+                _avatarLetter,
                 style: const TextStyle(
                   color: AppColors.white,
                   fontSize: 13,

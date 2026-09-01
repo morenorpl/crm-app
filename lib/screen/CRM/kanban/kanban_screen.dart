@@ -59,9 +59,8 @@ class _CrmBoardScreenState extends State<CrmBoardScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     HeaderBar(
-                      title: 'Dashboard CRM',
-                      subtitle: 'Selamat datang kembali!',
-                      avatarText: widget.avatarLetter,
+                      title: 'Manajemen CRM Project Leads',
+                      subtitle: 'Data tahap CRM prospek-prospek Sejadah...',
                     ),
                     const SizedBox(height: 12),
                     const CrmBoardInfo(),

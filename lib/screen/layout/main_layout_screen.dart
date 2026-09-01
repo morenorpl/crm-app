@@ -7,6 +7,7 @@ import 'package:crm_app/screen/profile/profile_screen.dart';
 import 'package:crm_app/constants/app_colors.dart';
 import 'package:crm_app/widgets/header_bar.dart';
 import 'package:crm_app/screen/CRM/jadwal_screen.dart';
+import 'package:crm_app/models/user_session.dart';
 
 class MainLayoutScreen extends StatefulWidget {
   final int initialIndex;
@@ -38,30 +39,44 @@ class _MainLayoutScreenState extends State<MainLayoutScreen> {
     try {
       final user = Supabase.instance.client.auth.currentUser;
       if (user != null) {
-        // Cek dari userMetadata terlebih dahulu
-        String? name = user.userMetadata?['name'];
+        String? name;
 
-        // Jika di metadata tidak ada, ambil dari tabel public.users
+        // 1. Try checking userMetadata first
+        name = user.userMetadata?['name'] ?? user.userMetadata?['username'];
+
+        // 2. If not found in metadata, fetch from public.users table using auth_id
         if (name == null || name.isEmpty) {
           final data = await Supabase.instance.client
               .from('users')
               .select('name')
-              .eq('id', user.id)
+              .eq('auth_id', user.id)
               .maybeSingle();
 
-          if (data != null) {
+          if (data != null && data['name'] != null) {
             name = data['name'];
           }
         }
 
-        // Ambil huruf pertamanya dan jadikan huruf besar
+        // 3. Fallback to email username if both metadata and database name are empty
+        if ((name == null || name.isEmpty) && user.email != null) {
+          name = user.email!.split('@').first;
+        }
+
+        // 4. Extract first letter and update state + global session
         if (name != null && name.isNotEmpty) {
-          setState(() {
-            _avatarLetter = name![0].toUpperCase();
-          });
+          final fetchedLetter = name[0].toUpperCase();
+          UserSession.globalInitial = fetchedLetter; // Save globally
+
+          if (mounted) {
+            setState(() {
+              _avatarLetter = fetchedLetter;
+            });
+          }
         }
       }
-    } catch (e) {}
+    } catch (e) {
+      debugPrint('Error loading user initial: $e');
+    }
   }
 
   @override

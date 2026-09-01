@@ -127,9 +127,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
               // ==========================================
 
               HeaderBar(
-                title: 'Dashboard CRM',
+                title: 'Dashboard Sejadah',
                 subtitle: 'Selamat datang kembali!',
-                avatarText: widget.avatarLetter,
               ),
 
               const SizedBox(height: 16),
