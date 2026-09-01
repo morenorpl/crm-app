@@ -1,4 +1,13 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <queries>
+        <!-- If you want to open web links / WhatsApp web links -->
+        <intent>
+            <action android:name="intent.action.VIEW" />
+            <data android:scheme="https" />
+        </intent>
+        <!-- Optional: If you intend to target WhatsApp package directly -->
+        <package android:name="com.whatsapp" />
+    </queries>
     <application
         android:label="crm_app"
         android:name="${applicationName}"

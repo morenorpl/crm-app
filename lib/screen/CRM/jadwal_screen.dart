@@ -134,12 +134,27 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
 
   Future<void> _launchWhatsApp(String? phone) async {
     if (phone == null || phone.isEmpty) return;
-    final formattedPhone = phone.startsWith('0')
-        ? '62${phone.substring(1)}'
-        : phone;
+
+    // Format phone number if needed (e.g., replace leading '0' with '62')
+    String formattedPhone = phone;
+    if (formattedPhone.startsWith('0')) {
+      formattedPhone = '62${formattedPhone.substring(1)}';
+    }
+
     final Uri url = Uri.parse('https://wa.me/$formattedPhone');
-    if (await canLaunchUrl(url)) {
-      await launchUrl(url, mode: LaunchMode.externalApplication);
+
+    try {
+      // Try launching directly with external application mode
+      bool launched = await launchUrl(
+        url,
+        mode: LaunchMode.externalApplication,
+      );
+
+      if (!launched) {
+        throw 'Could not launch $url';
+      }
+    } catch (e) {
+      print('Error launching WhatsApp: $e');
     }
   }
 

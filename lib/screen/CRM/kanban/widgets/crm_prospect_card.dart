@@ -3,6 +3,7 @@ import 'package:crm_app/constants/app_colors.dart';
 import 'package:crm_app/screen/CRM/kanban/models/lead_model.dart';
 import 'package:crm_app/screen/CRM/jadwal_screen.dart';
 import 'package:crm_app/screen/layout/main_layout_screen.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class CrmProspectCard extends StatefulWidget {
   final LeadModel leadData;
@@ -106,6 +107,23 @@ class _CrmProspectCardState extends State<CrmProspectCard> {
         );
       },
     );
+  }
+
+  Future<void> _launchWhatsApp(String? phone) async {
+    if (phone == null || phone.isEmpty || phone == '-') return;
+
+    String formattedPhone = phone;
+    if (formattedPhone.startsWith('0')) {
+      formattedPhone = '62${formattedPhone.substring(1)}';
+    }
+
+    final Uri url = Uri.parse('https://wa.me/$formattedPhone');
+
+    try {
+      await launchUrl(url, mode: LaunchMode.externalApplication);
+    } catch (e) {
+      debugPrint('Error launching WhatsApp: $e');
+    }
   }
 
   @override
@@ -358,32 +376,35 @@ class _CrmProspectCardState extends State<CrmProspectCard> {
                 child: Row(
                   children: [
                     Expanded(
-                      child: Container(
-                        height: 32,
-                        alignment: Alignment.center,
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.05),
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: AppColors.border),
-                        ),
-                        child: const Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.chat_bubble_outline,
-                              color: AppColors.textLight,
-                              size: 12,
-                            ),
-                            SizedBox(width: 6),
-                            Text(
-                              'Hubungi via WhatsApp',
-                              style: TextStyle(
+                      child: GestureDetector(
+                        onTap: () => _launchWhatsApp(widget.leadData.noHp),
+                        child: Container(
+                          height: 32,
+                          alignment: Alignment.center,
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.05),
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(color: AppColors.border),
+                          ),
+                          child: const Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.chat_bubble_outline,
                                 color: AppColors.textLight,
-                                fontSize: 9.5,
-                                fontWeight: FontWeight.bold,
+                                size: 12,
                               ),
-                            ),
-                          ],
+                              SizedBox(width: 6),
+                              Text(
+                                'Hubungi via WhatsApp',
+                                style: TextStyle(
+                                  color: AppColors.textLight,
+                                  fontSize: 9.5,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     ),
