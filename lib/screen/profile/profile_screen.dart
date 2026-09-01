@@ -18,8 +18,42 @@ class _ProfileScreenState extends State<ProfileScreen> {
   String _phone = '-';
   bool _isLoading = true;
 
-  // Track expanded state for the 6 FAQ items
-  final List<bool> _faqExpanded = [false, false, false, false, false, false];
+  // Track expanded state for FAQ items
+  final List<bool> _faqExpanded = List.generate(6, (_) => false);
+
+  // FAQ Data Source
+  final List<Map<String, String>> _faqList = const [
+    {
+      'question': 'Bagaimana cara menambahkan prospek baru?',
+      'answer':
+          'Anda dapat pergi ke halaman Dashboard atau Pipeline, lalu klik tombol hijau bertuliskan "Tambah Prospek Baru". Isi form yang muncul lalu simpan.',
+    },
+    {
+      'question': 'Bagaimana cara mengubah tahapan status CRM?',
+      'answer':
+          'Di halaman Pipeline Kanban, Anda bisa menggeser kartu prospek atau mengubah statusnya langsung melalui opsi edit/status change pada kartu prospek.',
+    },
+    {
+      'question': 'Apa fungsi dari fitur Jadwal Follow Up?',
+      'answer':
+          'Fitur ini membantu Anda melacak tanggal penting kapan harus menghubungi kembali calon jamaah agar tidak terlewat.',
+    },
+    {
+      'question': 'Bagaimana cara melihat laporan harian?',
+      'answer':
+          'Laporan harian terperinci dan grafik produktifitas dapat dipantau secara langsung melalui widget ringkasan di halaman utama Dashboard.',
+    },
+    {
+      'question': 'Apakah data prospek tersinkronisasi otomatis?',
+      'answer':
+          'Ya, semua perubahan data baik penambahan, perubahan status, maupun penghapusan terhubung secara real-time dengan database Supabase.',
+    },
+    {
+      'question': 'Bagaimana jika lupa atau ingin mengubah nomor HP?',
+      'answer':
+          'Informasi profil akun diambil langsung dari data registrasi sistem. Silakan hubungi administrator tim IT jika ada data profil yang perlu diperbarui.',
+    },
+  ];
 
   @override
   void initState() {
@@ -82,9 +116,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final String initialLetter = _username.isNotEmpty
-        ? _username[0].toUpperCase()
-        : 'U';
+    final String initialLetter =
+        _username.isNotEmpty ? _username[0].toUpperCase() : 'U';
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -92,8 +125,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
         child: _isLoading
             ? const Center(child: CircularProgressIndicator())
             : SingleChildScrollView(
+                physics: const BouncingScrollPhysics(),
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(19, 21, 19, 30),
+                  // Memberikan bottom padding 40dp agar berjarak aman dari bottom navigation bar
+                  padding: const EdgeInsets.fromLTRB(19, 21, 19, 40),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -102,36 +137,50 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         subtitle: 'Siap membuat konten berkah hari ini?',
                         avatarText: initialLetter,
                       ),
-                      const SizedBox(height: 25),
-                      Center(child: _buildProfilePhoto(initialLetter)),
-                      const SizedBox(height: 14),
-                      Center(
-                        child: Text(
-                          _username.toUpperCase(),
-                          style: const TextStyle(
-                            color: AppColors.white,
-                            fontSize: 20,
-                            fontWeight: FontWeight.w900,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 40),
+                      const SizedBox(height: 28),
 
-                      // Contact details centered
+                      // Profile Picture & Name Card
                       Center(
                         child: Column(
                           children: [
-                            _buildContact(icon: Icons.phone, text: _phone),
-                            const SizedBox(height: 10),
-                            _buildContact(
-                              icon: Icons.email_outlined,
-                              text: _email,
-                              google: true,
+                            _buildProfilePhoto(initialLetter),
+                            const SizedBox(height: 14),
+                            Text(
+                              _username.toUpperCase(),
+                              style: const TextStyle(
+                                color: AppColors.white,
+                                fontSize: 20,
+                                fontWeight: FontWeight.w800,
+                                letterSpacing: 0.5,
+                              ),
                             ),
                           ],
                         ),
                       ),
-                      const SizedBox(height: 35),
+
+                      const SizedBox(height: 32),
+
+                      // Contact Details Clean Section
+                      Center(
+                        child: Container(
+                          constraints: const BoxConstraints(maxWidth: 360),
+                          child: Column(
+                            children: [
+                              _buildContact(
+                                icon: Icons.phone_rounded,
+                                text: _phone,
+                              ),
+                              const SizedBox(height: 12),
+                              _buildContact(
+                                icon: Icons.email_rounded,
+                                text: _email,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+
+                      const SizedBox(height: 40),
 
                       // ==================== FAQ SECTION ====================
                       const Text(
@@ -147,54 +196,29 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         'Panduan cepat seputar penggunaan aplikasi CRM.',
                         style: TextStyle(
                           color: Colors.white.withValues(alpha: 0.5),
-                          fontSize: 11,
+                          fontSize: 12,
                         ),
                       ),
-                      const SizedBox(height: 14),
+                      const SizedBox(height: 16),
 
-                      _buildFaqItem(
-                        index: 0,
-                        question: 'Bagaimana cara menambahkan prospek baru?',
-                        answer:
-                            'Anda dapat pergi ke halaman Dashboard atau Pipeline, lalu klik tombol hijau bertuliskan "Tambah Prospek Baru". Isi form yang muncul lalu simpan.',
+                      // Loop FAQ Items
+                      ListView.separated(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: _faqList.length,
+                        separatorBuilder: (context, index) =>
+                            const SizedBox(height: 10),
+                        itemBuilder: (context, index) {
+                          return _buildFaqItem(
+                            index: index,
+                            question: _faqList[index]['question']!,
+                            answer: _faqList[index]['answer']!,
+                          );
+                        },
                       ),
-                      const SizedBox(height: 8),
-                      _buildFaqItem(
-                        index: 1,
-                        question: 'Bagaimana cara mengubah tahapan status CRM?',
-                        answer:
-                            'Di halaman Pipeline Kanban, Anda bisa menggeser kartu prospek atau mengubah statusnya langsung melalui opsi edit/status change pada kartu prospek.',
-                      ),
-                      const SizedBox(height: 8),
-                      _buildFaqItem(
-                        index: 2,
-                        question: 'Apa fungsi dari fitur Jadwal Follow Up?',
-                        answer:
-                            'Fitur ini membantu Anda melacak tanggal penting kapan harus menghubungi kembali calon jamaah agar tidak terlewat.',
-                      ),
-                      const SizedBox(height: 8),
-                      _buildFaqItem(
-                        index: 3,
-                        question: 'Bagaimana cara melihat laporan harian?',
-                        answer:
-                            'Laporan harian terperinci dan grafik produktifitas dapat dipantau secara langsung melalui widget ringkasan di halaman utama Dashboard.',
-                      ),
-                      const SizedBox(height: 8),
-                      _buildFaqItem(
-                        index: 4,
-                        question:
-                            'Apakah data prospek tersinkronisasi otomatis?',
-                        answer:
-                            'Ya, semua perubahan data baik penambahan, perubahan status, maupun penghapusan terhubung secara real-time dengan database Supabase.',
-                      ),
-                      const SizedBox(height: 8),
-                      _buildFaqItem(
-                        index: 5,
-                        question:
-                            'Bagaimana jika lupa atau ingin mengubah nomor HP?',
-                        answer:
-                            'Informasi profil akun diambil langsung dari data registrasi sistem. Silakan hubungi administrator tim IT jika ada data profil yang perlu diperbarui.',
-                      ),
+
+                      // Jarak tambahan khusus dari FAQ terakhir ke Bottom Bar
+                      const SizedBox(height: 40),
                     ],
                   ),
                 ),
@@ -205,22 +229,29 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Widget _buildProfilePhoto(String initialLetter) {
     return Container(
-      width: 140,
-      height: 140,
+      width: 130,
+      height: 130,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         color: Colors.white.withValues(alpha: 0.08),
         border: Border.all(
-          color: Colors.white.withValues(alpha: 0.20),
-          width: 1,
+          color: Colors.white.withValues(alpha: 0.18),
+          width: 1.5,
         ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.15),
+            blurRadius: 15,
+            spreadRadius: 2,
+          )
+        ],
       ),
       child: Center(
         child: Text(
           initialLetter,
           style: const TextStyle(
             color: Colors.white,
-            fontSize: 54,
+            fontSize: 50,
             fontWeight: FontWeight.bold,
           ),
         ),
@@ -228,50 +259,39 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
+  // Clean Contact Tile (Tanpa Kotak Abu-abu Pada Icon)
   Widget _buildContact({
     required IconData icon,
     required String text,
-    bool google = false,
   }) {
     return Container(
-      width: 322,
-      height: 46,
-      padding: const EdgeInsets.symmetric(horizontal: 7),
+      width: double.infinity,
+      height: 48,
+      padding: const EdgeInsets.symmetric(horizontal: 14),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(13),
-        border: Border.all(color: AppColors.border, width: 0.8),
+        color: Colors.white.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: AppColors.border.withValues(alpha: 0.6),
+          width: 0.8,
+        ),
       ),
       child: Row(
         children: [
-          Container(
-            width: 44,
-            height: 34,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.75),
-              borderRadius: BorderRadius.circular(11),
-            ),
-            child: google
-                ? const Text(
-                    'G',
-                    style: TextStyle(
-                      color: Color(0xFF4285F4),
-                      fontSize: 23,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  )
-                : Icon(icon, color: const Color(0xFF20152F), size: 21),
+          // Icon langsung tanpa wrapper Container kotak
+          Icon(
+            icon,
+            color: Colors.white.withValues(alpha: 0.85),
+            size: 20,
           ),
-          const SizedBox(width: 10),
+          const SizedBox(width: 14),
           Expanded(
             child: Text(
               text,
-              style: const TextStyle(
-                color: AppColors.muted,
+              style: TextStyle(
+                color: Colors.white.withValues(alpha: 0.85),
                 fontSize: 13,
-                decoration: TextDecoration.underline,
-                decorationColor: AppColors.muted,
+                fontWeight: FontWeight.w400,
               ),
               overflow: TextOverflow.ellipsis,
             ),
@@ -281,7 +301,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  // FAQ Dropdown Row Widget
+  // FAQ Dropdown Tile
   Widget _buildFaqItem({
     required int index,
     required String question,
@@ -289,67 +309,82 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }) {
     final bool isExpanded = _faqExpanded[index];
 
-    return GestureDetector(
-      onTap: () {
-        setState(() {
-          _faqExpanded[index] = !isExpanded;
-        });
-      },
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 250),
-        width: double.infinity,
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: isExpanded ? 0.09 : 0.06),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: Colors.white.withValues(alpha: isExpanded ? 0.2 : 0.08),
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 250),
+      curve: Curves.easeInOut,
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(
+          alpha: isExpanded ? 0.08 : 0.04,
+        ),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: Colors.white.withValues(
+            alpha: isExpanded ? 0.18 : 0.06,
           ),
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(12),
+          onTap: () {
+            setState(() {
+              _faqExpanded[index] = !isExpanded;
+            });
+          },
+          child: Padding(
+            padding: const EdgeInsets.all(14),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Expanded(
-                  child: Text(
-                    question,
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        question,
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 13,
+                          fontWeight: isExpanded
+                              ? FontWeight.w700
+                              : FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    AnimatedRotation(
+                      turns: isExpanded ? 0.5 : 0.0,
+                      duration: const Duration(milliseconds: 200),
+                      child: Icon(
+                        Icons.keyboard_arrow_down_rounded,
+                        color: Colors.white.withValues(
+                          alpha: isExpanded ? 0.9 : 0.5,
+                        ),
+                        size: 20,
+                      ),
+                    ),
+                  ],
+                ),
+                if (isExpanded) ...[
+                  const SizedBox(height: 10),
+                  Divider(
+                    color: Colors.white.withValues(alpha: 0.1),
+                    height: 1,
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    answer,
                     style: TextStyle(
-                      color: Colors.white,
+                      color: Colors.white.withValues(alpha: 0.7),
                       fontSize: 12,
-                      fontWeight: isExpanded
-                          ? FontWeight.bold
-                          : FontWeight.w600,
+                      height: 1.45,
                     ),
                   ),
-                ),
-                const SizedBox(width: 8),
-                AnimatedRotation(
-                  turns: isExpanded ? 0.5 : 0.0, // Rotates arrow 180 degrees
-                  duration: const Duration(milliseconds: 200),
-                  child: const Icon(
-                    Icons.keyboard_arrow_down_rounded,
-                    color: Colors.white70,
-                    size: 20,
-                  ),
-                ),
+                ],
               ],
             ),
-            if (isExpanded) ...[
-              const SizedBox(height: 10),
-              const Divider(color: Colors.white12, height: 1),
-              const SizedBox(height: 10),
-              Text(
-                answer,
-                style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.7),
-                  fontSize: 11,
-                  height: 1.4,
-                ),
-              ),
-            ],
-          ],
+          ),
         ),
       ),
     );
