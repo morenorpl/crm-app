@@ -70,7 +70,7 @@ class _CrmProspectCardState extends State<CrmProspectCard> {
       context: context,
       builder: (BuildContext ctx) {
         return AlertDialog(
-          backgroundColor: AppColors.searchPanelBg,
+          backgroundColor: const Color(0xFF1E1735),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(14),
           ),
@@ -420,7 +420,7 @@ class _CrmProspectCardState extends State<CrmProspectCard> {
 
                     // Status Dropdown implemented as a PopupMenuButton to match your exact UI style
                     PopupMenuButton<String>(
-                      color: AppColors.searchPanelBg,
+                      color: const Color(0xFF2D234A),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),

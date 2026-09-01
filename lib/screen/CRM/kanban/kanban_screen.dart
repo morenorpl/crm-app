@@ -339,7 +339,7 @@ class _EditProspectDialogState extends State<_EditProspectDialog> {
             child: DropdownButton<String>(
               value: safeValue,
               isExpanded: true,
-              dropdownColor: AppColors.searchPanelBg,
+              dropdownColor: const Color(0xFF2D234A),
               icon: const Icon(
                 Icons.keyboard_arrow_down,
                 color: AppColors.textMuted,
@@ -368,7 +368,7 @@ class _EditProspectDialogState extends State<_EditProspectDialog> {
         width: double.infinity,
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: AppColors.searchPanelBg,
+          color: const Color(0xFF1E1735),
           borderRadius: BorderRadius.circular(16),
         ),
         child: SingleChildScrollView(
@@ -620,7 +620,7 @@ class _EditProspectDialogState extends State<_EditProspectDialog> {
                       child: const Text(
                         'Simpan Perubahan',
                         style: TextStyle(
-                          color: Colors.black,
+                          color: Colors.white,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
