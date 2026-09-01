@@ -2,13 +2,13 @@
 
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-
 import 'package:crm_app/widgets/header_bar.dart';
 import '../CRM/kanban/widgets/crm_kanban_tabs.dart';
 import '../CRM/kanban/widgets/crm_prospect_card.dart';
 import '../CRM/kanban/models/lead_model.dart';
 import '../CRM/kanban/widgets/crm_search_panel.dart';
 import '../CRM/kanban/controllers/crm_controller.dart';
+import 'package:crm_app/constants/app_colors.dart';
 
 class DashboardScreen extends StatefulWidget {
   final String avatarLetter;
@@ -115,231 +115,222 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF1E1735),
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Color(0xFF382D54), Color(0xFF1E1735)],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-          ),
-        ),
-        child: SafeArea(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // ==========================================
-                // HEADER
-                // ==========================================
+      backgroundColor: AppColors.background,
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // ==========================================
+              // HEADER
+              // ==========================================
 
-                HeaderBar(
-                  title: 'Dashboard CRM',
-                  subtitle: 'Selamat datang kembali!',
-                  avatarText: widget.avatarLetter,
-                ),
+              HeaderBar(
+                title: 'Dashboard CRM',
+                subtitle: 'Selamat datang kembali!',
+                avatarText: widget.avatarLetter,
+              ),
 
-                const SizedBox(height: 16),
+              const SizedBox(height: 16),
 
-                // ==========================================
-                // FILTER PILLS
-                // ==========================================
-                SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(4),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.06),
-                          borderRadius: BorderRadius.circular(24),
-                          border: Border.all(
-                            color: Colors.white.withOpacity(0.12),
-                          ),
-                        ),
-                        child: Row(
-                          children: [
-                            _buildFilterChip(
-                              'Tim Bawahanku',
-                              _selectedTeamFilter == 'Tim Bawahanku',
-                              () {
-                                setState(() {
-                                  _selectedTeamFilter = 'Tim Bawahanku';
-                                });
-                              },
-                              activeColor: const Color(0xFF3B82F6),
-                            ),
-
-                            const SizedBox(width: 4),
-
-                            _buildFilterChip(
-                              'Kinerja Ku Saja',
-                              _selectedTeamFilter == 'Kinerja Ku Saja',
-                              () {
-                                setState(() {
-                                  _selectedTeamFilter = 'Kinerja Ku Saja';
-                                });
-                              },
-                              activeColor: const Color(0xFF3B82F6),
-                            ),
-                          ],
+              // ==========================================
+              // FILTER PILLS
+              // ==========================================
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.06),
+                        borderRadius: BorderRadius.circular(24),
+                        border: Border.all(
+                          color: Colors.white.withOpacity(0.12),
                         ),
                       ),
-
-                      const SizedBox(width: 12),
-
-                      Container(
-                        padding: const EdgeInsets.all(4),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.06),
-                          borderRadius: BorderRadius.circular(24),
-                          border: Border.all(
-                            color: Colors.white.withOpacity(0.12),
+                      child: Row(
+                        children: [
+                          _buildFilterChip(
+                            'Tim Bawahanku',
+                            _selectedTeamFilter == 'Tim Bawahanku',
+                            () {
+                              setState(() {
+                                _selectedTeamFilter = 'Tim Bawahanku';
+                              });
+                            },
+                            activeColor: const Color(0xFF3B82F6),
                           ),
-                        ),
-                        child: Row(
-                          children: [
-                            _buildFilterChip(
-                              'Semua waktu',
-                              _selectedTimeFilter == 'Semua waktu',
-                              () {
-                                setState(() {
-                                  _selectedTimeFilter = 'Semua waktu';
-                                });
-                              },
-                              activeColor: const Color(0xFF10B981),
-                            ),
 
-                            const SizedBox(width: 4),
+                          const SizedBox(width: 4),
 
-                            _buildFilterChip(
-                              'Hari ini',
-                              _selectedTimeFilter == 'Hari ini',
-                              () {
-                                setState(() {
-                                  _selectedTimeFilter = 'Hari ini';
-                                });
-                              },
-                              activeColor: const Color(0xFF10B981),
-                            ),
-                          ],
+                          _buildFilterChip(
+                            'Kinerja Ku Saja',
+                            _selectedTeamFilter == 'Kinerja Ku Saja',
+                            () {
+                              setState(() {
+                                _selectedTeamFilter = 'Kinerja Ku Saja';
+                              });
+                            },
+                            activeColor: const Color(0xFF3B82F6),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(width: 12),
+
+                    Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.06),
+                        borderRadius: BorderRadius.circular(24),
+                        border: Border.all(
+                          color: Colors.white.withOpacity(0.12),
                         ),
                       ),
-                    ],
-                  ),
+                      child: Row(
+                        children: [
+                          _buildFilterChip(
+                            'Semua waktu',
+                            _selectedTimeFilter == 'Semua waktu',
+                            () {
+                              setState(() {
+                                _selectedTimeFilter = 'Semua waktu';
+                              });
+                            },
+                            activeColor: const Color(0xFF10B981),
+                          ),
+
+                          const SizedBox(width: 4),
+
+                          _buildFilterChip(
+                            'Hari ini',
+                            _selectedTimeFilter == 'Hari ini',
+                            () {
+                              setState(() {
+                                _selectedTimeFilter = 'Hari ini';
+                              });
+                            },
+                            activeColor: const Color(0xFF10B981),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
+              ),
 
-                const SizedBox(height: 16),
+              const SizedBox(height: 16),
 
-                // ==========================================
-                // METRIC CARDS (DYNAMIC ALL-TIME CRM STAGES)
-                // ==========================================
-                StreamBuilder<List<Map<String, dynamic>>>(
-                  stream: _getProductivityLeadsStream(),
-                  builder: (context, snapshot) {
-                    int totalBaru = 0;
-                    int totalDihubungi = 0;
-                    int totalLayak = 0;
-                    int totalClosed = 0;
+              // ==========================================
+              // METRIC CARDS (DYNAMIC ALL-TIME CRM STAGES)
+              // ==========================================
+              StreamBuilder<List<Map<String, dynamic>>>(
+                stream: _getProductivityLeadsStream(),
+                builder: (context, snapshot) {
+                  int totalBaru = 0;
+                  int totalDihubungi = 0;
+                  int totalLayak = 0;
+                  int totalClosed = 0;
 
-                    if (snapshot.hasData) {
-                      final leads = snapshot.data!;
-                      for (var lead in leads) {
-                        final String status = lead['status'] ?? 'baru';
+                  if (snapshot.hasData) {
+                    final leads = snapshot.data!;
+                    for (var lead in leads) {
+                      final String status = lead['status'] ?? 'baru';
 
-                        if (status == 'baru') {
-                          totalBaru++;
-                        } else if (status == 'dihubungi') {
-                          totalDihubungi++;
-                        } else if (status == 'layak') {
-                          totalLayak++;
-                        } else if (status == 'closed' || status == 'selesai') {
-                          totalClosed++;
-                        }
+                      if (status == 'baru') {
+                        totalBaru++;
+                      } else if (status == 'dihubungi') {
+                        totalDihubungi++;
+                      } else if (status == 'layak') {
+                        totalLayak++;
+                      } else if (status == 'closed' || status == 'selesai') {
+                        totalClosed++;
                       }
                     }
+                  }
 
-                    return Column(
-                      children: [
-                        // 1. Prospek Baru -> Blue (Icon: Fiber New / Sparkle for new leads)
-                        _buildMetricCard(
-                          title: 'Prospek Baru',
-                          titleColor: const Color(0xFF3B82F6),
-                          value: '$totalBaru',
-                          subtitle: 'Total semua prospek baru',
-                          actionText: 'Tahap Awal Pipeline',
-                          icon: Icons.fiber_new_rounded,
-                          iconBgColor: const Color(0xFF3B82F6).withOpacity(0.2),
-                          iconColor: const Color(0xFF3B82F6),
-                        ),
-                        const SizedBox(height: 12),
+                  return Column(
+                    children: [
+                      // 1. Prospek Baru -> Blue (Icon: Fiber New / Sparkle for new leads)
+                      _buildMetricCard(
+                        title: 'Prospek Baru',
+                        titleColor: const Color(0xFF3B82F6),
+                        value: '$totalBaru',
+                        subtitle: 'Total semua prospek baru',
+                        actionText: 'Tahap Awal Pipeline',
+                        icon: Icons.fiber_new_rounded,
+                        iconBgColor: const Color(0xFF3B82F6).withOpacity(0.2),
+                        iconColor: const Color(0xFF3B82F6),
+                      ),
+                      const SizedBox(height: 12),
 
-                        // 2. Dihubungi -> Orange (Icon: Phone Callback / Call for communication)
-                        _buildMetricCard(
-                          title: 'Dihubungi',
-                          titleColor: const Color(0xFFF59E0B),
-                          value: '$totalDihubungi',
-                          subtitle: 'Total prospek dihubungi',
-                          actionText: 'Dalam Proses Follow Up',
-                          icon: Icons.phone_callback_rounded,
-                          iconBgColor: const Color(0xFFF59E0B).withOpacity(0.2),
-                          iconColor: const Color(0xFFF59E0B),
-                        ),
-                        const SizedBox(height: 12),
+                      // 2. Dihubungi -> Orange (Icon: Phone Callback / Call for communication)
+                      _buildMetricCard(
+                        title: 'Dihubungi',
+                        titleColor: const Color(0xFFF59E0B),
+                        value: '$totalDihubungi',
+                        subtitle: 'Total prospek dihubungi',
+                        actionText: 'Dalam Proses Follow Up',
+                        icon: Icons.phone_callback_rounded,
+                        iconBgColor: const Color(0xFFF59E0B).withOpacity(0.2),
+                        iconColor: const Color(0xFFF59E0B),
+                      ),
+                      const SizedBox(height: 12),
 
-                        // 3. Prospek Layak -> Green (Icon: Check Circle / Verified for qualified leads)
-                        _buildMetricCard(
-                          title: 'Prospek Layak',
-                          titleColor: const Color(0xFF10B981),
-                          value: '$totalLayak',
-                          subtitle: 'Total prospek memenuhi syarat',
-                          actionText: 'Siap Menuju Closing',
-                          icon: Icons.check_circle_outline_rounded,
-                          iconBgColor: const Color(0xFF10B981).withOpacity(0.2),
-                          iconColor: const Color(0xFF10B981),
-                        ),
-                        const SizedBox(height: 12),
+                      // 3. Prospek Layak -> Green (Icon: Check Circle / Verified for qualified leads)
+                      _buildMetricCard(
+                        title: 'Prospek Layak',
+                        titleColor: const Color(0xFF10B981),
+                        value: '$totalLayak',
+                        subtitle: 'Total prospek memenuhi syarat',
+                        actionText: 'Siap Menuju Closing',
+                        icon: Icons.check_circle_outline_rounded,
+                        iconBgColor: const Color(0xFF10B981).withOpacity(0.2),
+                        iconColor: const Color(0xFF10B981),
+                      ),
+                      const SizedBox(height: 12),
 
-                        // 4. Closed (WON) -> Purple (Icon: Workspace Premium / Handshake for closed deals)
-                        _buildMetricCard(
-                          title: 'Closed (WON)',
-                          titleColor: const Color(0xFF8B5CF6),
-                          value: '$totalClosed',
-                          subtitle: 'Total deal berhasil',
-                          actionText: null,
-                          icon: Icons.workspace_premium_rounded,
-                          iconBgColor: const Color(0xFF8B5CF6).withOpacity(0.2),
-                          iconColor: const Color(0xFF8B5CF6),
-                        ),
-                      ],
-                    );
-                  },
-                ),
-                const SizedBox(height: 16),
+                      // 4. Closed (WON) -> Purple (Icon: Workspace Premium / Handshake for closed deals)
+                      _buildMetricCard(
+                        title: 'Closed (WON)',
+                        titleColor: const Color(0xFF8B5CF6),
+                        value: '$totalClosed',
+                        subtitle: 'Total deal berhasil',
+                        actionText: null,
+                        icon: Icons.workspace_premium_rounded,
+                        iconBgColor: const Color(0xFF8B5CF6).withOpacity(0.2),
+                        iconColor: const Color(0xFF8B5CF6),
+                      ),
+                    ],
+                  );
+                },
+              ),
+              const SizedBox(height: 16),
 
-                // ==========================================
-                // PRODUKTIFITAS
-                // ==========================================
-                _buildProduktifitasHarianCard(),
+              // ==========================================
+              // PRODUKTIFITAS
+              // ==========================================
+              _buildProduktifitasHarianCard(),
 
-                const SizedBox(height: 16),
+              const SizedBox(height: 16),
 
-                // ==========================================
-                // LAPORAN HARIAN
-                // ==========================================
-                _buildLaporanHarianCard(),
+              // ==========================================
+              // LAPORAN HARIAN
+              // ==========================================
+              _buildLaporanHarianCard(),
 
-                const SizedBox(height: 16),
+              const SizedBox(height: 16),
 
-                // ==========================================
-                // PIPELINE CRM
-                // ==========================================
-                _buildPipelineCrmCard(),
+              // ==========================================
+              // PIPELINE CRM
+              // ==========================================
+              _buildPipelineCrmCard(),
 
-                const SizedBox(height: 24),
-              ],
-            ),
+              const SizedBox(height: 24),
+            ],
           ),
         ),
       ),
