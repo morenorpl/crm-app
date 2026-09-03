@@ -136,8 +136,8 @@ class _MainLayoutScreenState extends State<MainLayoutScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
-          _navItem(Icons.home_outlined, 'Home', 0),
-          _navItem(Icons.grid_view_rounded, 'Pipeline', 1),
+          _navItem(Icons.dashboard_outlined, 'Dashboard', 0),
+          _navItem(Icons.analytics_outlined, 'Pipeline', 1),
           _navItem(Icons.calendar_month_outlined, 'Schedule', 2),
           _navItem(Icons.person_outline, 'Profile', 3),
         ],

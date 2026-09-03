@@ -159,7 +159,7 @@ class _CrmBoardScreenState extends State<CrmBoardScreen> {
     showDialog(
       context: context,
       builder: (BuildContext ctx) {
-        return _EditProspectDialog(
+        return EditProspectDialog(
           lead: lead,
           onSave: (updatedData) async {
             await _crmController.updateLead(lead.id, updatedData);
@@ -170,17 +170,17 @@ class _CrmBoardScreenState extends State<CrmBoardScreen> {
   }
 }
 
-class _EditProspectDialog extends StatefulWidget {
+class EditProspectDialog extends StatefulWidget {
   final LeadModel lead;
   final Function(Map<String, dynamic>) onSave;
 
-  const _EditProspectDialog({required this.lead, required this.onSave});
+  const EditProspectDialog({required this.lead, required this.onSave});
 
   @override
-  State<_EditProspectDialog> createState() => _EditProspectDialogState();
+  State<EditProspectDialog> createState() => EditProspectDialogState();
 }
 
-class _EditProspectDialogState extends State<_EditProspectDialog> {
+class EditProspectDialogState extends State<EditProspectDialog> {
   late TextEditingController _namaCtrl;
   late TextEditingController _instansiCtrl;
   late TextEditingController _noHpCtrl;

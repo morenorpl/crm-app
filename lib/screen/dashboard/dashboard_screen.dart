@@ -9,6 +9,7 @@ import '../CRM/kanban/models/lead_model.dart';
 import '../CRM/kanban/widgets/crm_search_panel.dart';
 import '../CRM/kanban/controllers/crm_controller.dart';
 import 'package:crm_app/constants/app_colors.dart';
+import '../CRM/kanban/kanban_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   final String avatarLetter;
@@ -90,6 +91,42 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ).showSnackBar(SnackBar(content: Text('Gagal memperbarui status: $e')));
       }
     }
+  }
+
+  Future<void> _showEditProspectDialog(BuildContext context, LeadModel lead) {
+    return showDialog(
+      context: context,
+      builder: (context) => EditProspectDialog(
+        lead: lead,
+        onSave: (updates) async {
+          try {
+            // 1. Update the lead record in Supabase using the lead's id
+            await _supabase
+                .from('leads')
+                .update(updates)
+                .eq('id', lead.id); // Assuming your LeadModel uses 'id'
+
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Prospek berhasil diperbarui!'),
+                  backgroundColor: Colors.green,
+                ),
+              );
+            }
+          } catch (e) {
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('Gagal memperbarui prospek: $e'),
+                  backgroundColor: Colors.red,
+                ),
+              );
+            }
+          }
+        },
+      ),
+    );
   }
 
   // ==========================================
@@ -1405,7 +1442,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         },
 
                         // EDIT
-                        onEdit: () {},
+                        onEdit: () {
+                          _showEditProspectDialog(context, lead);
+                        },
 
                         // DELETE
                         onDelete: () {
