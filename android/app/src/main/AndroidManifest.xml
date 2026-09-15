@@ -8,10 +8,12 @@
         <!-- Optional: If you intend to target WhatsApp package directly -->
         <package android:name="com.whatsapp" />
     </queries>
+    <uses-permission android:name="android.permission.INTERNET"/>
     <application
         android:label="crm_app"
         android:name="${applicationName}"
-        android:icon="@mipmap/ic_launcher">
+        android:icon="@mipmap/ic_launcher"
+        android:usesCleartextTraffic="true">
         <activity
             android:name=".MainActivity"
             android:exported="true"
