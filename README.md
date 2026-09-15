@@ -1,16 +1,35 @@
-# crm_app
+# Retali CRM Application ✨
 
-A new Flutter project.
+Aplikasi Customer Relationship Management (CRM) berbasis *full-stack* yang dirancang dengan antarmuka (UI) modern dan pengelolaan data yang efisien untuk kebutuhan operasional PT Retali Mustajab Travel.
 
-## Getting Started
+## 🚀 Teknologi yang Digunakan
+- **Frontend Client:** Flutter, Dart
+- **Backend API:** Node.js, Express.js *(Dikelola pada repositori terpisah: [https://github.com/OIPOI08/BE-Projectretalione.git])*
+- **Database & Auth:** Supabase
 
-This project is a starting point for a Flutter application.
+## ✨ Fitur Utama
+- **Autentikasi Aman:** Login yang mulus menggunakan kode OTP melalui sistem Supabase Auth.
+- **Dashboard Modern:** Visualisasi data yang intuitif dengan desain antarmuka yang bersih dan profesional.
+- **Kanban Board:** Visualisasi *pipeline* penjualan yang bersih dan rapi, memudahkan pengguna mengelola status prospek secara intuitif.
+- **Jadwal Follow-Up:** Sistem pelacakan dan penjadwalan terintegrasi untuk memastikan tidak ada interaksi klien yang terlewat.
+- **Integrasi API:** Sinkronisasi data secara *real-time* dengan arsitektur RESTful API.
 
-A few resources to get you started if this is your first Flutter project:
+## 🛠️ Instalasi & Persiapan (Frontend)
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+### Prasyarat
+- Flutter SDK terinstal di sistem kamu.
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+### Langkah Instalasi
+1. Kloning repositori ini ke PC lokal kamu.
+2. Buka terminal dan masuk ke folder proyek:
+``` bash
+    cd crm-app
+```
+### Unduh semua dependensi yang dibutuhkan:
+``` bash
+    flutter pub get
+```     
+### Jalankan aplikasi di emulator atau perangkat fisik:
+``` bash
+    flutter run
+```
