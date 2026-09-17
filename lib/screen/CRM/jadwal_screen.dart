@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:crm_app/constants/app_colors.dart';
 import 'package:crm_app/widgets/header_bar.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:crm_app/services/notification_service.dart';
 
 // 🛠️ IMPORT PATH ABSOLUT TERUPDATE
 import 'package:crm_app/screen/CRM/kanban/controllers/crm_controller.dart';
@@ -748,7 +749,17 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                         picked,
                       );
 
-                      // 2. Geser tampilan jadwal (`_selectedWeekStart`) ke minggu dari tanggal yang baru dipilih
+                      // 2. 👈 JADWALKAN NOTIFIKASI LOKAL JAM 09:00
+                      await NotificationService.scheduleFollowUp(
+                        lead
+                            .id
+                            .hashCode, // Gunakan hashcode sebagai ID angka unik
+                        'Waktunya Follow-up! 📅',
+                        'Segera hubungi ${lead.nama} dari ${lead.instansi ?? 'Personal'} hari ini.',
+                        picked,
+                      );
+
+                      // 3. Geser tampilan jadwal (`_selectedWeekStart`) ke minggu dari tanggal yang baru dipilih
                       setState(() {
                         _selectedWeekStart = DateTime(
                           picked.year,

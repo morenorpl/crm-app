@@ -1,5 +1,6 @@
 import 'package:crm_app/screen/layout/main_layout_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:provider/provider.dart'; // 👈 Tambahkan Provider
 import 'screen/auth/login_screen.dart';
 import 'screen/auth/register_screen.dart';
@@ -13,9 +14,8 @@ import 'screen/profile/profile_screen.dart';
 import 'screen/splash/splash_screen.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'config/api_config.dart';
-
-// 👈 Import CrmController Anda
-import 'screen/CRM/kanban/controllers/crm_controller.dart'; 
+import 'package:crm_app/services/notification_service.dart';
+import 'screen/CRM/kanban/controllers/crm_controller.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -26,12 +26,21 @@ Future<void> main() async {
     anonKey: ApiConfig.supabaseAnonKey,
   );
 
+  await NotificationService.init();
+
+  final FlutterLocalNotificationsPlugin notificationsPlugin =
+      FlutterLocalNotificationsPlugin();
+
+  await notificationsPlugin
+      .resolvePlatformSpecificImplementation<
+        AndroidFlutterLocalNotificationsPlugin
+      >()
+      ?.requestNotificationsPermission();
+
   // 👈 Bungkus runApp dengan MultiProvider
   runApp(
     MultiProvider(
-      providers: [
-        ChangeNotifierProvider(create: (_) => CrmController()),
-      ],
+      providers: [ChangeNotifierProvider(create: (_) => CrmController())],
       child: const ProjectRetalioneApp(),
     ),
   );

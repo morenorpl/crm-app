@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:crm_app/constants/app_colors.dart';
 import '../controllers/crm_controller.dart';
+import 'package:crm_app/services/notification_service.dart';
 
 class AddProspectDialog {
   static void show(BuildContext context, CrmController crmController) {
@@ -346,6 +347,8 @@ class AddProspectDialog {
                           "${selectedFollowUpDate!.year}-${selectedFollowUpDate!.month.toString().padLeft(2, '0')}-${selectedFollowUpDate!.day.toString().padLeft(2, '0')}";
                     }
 
+                    print("MENCOBA MENYIMPAN KE SUPABASE...");
+
                     // Panggil controller untuk menyimpan data ke Supabase
                     final success = await crmController.addLead(
                       nama: nameController.text.trim(),
@@ -365,13 +368,32 @@ class AddProspectDialog {
                           formattedDate, // 👈 Passing string YYYY-MM-DD
                     );
 
+                    print("HASIL SIMPAN SUPABASE (success) = $success");
+
                     if (!context.mounted) return;
 
                     if (success) {
+                      if (selectedFollowUpDate != null) {
+                        // Buat ID unik berdasarkan angka waktu agar tidak bentrok antar leads
+                        final int uniqueId = DateTime.now()
+                            .millisecondsSinceEpoch
+                            .remainder(100000);
+
+                        // Panggil fungsi jadwal jam 09:00 pagi pada tanggal yang dipilih user
+                        await NotificationService.scheduleFollowUp(
+                          uniqueId,
+                          'Jadwal Follow-up: ${nameController.text.trim()} 🚀',
+                          'Waktunya menghubungi prospek dari ${instansiController.text.trim()}.',
+                          selectedFollowUpDate!, // Tanggal dari DateTimePicker
+                        );
+                      }
+
                       Navigator.pop(context);
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
-                          content: Text('Prospek berhasil ditambahkan!'),
+                          content: Text(
+                            'Prospek berhasil ditambahkan! Menunggu 5 detik...',
+                          ),
                           backgroundColor: Colors.green,
                         ),
                       );
