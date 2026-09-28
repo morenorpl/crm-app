@@ -32,8 +32,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
   // FILTER DASHBOARD
   // ==========================================
 
-  String _selectedTeamFilter = 'Tim Bawahanku';
-  String _selectedTimeFilter = 'Semua waktu';
+  String _selectedTeamFilter = 'Kinerja Ku Saja';
+  // String _selectedTimeFilter = 'Semua waktu';
 
   // ==========================================
   // FILTER PIPELINE CRM
@@ -170,93 +170,170 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
               const SizedBox(height: 16),
 
-              // ==========================================
-              // FILTER PILLS
-              // ==========================================
-              SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(4),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.06),
-                        borderRadius: BorderRadius.circular(24),
-                        border: Border.all(
-                          color: Colors.white.withOpacity(0.12),
-                        ),
-                      ),
-                      child: Row(
-                        children: [
-                          _buildFilterChip(
-                            'Tim Bawahanku',
-                            _selectedTeamFilter == 'Tim Bawahanku',
-                            () {
-                              setState(() {
-                                _selectedTeamFilter = 'Tim Bawahanku';
-                              });
-                            },
-                            activeColor: const Color(0xFF3B82F6),
-                          ),
-
-                          const SizedBox(width: 4),
-
-                          _buildFilterChip(
-                            'Kinerja Ku Saja',
-                            _selectedTeamFilter == 'Kinerja Ku Saja',
-                            () {
-                              setState(() {
-                                _selectedTeamFilter = 'Kinerja Ku Saja';
-                              });
-                            },
-                            activeColor: const Color(0xFF3B82F6),
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    const SizedBox(width: 12),
-
-                    Container(
-                      padding: const EdgeInsets.all(4),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.06),
-                        borderRadius: BorderRadius.circular(24),
-                        border: Border.all(
-                          color: Colors.white.withOpacity(0.12),
-                        ),
-                      ),
-                      child: Row(
-                        children: [
-                          _buildFilterChip(
-                            'Semua waktu',
-                            _selectedTimeFilter == 'Semua waktu',
-                            () {
-                              setState(() {
-                                _selectedTimeFilter = 'Semua waktu';
-                              });
-                            },
-                            activeColor: const Color(0xFF10B981),
-                          ),
-
-                          const SizedBox(width: 4),
-
-                          _buildFilterChip(
-                            'Hari ini',
-                            _selectedTimeFilter == 'Hari ini',
-                            () {
-                              setState(() {
-                                _selectedTimeFilter = 'Hari ini';
-                              });
-                            },
-                            activeColor: const Color(0xFF10B981),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
+             // ==========================================
+// FILTER PILLS (LANGSUNG AKTIF BIRU SAAT PERTAMA KALI KELUAR)
+// ==========================================
+Container(
+  width: double.infinity,
+  padding: const EdgeInsets.all(4),
+  decoration: BoxDecoration(
+    color: Colors.white.withOpacity(0.06),
+    borderRadius: BorderRadius.circular(24),
+    border: Border.all(
+      color: Colors.white.withOpacity(0.12),
+    ),
+  ),
+  child: Row(
+    children: [
+      // 1. Kinerja Ku Saja (KIRI - LANGSUNG BIRU DARI AWAL)
+      Expanded(
+        child: GestureDetector(
+          onTap: () {
+            setState(() {
+              _selectedTeamFilter = 'Kinerja Ku Saja';
+            });
+          },
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            padding: const EdgeInsets.symmetric(vertical: 10),
+            decoration: BoxDecoration(
+              color: (_selectedTeamFilter == 'Kinerja Ku Saja' || _selectedTeamFilter.isEmpty)
+                  ? const Color(0xFF3B82F6)
+                  : Colors.transparent,
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: const Center(
+              child: Text(
+                'Kinerja Ku Saja',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
+            ),
+          ),
+        ),
+      ),
+
+      const SizedBox(width: 4),
+
+      // 2. Tim Bawahanku (KANAN)
+      Expanded(
+        child: GestureDetector(
+          onTap: () {
+            setState(() {
+              _selectedTeamFilter = 'Tim Bawahanku';
+            });
+          },
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            padding: const EdgeInsets.symmetric(vertical: 10),
+            decoration: BoxDecoration(
+              color: _selectedTeamFilter == 'Tim Bawahanku'
+                  ? const Color(0xFF3B82F6)
+                  : Colors.transparent,
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Center(
+              child: Text(
+                'Tim Bawahanku',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: _selectedTeamFilter == 'Tim Bawahanku'
+                      ? Colors.white
+                      : const Color(0xFFA197B4),
+                  fontSize: 12,
+                  fontWeight: _selectedTeamFilter == 'Tim Bawahanku'
+                      ? FontWeight.bold
+                      : FontWeight.normal,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+
+      // =========================================================
+      // FILTER WAKTU (DIKOMEN AGAR TIDAK MUNCUL TAPI TIDAK DIHAPUS)
+      // =========================================================
+      /*
+      const SizedBox(width: 4),
+      Expanded(
+        child: GestureDetector(
+          onTap: () {
+            setState(() {
+              _selectedTimeFilter = 'Semua waktu';
+            });
+          },
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            padding: const EdgeInsets.symmetric(vertical: 10),
+            decoration: BoxDecoration(
+              color: _selectedTimeFilter == 'Semua waktu'
+                  ? const Color(0xFF10B981)
+                  : Colors.transparent,
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Center(
+              child: Text(
+                'Semua waktu',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: _selectedTimeFilter == 'Semua waktu'
+                      ? Colors.white
+                      : const Color(0xFFA197B4),
+                  fontSize: 12,
+                  fontWeight: _selectedTimeFilter == 'Semua waktu'
+                      ? FontWeight.bold
+                      : FontWeight.normal,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+
+      const SizedBox(width: 4),
+      Expanded(
+        child: GestureDetector(
+          onTap: () {
+            setState(() {
+              _selectedTimeFilter = 'Hari ini';
+            });
+          },
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            padding: const EdgeInsets.symmetric(vertical: 10),
+            decoration: BoxDecoration(
+              color: _selectedTimeFilter == 'Hari ini'
+                  ? const Color(0xFF10B981)
+                  : Colors.transparent,
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Center(
+              child: Text(
+                'Hari ini',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: _selectedTimeFilter == 'Hari ini'
+                      ? Colors.white
+                      : const Color(0xFFA197B4),
+                  fontSize: 12,
+                  fontWeight: _selectedTimeFilter == 'Hari ini'
+                      ? FontWeight.bold
+                      : FontWeight.normal,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+      */
+    ],
+  ),
+),
 
               const SizedBox(height: 16),
 
