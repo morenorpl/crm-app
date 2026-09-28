@@ -170,95 +170,96 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
               const SizedBox(height: 16),
 
-             // ==========================================
-// FILTER PILLS (LANGSUNG AKTIF BIRU SAAT PERTAMA KALI KELUAR)
-// ==========================================
-Container(
-  width: double.infinity,
-  padding: const EdgeInsets.all(4),
-  decoration: BoxDecoration(
-    color: Colors.white.withOpacity(0.06),
-    borderRadius: BorderRadius.circular(24),
-    border: Border.all(
-      color: Colors.white.withOpacity(0.12),
-    ),
-  ),
-  child: Row(
-    children: [
-      // 1. Kinerja Ku Saja (KIRI - LANGSUNG BIRU DARI AWAL)
-      Expanded(
-        child: GestureDetector(
-          onTap: () {
-            setState(() {
-              _selectedTeamFilter = 'Kinerja Ku Saja';
-            });
-          },
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            padding: const EdgeInsets.symmetric(vertical: 10),
-            decoration: BoxDecoration(
-              color: (_selectedTeamFilter == 'Kinerja Ku Saja' || _selectedTeamFilter.isEmpty)
-                  ? const Color(0xFF3B82F6)
-                  : Colors.transparent,
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: const Center(
-              child: Text(
-                'Kinerja Ku Saja',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
+              // ==========================================
+              // FILTER PILLS (LANGSUNG AKTIF BIRU SAAT PERTAMA KALI KELUAR)
+              // ==========================================
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(4),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.06),
+                  borderRadius: BorderRadius.circular(24),
+                  border: Border.all(color: Colors.white.withOpacity(0.12)),
                 ),
-              ),
-            ),
-          ),
-        ),
-      ),
+                child: Row(
+                  children: [
+                    // 1. Kinerja Ku Saja (KIRI - LANGSUNG BIRU DARI AWAL)
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            _selectedTeamFilter = 'Kinerja Ku Saja';
+                          });
+                        },
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 200),
+                          padding: const EdgeInsets.symmetric(vertical: 10),
+                          decoration: BoxDecoration(
+                            color:
+                                (_selectedTeamFilter == 'Kinerja Ku Saja' ||
+                                    _selectedTeamFilter.isEmpty)
+                                ? const Color(0xFF3B82F6)
+                                : Colors.transparent,
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: const Center(
+                            child: Text(
+                              'Kinerja Ku Saja',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
 
-      const SizedBox(width: 4),
+                    const SizedBox(width: 4),
 
-      // 2. Tim Bawahanku (KANAN)
-      Expanded(
-        child: GestureDetector(
-          onTap: () {
-            setState(() {
-              _selectedTeamFilter = 'Tim Bawahanku';
-            });
-          },
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            padding: const EdgeInsets.symmetric(vertical: 10),
-            decoration: BoxDecoration(
-              color: _selectedTeamFilter == 'Tim Bawahanku'
-                  ? const Color(0xFF3B82F6)
-                  : Colors.transparent,
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Center(
-              child: Text(
-                'Tim Bawahanku',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: _selectedTeamFilter == 'Tim Bawahanku'
-                      ? Colors.white
-                      : const Color(0xFFA197B4),
-                  fontSize: 12,
-                  fontWeight: _selectedTeamFilter == 'Tim Bawahanku'
-                      ? FontWeight.bold
-                      : FontWeight.normal,
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
+                    // 2. Tim Bawahanku (KANAN)
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            _selectedTeamFilter = 'Tim Bawahanku';
+                          });
+                        },
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 200),
+                          padding: const EdgeInsets.symmetric(vertical: 10),
+                          decoration: BoxDecoration(
+                            color: _selectedTeamFilter == 'Tim Bawahanku'
+                                ? const Color(0xFF3B82F6)
+                                : Colors.transparent,
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Center(
+                            child: Text(
+                              'Tim Bawahanku',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                color: _selectedTeamFilter == 'Tim Bawahanku'
+                                    ? Colors.white
+                                    : const Color(0xFFA197B4),
+                                fontSize: 12,
+                                fontWeight:
+                                    _selectedTeamFilter == 'Tim Bawahanku'
+                                    ? FontWeight.bold
+                                    : FontWeight.normal,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
 
-      // =========================================================
-      // FILTER WAKTU (DIKOMEN AGAR TIDAK MUNCUL TAPI TIDAK DIHAPUS)
-      // =========================================================
-      /*
+                    // =========================================================
+                    // FILTER WAKTU (DIKOMEN AGAR TIDAK MUNCUL TAPI TIDAK DIHAPUS)
+                    // =========================================================
+                    /*
       const SizedBox(width: 4),
       Expanded(
         child: GestureDetector(
@@ -331,9 +332,9 @@ Container(
         ),
       ),
       */
-    ],
-  ),
-),
+                  ],
+                ),
+              ),
 
               const SizedBox(height: 16),
 
