@@ -1,9 +1,9 @@
 import 'dart:convert';
-import 'dart:io';
-
+import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/lead_model.dart';
+import '/config/api_config.dart';
 
 class CrmController extends ChangeNotifier {
   final SupabaseClient _supabase = Supabase.instance.client;
@@ -89,7 +89,7 @@ class CrmController extends ChangeNotifier {
   }
 
   // ==========================================
-  // FETCH LEADS
+  // FETCH LEADS (MENDUKUNG WEB & EMULATOR)
   // ==========================================
 
   Future<void> fetchLeads() async {
@@ -107,46 +107,34 @@ class CrmController extends ChangeNotifier {
 
       final accessToken = session.accessToken;
 
-      final uri = Uri.parse('http://192.168.1.25:5000/api/leads');
+      // Menggunakan ApiConfig agar seragam
+      final uri = Uri.parse('${ApiConfig.baseUrl}/api/leads');
 
-      final client = HttpClient();
+      final response = await http.get(
+        uri,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $accessToken',
+        },
+      );
 
-      try {
-        final request = await client.getUrl(uri);
+      debugPrint('STATUS FETCH LEADS: ${response.statusCode}');
+      debugPrint('RESPONSE FETCH LEADS: ${response.body}');
 
-        request.headers.set('Content-Type', 'application/json');
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        final decoded = jsonDecode(response.body);
+        final data = decoded['data'];
 
-        request.headers.set('Authorization', 'Bearer $accessToken');
-
-        final response = await request.close();
-
-        final responseBody = await response.transform(utf8.decoder).join();
-
-        debugPrint('STATUS FETCH LEADS: ${response.statusCode}');
-
-        debugPrint('RESPONSE FETCH LEADS: $responseBody');
-
-        if (response.statusCode >= 200 && response.statusCode < 300) {
-          final decoded = jsonDecode(responseBody);
-
-          final data = decoded['data'];
-
-          if (data is List) {
-            leads = data
-                .map(
-                  (item) => LeadModel.fromMap(Map<String, dynamic>.from(item)),
-                )
-                .toList();
-          } else {
-            leads = [];
-          }
+        if (data is List) {
+          leads = data
+              .map((item) => LeadModel.fromMap(Map<String, dynamic>.from(item)))
+              .toList();
         } else {
-          debugPrint('Gagal mengambil leads: $responseBody');
-
           leads = [];
         }
-      } finally {
-        client.close();
+      } else {
+        debugPrint('Gagal mengambil leads: ${response.body}');
+        leads = [];
       }
     } catch (e) {
       debugPrint('Error fetching leads: $e');
@@ -158,7 +146,7 @@ class CrmController extends ChangeNotifier {
   }
 
   // ==========================================
-  // TAMBAH LEAD
+  // TAMBAH LEAD (MENDUKUNG WEB & EMULATOR)
   // ==========================================
 
   Future<bool> addLead({
@@ -185,56 +173,45 @@ class CrmController extends ChangeNotifier {
 
       final accessToken = session.accessToken;
 
-      final uri = Uri.parse('http://192.168.1.25:5000/api/leads');
+      // Gunakan ApiConfig.baseUrl agar IP seragam
+      final uri = Uri.parse('${ApiConfig.baseUrl}/api/leads');
 
-      final client = HttpClient();
+      final body = {
+        'nama': nama,
+        'instansi': instansi,
+        'email': email,
+        'no_hp': noHp,
+        'lokasi': lokasi,
+        'sumber_leads': sumberLeads,
+        'tipe_lead': tipeLead,
+        'status': status,
+        'jumlah_pax': jumlahPax,
+        'potensi_nilai': potensiNilai,
+        'catatan': catatan,
+        'jadwal_follow_up': jadwalFollowUp,
+      };
 
-      try {
-        final request = await client.postUrl(uri);
+      // Menggunakan package http yang aman untuk Web & Mobile
+      final response = await http.post(
+        uri,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $accessToken',
+        },
+        body: jsonEncode(body),
+      );
 
-        request.headers.set('Content-Type', 'application/json');
+      debugPrint('STATUS CREATE LEAD: ${response.statusCode}');
+      debugPrint('RESPONSE CREATE LEAD: ${response.body}');
 
-        request.headers.set('Authorization', 'Bearer $accessToken');
-
-        final body = {
-          'nama': nama,
-          'instansi': instansi,
-          'email': email,
-          'no_hp': noHp,
-          'lokasi': lokasi,
-          'sumber_leads': sumberLeads,
-          'tipe_lead': tipeLead,
-          'status': status,
-          'jumlah_pax': jumlahPax,
-          'potensi_nilai': potensiNilai,
-          'catatan': catatan,
-          'jadwal_follow_up': jadwalFollowUp,
-        };
-
-        debugPrint('CREATE LEAD BODY: ${jsonEncode(body)}');
-
-        request.write(jsonEncode(body));
-
-        final response = await request.close();
-
-        final responseBody = await response.transform(utf8.decoder).join();
-
-        debugPrint('STATUS CREATE LEAD: ${response.statusCode}');
-
-        debugPrint('RESPONSE CREATE LEAD: $responseBody');
-
-        if (response.statusCode >= 200 && response.statusCode < 300) {
-          await fetchLeads();
-          return true;
-        }
-
-        return false;
-      } finally {
-        client.close();
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        await fetchLeads(); // Refresh list setelah berhasil
+        return true;
       }
+
+      return false;
     } catch (e) {
       debugPrint('Gagal menyimpan lead: $e');
-
       return false;
     }
   }
