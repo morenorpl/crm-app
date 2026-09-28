@@ -29,6 +29,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
   final CrmController _crmController = CrmController();
 
   // ==========================================
+  // STATE USER & PROFIL (DITAMBAHKAN)
+  // ==========================================
+  int? _currentUserId;
+  String? _currentUserRole;
+  bool _isLoadingProfile = true;
+
+  // ==========================================
   // FILTER DASHBOARD
   // ==========================================
 
@@ -48,16 +55,69 @@ class _DashboardScreenState extends State<DashboardScreen> {
   final _supabase = Supabase.instance.client;
 
   // ==========================================
-  // STREAM LEADS
+  // INIT STATE UTK AMBIL PROFIL (DITAMBAHKAN)
+  // ==========================================
+  @override
+  void initState() {
+    super.initState();
+    _fetchUserProfile();
+  }
+
+  Future<void> _fetchUserProfile() async {
+    final user = _supabase.auth.currentUser;
+    if (user != null && user.email != null) {
+      try {
+        final response = await _supabase
+            .from('users')
+            .select('id, role')
+            .eq('email', user.email!)
+            .single();
+
+        if (mounted) {
+          setState(() {
+            _currentUserId = response['id'];
+            _currentUserRole = response['role'];
+            _isLoadingProfile = false;
+          });
+        }
+      } catch (e) {
+        debugPrint('Error fetching user profile: $e');
+        if (mounted) {
+          setState(() => _isLoadingProfile = false);
+        }
+      }
+    } else {
+      if (mounted) {
+        setState(() => _isLoadingProfile = false);
+      }
+    }
+  }
+
+  // ==========================================
+  // STREAM LEADS (DIPERBARUI DGN FILTER DART)
   // ==========================================
 
   Stream<List<LeadModel>> _getLeadsStream() {
+    if (_isLoadingProfile || _currentUserId == null) {
+      return Stream.value([]);
+    }
+
     return _supabase
         .from('leads')
         .stream(primaryKey: ['id'])
         .order('id', ascending: false)
         .map((data) {
-          return data
+          // 1. Filter data secara lokal di Dart
+          var filteredData = data;
+          if (_selectedTeamFilter == 'Kinerja Ku Saja' ||
+              _currentUserRole != 'admin') {
+            filteredData = filteredData
+                .where((json) => json['user_id'] == _currentUserId)
+                .toList();
+          }
+
+          // 2. Convert ke Model
+          return filteredData
               .map((json) => LeadModel.fromMap(Map<String, dynamic>.from(json)))
               .toList();
         });
@@ -100,11 +160,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         lead: lead,
         onSave: (updates) async {
           try {
-            // 1. Update the lead record in Supabase using the lead's id
-            await _supabase
-                .from('leads')
-                .update(updates)
-                .eq('id', lead.id); // Assuming your LeadModel uses 'id'
+            await _supabase.from('leads').update(updates).eq('id', lead.id);
 
             if (mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
@@ -154,330 +210,247 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // ==========================================
-              // HEADER
-              // ==========================================
-
-              HeaderBar(
-                title: 'Dashboard Sejadah',
-                subtitle: 'Selamat datang kembali!',
-              ),
-
-              const SizedBox(height: 16),
-
-              // ==========================================
-              // FILTER PILLS (LANGSUNG AKTIF BIRU SAAT PERTAMA KALI KELUAR)
-              // ==========================================
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(4),
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.06),
-                  borderRadius: BorderRadius.circular(24),
-                  border: Border.all(color: Colors.white.withOpacity(0.12)),
-                ),
-                child: Row(
+        // DITAMBAHKAN: Pengecekan loading profile
+        child: _isLoadingProfile
+            ? const Center(
+                child: CircularProgressIndicator(color: Colors.white),
+              )
+            : SingleChildScrollView(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // 1. Kinerja Ku Saja (KIRI - LANGSUNG BIRU DARI AWAL)
-                    Expanded(
-                      child: GestureDetector(
-                        onTap: () {
-                          setState(() {
-                            _selectedTeamFilter = 'Kinerja Ku Saja';
-                          });
-                        },
-                        child: AnimatedContainer(
-                          duration: const Duration(milliseconds: 200),
-                          padding: const EdgeInsets.symmetric(vertical: 10),
-                          decoration: BoxDecoration(
-                            color:
-                                (_selectedTeamFilter == 'Kinerja Ku Saja' ||
-                                    _selectedTeamFilter.isEmpty)
-                                ? const Color(0xFF3B82F6)
-                                : Colors.transparent,
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: const Center(
-                            child: Text(
-                              'Kinerja Ku Saja',
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 12,
-                                fontWeight: FontWeight.bold,
+                    // ==========================================
+                    // HEADER
+                    // ==========================================
+
+                    HeaderBar(
+                      title: 'Dashboard Sejadah',
+                      subtitle: 'Selamat datang kembali!',
+                    ),
+
+                    const SizedBox(height: 16),
+
+                    // ==========================================
+                    // FILTER PILLS
+                    // ==========================================
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(4),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.06),
+                        borderRadius: BorderRadius.circular(24),
+                        border: Border.all(
+                          color: Colors.white.withOpacity(0.12),
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          // 1. Kinerja Ku Saja (KIRI)
+                          Expanded(
+                            child: GestureDetector(
+                              onTap: () {
+                                setState(() {
+                                  _selectedTeamFilter = 'Kinerja Ku Saja';
+                                });
+                              },
+                              child: AnimatedContainer(
+                                duration: const Duration(milliseconds: 200),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 10,
+                                ),
+                                decoration: BoxDecoration(
+                                  color:
+                                      (_selectedTeamFilter ==
+                                              'Kinerja Ku Saja' ||
+                                          _selectedTeamFilter.isEmpty)
+                                      ? const Color(0xFF3B82F6)
+                                      : Colors.transparent,
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: const Center(
+                                  child: Text(
+                                    'Kinerja Ku Saja',
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
                               ),
                             ),
                           ),
-                        ),
-                      ),
-                    ),
 
-                    const SizedBox(width: 4),
+                          const SizedBox(width: 4),
 
-                    // 2. Tim Bawahanku (KANAN)
-                    Expanded(
-                      child: GestureDetector(
-                        onTap: () {
-                          setState(() {
-                            _selectedTeamFilter = 'Tim Bawahanku';
-                          });
-                        },
-                        child: AnimatedContainer(
-                          duration: const Duration(milliseconds: 200),
-                          padding: const EdgeInsets.symmetric(vertical: 10),
-                          decoration: BoxDecoration(
-                            color: _selectedTeamFilter == 'Tim Bawahanku'
-                                ? const Color(0xFF3B82F6)
-                                : Colors.transparent,
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: Center(
-                            child: Text(
-                              'Tim Bawahanku',
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                color: _selectedTeamFilter == 'Tim Bawahanku'
-                                    ? Colors.white
-                                    : const Color(0xFFA197B4),
-                                fontSize: 12,
-                                fontWeight:
-                                    _selectedTeamFilter == 'Tim Bawahanku'
-                                    ? FontWeight.bold
-                                    : FontWeight.normal,
+                          // 2. Tim Bawahanku (KANAN - DIPERBARUI LOGIC GRAY OUT)
+                          Expanded(
+                            child: GestureDetector(
+                              onTap: _currentUserRole == 'admin'
+                                  ? () {
+                                      setState(() {
+                                        _selectedTeamFilter = 'Tim Bawahanku';
+                                      });
+                                    }
+                                  : null, // Disable klik jika user biasa
+                              child: AnimatedContainer(
+                                duration: const Duration(milliseconds: 200),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 10,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: _currentUserRole != 'admin'
+                                      ? Colors.grey.withOpacity(
+                                          0.1,
+                                        ) // Background abu-abu jika disable
+                                      : _selectedTeamFilter == 'Tim Bawahanku'
+                                      ? const Color(0xFF3B82F6)
+                                      : Colors.transparent,
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: Center(
+                                  child: Text(
+                                    'Tim Bawahanku',
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      color: _currentUserRole != 'admin'
+                                          ? Colors.grey.withOpacity(
+                                              0.5,
+                                            ) // Teks mati jika disable
+                                          : _selectedTeamFilter ==
+                                                'Tim Bawahanku'
+                                          ? Colors.white
+                                          : const Color(0xFFA197B4),
+                                      fontSize: 12,
+                                      fontWeight:
+                                          _selectedTeamFilter == 'Tim Bawahanku'
+                                          ? FontWeight.bold
+                                          : FontWeight.normal,
+                                    ),
+                                  ),
+                                ),
                               ),
                             ),
                           ),
-                        ),
+                        ],
                       ),
                     ),
 
-                    // =========================================================
-                    // FILTER WAKTU (DIKOMEN AGAR TIDAK MUNCUL TAPI TIDAK DIHAPUS)
-                    // =========================================================
-                    /*
-      const SizedBox(width: 4),
-      Expanded(
-        child: GestureDetector(
-          onTap: () {
-            setState(() {
-              _selectedTimeFilter = 'Semua waktu';
-            });
-          },
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            padding: const EdgeInsets.symmetric(vertical: 10),
-            decoration: BoxDecoration(
-              color: _selectedTimeFilter == 'Semua waktu'
-                  ? const Color(0xFF10B981)
-                  : Colors.transparent,
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Center(
-              child: Text(
-                'Semua waktu',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: _selectedTimeFilter == 'Semua waktu'
-                      ? Colors.white
-                      : const Color(0xFFA197B4),
-                  fontSize: 12,
-                  fontWeight: _selectedTimeFilter == 'Semua waktu'
-                      ? FontWeight.bold
-                      : FontWeight.normal,
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
+                    const SizedBox(height: 16),
 
-      const SizedBox(width: 4),
-      Expanded(
-        child: GestureDetector(
-          onTap: () {
-            setState(() {
-              _selectedTimeFilter = 'Hari ini';
-            });
-          },
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            padding: const EdgeInsets.symmetric(vertical: 10),
-            decoration: BoxDecoration(
-              color: _selectedTimeFilter == 'Hari ini'
-                  ? const Color(0xFF10B981)
-                  : Colors.transparent,
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Center(
-              child: Text(
-                'Hari ini',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: _selectedTimeFilter == 'Hari ini'
-                      ? Colors.white
-                      : const Color(0xFFA197B4),
-                  fontSize: 12,
-                  fontWeight: _selectedTimeFilter == 'Hari ini'
-                      ? FontWeight.bold
-                      : FontWeight.normal,
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-      */
+                    // ==========================================
+                    // METRIC CARDS (DYNAMIC ALL-TIME CRM STAGES)
+                    // ==========================================
+                    StreamBuilder<List<Map<String, dynamic>>>(
+                      stream: _getProductivityLeadsStream(),
+                      builder: (context, snapshot) {
+                        int totalBaru = 0;
+                        int totalDihubungi = 0;
+                        int totalLayak = 0;
+                        int totalClosed = 0;
+
+                        if (snapshot.hasData) {
+                          final leads = snapshot.data!;
+                          for (var lead in leads) {
+                            final String status = lead['status'] ?? 'baru';
+
+                            if (status == 'baru') {
+                              totalBaru++;
+                            } else if (status == 'dihubungi') {
+                              totalDihubungi++;
+                            } else if (status == 'layak') {
+                              totalLayak++;
+                            } else if (status == 'closed' ||
+                                status == 'selesai') {
+                              totalClosed++;
+                            }
+                          }
+                        }
+
+                        return Column(
+                          children: [
+                            _buildMetricCard(
+                              title: 'Prospek Baru',
+                              titleColor: const Color(0xFF3B82F6),
+                              value: '$totalBaru',
+                              subtitle: 'Total semua prospek baru',
+                              actionText: 'Tahap Awal Pipeline',
+                              icon: Icons.fiber_new_rounded,
+                              iconBgColor: const Color(
+                                0xFF3B82F6,
+                              ).withOpacity(0.2),
+                              iconColor: const Color(0xFF3B82F6),
+                            ),
+                            const SizedBox(height: 12),
+                            _buildMetricCard(
+                              title: 'Dihubungi',
+                              titleColor: const Color(0xFFF59E0B),
+                              value: '$totalDihubungi',
+                              subtitle: 'Total prospek dihubungi',
+                              actionText: 'Dalam Proses Follow Up',
+                              icon: Icons.phone_callback_rounded,
+                              iconBgColor: const Color(
+                                0xFFF59E0B,
+                              ).withOpacity(0.2),
+                              iconColor: const Color(0xFFF59E0B),
+                            ),
+                            const SizedBox(height: 12),
+                            _buildMetricCard(
+                              title: 'Prospek Layak',
+                              titleColor: const Color(0xFF10B981),
+                              value: '$totalLayak',
+                              subtitle: 'Total prospek memenuhi syarat',
+                              actionText: 'Siap Menuju Closing',
+                              icon: Icons.check_circle_outline_rounded,
+                              iconBgColor: const Color(
+                                0xFF10B981,
+                              ).withOpacity(0.2),
+                              iconColor: const Color(0xFF10B981),
+                            ),
+                            const SizedBox(height: 12),
+                            _buildMetricCard(
+                              title: 'Closed (WON)',
+                              titleColor: const Color(0xFF8B5CF6),
+                              value: '$totalClosed',
+                              subtitle: 'Total deal berhasil',
+                              actionText: null,
+                              icon: Icons.workspace_premium_rounded,
+                              iconBgColor: const Color(
+                                0xFF8B5CF6,
+                              ).withOpacity(0.2),
+                              iconColor: const Color(0xFF8B5CF6),
+                            ),
+                          ],
+                        );
+                      },
+                    ),
+                    const SizedBox(height: 16),
+
+                    // ==========================================
+                    // PRODUKTIFITAS
+                    // ==========================================
+                    _buildProduktifitasHarianCard(),
+
+                    const SizedBox(height: 16),
+
+                    // ==========================================
+                    // LAPORAN HARIAN
+                    // ==========================================
+                    _buildLaporanHarianCard(),
+
+                    const SizedBox(height: 16),
+
+                    // ==========================================
+                    // PIPELINE CRM
+                    // ==========================================
+                    _buildPipelineCrmCard(),
+
+                    const SizedBox(height: 24),
                   ],
                 ),
               ),
-
-              const SizedBox(height: 16),
-
-              // ==========================================
-              // METRIC CARDS (DYNAMIC ALL-TIME CRM STAGES)
-              // ==========================================
-              StreamBuilder<List<Map<String, dynamic>>>(
-                stream: _getProductivityLeadsStream(),
-                builder: (context, snapshot) {
-                  int totalBaru = 0;
-                  int totalDihubungi = 0;
-                  int totalLayak = 0;
-                  int totalClosed = 0;
-
-                  if (snapshot.hasData) {
-                    final leads = snapshot.data!;
-                    for (var lead in leads) {
-                      final String status = lead['status'] ?? 'baru';
-
-                      if (status == 'baru') {
-                        totalBaru++;
-                      } else if (status == 'dihubungi') {
-                        totalDihubungi++;
-                      } else if (status == 'layak') {
-                        totalLayak++;
-                      } else if (status == 'closed' || status == 'selesai') {
-                        totalClosed++;
-                      }
-                    }
-                  }
-
-                  return Column(
-                    children: [
-                      // 1. Prospek Baru -> Blue (Icon: Fiber New / Sparkle for new leads)
-                      _buildMetricCard(
-                        title: 'Prospek Baru',
-                        titleColor: const Color(0xFF3B82F6),
-                        value: '$totalBaru',
-                        subtitle: 'Total semua prospek baru',
-                        actionText: 'Tahap Awal Pipeline',
-                        icon: Icons.fiber_new_rounded,
-                        iconBgColor: const Color(0xFF3B82F6).withOpacity(0.2),
-                        iconColor: const Color(0xFF3B82F6),
-                      ),
-                      const SizedBox(height: 12),
-
-                      // 2. Dihubungi -> Orange (Icon: Phone Callback / Call for communication)
-                      _buildMetricCard(
-                        title: 'Dihubungi',
-                        titleColor: const Color(0xFFF59E0B),
-                        value: '$totalDihubungi',
-                        subtitle: 'Total prospek dihubungi',
-                        actionText: 'Dalam Proses Follow Up',
-                        icon: Icons.phone_callback_rounded,
-                        iconBgColor: const Color(0xFFF59E0B).withOpacity(0.2),
-                        iconColor: const Color(0xFFF59E0B),
-                      ),
-                      const SizedBox(height: 12),
-
-                      // 3. Prospek Layak -> Green (Icon: Check Circle / Verified for qualified leads)
-                      _buildMetricCard(
-                        title: 'Prospek Layak',
-                        titleColor: const Color(0xFF10B981),
-                        value: '$totalLayak',
-                        subtitle: 'Total prospek memenuhi syarat',
-                        actionText: 'Siap Menuju Closing',
-                        icon: Icons.check_circle_outline_rounded,
-                        iconBgColor: const Color(0xFF10B981).withOpacity(0.2),
-                        iconColor: const Color(0xFF10B981),
-                      ),
-                      const SizedBox(height: 12),
-
-                      // 4. Closed (WON) -> Purple (Icon: Workspace Premium / Handshake for closed deals)
-                      _buildMetricCard(
-                        title: 'Closed (WON)',
-                        titleColor: const Color(0xFF8B5CF6),
-                        value: '$totalClosed',
-                        subtitle: 'Total deal berhasil',
-                        actionText: null,
-                        icon: Icons.workspace_premium_rounded,
-                        iconBgColor: const Color(0xFF8B5CF6).withOpacity(0.2),
-                        iconColor: const Color(0xFF8B5CF6),
-                      ),
-                    ],
-                  );
-                },
-              ),
-              const SizedBox(height: 16),
-
-              // ==========================================
-              // PRODUKTIFITAS
-              // ==========================================
-              _buildProduktifitasHarianCard(),
-
-              const SizedBox(height: 16),
-
-              // ==========================================
-              // LAPORAN HARIAN
-              // ==========================================
-              _buildLaporanHarianCard(),
-
-              const SizedBox(height: 16),
-
-              // ==========================================
-              // PIPELINE CRM
-              // ==========================================
-              _buildPipelineCrmCard(),
-
-              const SizedBox(height: 24),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  // ==========================================
-  // FILTER CHIP
-  // ==========================================
-
-  Widget _buildFilterChip(
-    String label,
-    bool isActive,
-    VoidCallback onTap, {
-    Color activeColor = const Color(0xFF3B82F6),
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-        decoration: BoxDecoration(
-          color: isActive ? activeColor : Colors.transparent,
-          borderRadius: BorderRadius.circular(18),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            color: isActive ? Colors.white : const Color(0xFFA197B4),
-            fontSize: 12,
-            fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
-          ),
-        ),
       ),
     );
   }
@@ -518,7 +491,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   fontWeight: FontWeight.bold,
                 ),
               ),
-
               Container(
                 width: 36,
                 height: 36,
@@ -530,7 +502,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ),
             ],
           ),
-
           Text(
             value,
             style: const TextStyle(
@@ -539,9 +510,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               fontWeight: FontWeight.w900,
             ),
           ),
-
           const SizedBox(height: 2),
-
           Text(
             subtitle,
             style: TextStyle(
@@ -549,10 +518,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
               fontSize: 12,
             ),
           ),
-
           if (actionText != null) ...[
             const SizedBox(height: 14),
-
             Text(
               actionText,
               style: TextStyle(
@@ -567,17 +534,28 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   // ==========================================
-  // PRODUCTIVITY STREAM
+  // PRODUCTIVITY STREAM (DIPERBARUI DGN FILTER DART)
   // ==========================================
 
   Stream<List<Map<String, dynamic>>> _getProductivityLeadsStream() {
-    return _supabase
-        .from('leads')
-        .stream(primaryKey: ['id'])
-        .map(
-          (data) =>
-              data.map((json) => Map<String, dynamic>.from(json)).toList(),
-        );
+    if (_isLoadingProfile || _currentUserId == null) {
+      return Stream.value([]);
+    }
+
+    return _supabase.from('leads').stream(primaryKey: ['id']).map((data) {
+      // Filter data secara lokal di Dart
+      var filteredData = data;
+      if (_selectedTeamFilter == 'Kinerja Ku Saja' ||
+          _currentUserRole != 'admin') {
+        filteredData = filteredData
+            .where((json) => json['user_id'] == _currentUserId)
+            .toList();
+      }
+
+      return filteredData
+          .map((json) => Map<String, dynamic>.from(json))
+          .toList();
+    });
   }
 
   // ==========================================
@@ -599,27 +577,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
         }
 
         final leads = snapshot.data ?? [];
-
         final now = DateTime.now();
-
         final today = DateTime(now.year, now.month, now.day);
-
         final List<Map<String, dynamic>> dailyData = [];
 
         for (int i = 6; i >= 0; i--) {
           final date = today.subtract(Duration(days: i));
-
           int total = 0;
 
           for (final lead in leads) {
             final createdAtValue = lead['created_at'];
-
-            if (createdAtValue == null) {
-              continue;
-            }
+            if (createdAtValue == null) continue;
 
             DateTime? createdAt;
-
             try {
               createdAt = DateTime.parse(createdAtValue.toString()).toLocal();
             } catch (_) {
@@ -647,10 +617,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
         }
 
         int maxTotal = 0;
-
         for (final item in dailyData) {
           final total = item['total'] as int;
-
           if (total > maxTotal) {
             maxTotal = total;
           }
@@ -696,7 +664,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   fontWeight: FontWeight.bold,
                 ),
               ),
-
               Container(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 10,
@@ -717,9 +684,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ),
             ],
           ),
-
           const SizedBox(height: 4),
-
           Text(
             'Jumlah leads yang dibuat setiap hari berdasarkan data Supabase.',
             style: TextStyle(
@@ -727,9 +692,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               fontSize: 11,
             ),
           ),
-
           const SizedBox(height: 16),
-
           if (isLoading)
             Text(
               'Memuat data...',
@@ -751,9 +714,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 fontSize: 10,
               ),
             ),
-
           const SizedBox(height: 10),
-
           SizedBox(
             height: 125,
             child: isLoading || errorText != null
@@ -763,11 +724,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: dailyData!.map((item) {
                       final total = item['total'] as int;
-
                       final label = item['label'] as String;
-
                       final date = item['date'] as DateTime;
-
                       final isToday = _isSameDate(date, DateTime.now());
 
                       return _buildBarItem(
@@ -779,9 +737,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     }).toList(),
                   ),
           ),
-
           const SizedBox(height: 8),
-
           Row(
             children: [
               Container(
@@ -792,16 +748,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   shape: BoxShape.circle,
                 ),
               ),
-
               const SizedBox(width: 6),
-
               const Text(
                 'Hari ini',
                 style: TextStyle(color: Color(0xFFA197B4), fontSize: 10),
               ),
-
               const Spacer(),
-
               Flexible(
                 child: Text(
                   'Jumlah bar mengikuti jumlah leads yang dibuat pada hari tersebut.',
@@ -830,7 +782,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
     bool isToday = false,
   }) {
     double barHeight = 0;
-
     if (maxTotal > 0 && total > 0) {
       barHeight = 10 + ((total / maxTotal) * 65);
     } else if (total > 0) {
@@ -856,9 +807,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ),
             ),
           ),
-
           const SizedBox(height: 4),
-
           Container(
             height: barHeight > 0 ? barHeight : 4,
             width: 38,
@@ -869,9 +818,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               borderRadius: BorderRadius.circular(5),
             ),
           ),
-
           const SizedBox(height: 8),
-
           SizedBox(
             height: 16,
             child: Text(
@@ -912,7 +859,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
       'Nov',
       'Des',
     ];
-
     return '${date.day} ${months[date.month - 1]}';
   }
 
@@ -944,18 +890,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
         }
 
         final leads = snapshot.data ?? [];
-
         Map<String, Map<String, int>> groupedData = {};
 
         for (final lead in leads) {
           final createdAtValue = lead['created_at'];
-
-          if (createdAtValue == null) {
-            continue;
-          }
+          if (createdAtValue == null) continue;
 
           DateTime? createdAt;
-
           try {
             createdAt = DateTime.parse(createdAtValue.toString()).toLocal();
           } catch (_) {
@@ -963,7 +904,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
           }
 
           final dateKey = _formatLongDate(createdAt);
-
           final String status = lead['status']?.toString() ?? 'baru';
 
           if (!groupedData.containsKey(dateKey)) {
@@ -994,9 +934,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   fontWeight: FontWeight.bold,
                 ),
               ),
-
               const SizedBox(height: 4),
-
               Text(
                 'Daftar rinci dari prospek-prospek yang ditambah per hari.',
                 style: TextStyle(
@@ -1004,9 +942,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   fontSize: 11,
                 ),
               ),
-
               const SizedBox(height: 14),
-
               if (sortedKeys.isEmpty)
                 Text(
                   'Belum ada data laporan harian.',
@@ -1018,9 +954,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               else
                 ...sortedKeys.map((dateStr) {
                   final counts = groupedData[dateStr]!;
-
                   final total = counts.values.fold(0, (sum, val) => sum + val);
-
                   List<Widget> dynamicBadges = [];
 
                   if ((counts['baru'] ?? 0) > 0) {
@@ -1031,7 +965,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       ),
                     );
                   }
-
                   if ((counts['dihubungi'] ?? 0) > 0) {
                     dynamicBadges.add(
                       _buildBadge(
@@ -1040,7 +973,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       ),
                     );
                   }
-
                   if ((counts['layak'] ?? 0) > 0) {
                     dynamicBadges.add(
                       _buildBadge(
@@ -1049,7 +981,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       ),
                     );
                   }
-
                   if ((counts['closed'] ?? 0) > 0) {
                     dynamicBadges.add(
                       _buildBadge(
@@ -1106,7 +1037,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
       'Sabtu',
       'Minggu',
     ];
-
     const months = [
       'Januari',
       'Februari',
@@ -1123,7 +1053,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
     ];
 
     String dayName = days[date.weekday - 1];
-
     String monthName = months[date.month - 1];
 
     return '$dayName, ${date.day} $monthName ${date.year}';
@@ -1159,7 +1088,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   fontWeight: FontWeight.bold,
                 ),
               ),
-
               Text(
                 'Total : $total item',
                 style: TextStyle(
@@ -1169,10 +1097,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ),
             ],
           ),
-
           if (badges.isNotEmpty) ...[
             const SizedBox(height: 8),
-
             Wrap(spacing: 6, runSpacing: 4, children: badges),
           ],
         ],
@@ -1226,9 +1152,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               fontWeight: FontWeight.bold,
             ),
           ),
-
           const SizedBox(height: 4),
-
           Text(
             'Pantau dan kelola prospek jamaah umrah dari berbagai sumber secara terintegrasi.',
             style: TextStyle(
@@ -1236,9 +1160,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               fontSize: 11,
             ),
           ),
-
           const SizedBox(height: 12),
-
           ElevatedButton.icon(
             onPressed: () {
               if (widget.onNavigateToPipeline != null) {
@@ -1265,21 +1187,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ),
           const SizedBox(height: 14),
 
-          // ==========================================
-          // SEARCH + FILTER
-          // ==========================================
           AnimatedBuilder(
             animation: _crmController,
             builder: (context, child) {
               return CrmSearchPanel(crmController: _crmController);
             },
           ),
-
           const SizedBox(height: 14),
 
-          // ==========================================
-          // KANBAN TABS
-          // ==========================================
           CrmKanbanTabs(
             tabData: _kanbanTabsData,
             selectedStatus: _selectedPipelineStatus,
@@ -1289,30 +1204,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
               });
             },
           ),
-
           const SizedBox(height: 14),
 
-          // ==========================================
-          // BAGIAN INI PENTING
-          //
-          // AnimatedBuilder membuat Dashboard
-          // rebuild setiap kali:
-          //
-          // search berubah
-          // source berubah
-          // type berubah
-          //
-          // ==========================================
           AnimatedBuilder(
             animation: _crmController,
             builder: (context, _) {
               return StreamBuilder<List<LeadModel>>(
                 stream: _getLeadsStream(),
                 builder: (context, snapshot) {
-                  // ==========================================
-                  // LOADING
-                  // ==========================================
-
                   if (snapshot.connectionState == ConnectionState.waiting) {
                     return const Center(
                       child: Padding(
@@ -1321,10 +1220,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       ),
                     );
                   }
-
-                  // ==========================================
-                  // ERROR
-                  // ==========================================
 
                   if (snapshot.hasError) {
                     return Center(
@@ -1338,122 +1233,54 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     );
                   }
 
-                  // ==========================================
-                  // SEMUA DATA DARI SUPABASE
-                  // ==========================================
-
                   final allLeads = snapshot.data ?? [];
-
-                  // ==========================================
-                  // FILTER DATA
-                  // ==========================================
-
                   final searchQuery = _crmController.searchQuery
                       .toLowerCase()
                       .trim();
-
                   final selectedSource = _crmController.selectedSource;
-
                   final selectedType = _crmController.selectedType;
 
                   final filteredLeads = allLeads.where((lead) {
-                    // ======================================
-                    // 1. STATUS KANBAN
-                    // ======================================
-
                     final matchStatus =
                         lead.status.toLowerCase() ==
                         _selectedPipelineStatus.toLowerCase();
-
-                    // ======================================
-                    // 2. SEARCH
-                    // ======================================
-
                     bool matchSearch = true;
 
                     if (searchQuery.isNotEmpty) {
-                      final namaMatch = lead.nama.toLowerCase().contains(
-                        searchQuery,
-                      );
-
-                      final instansiMatch =
-                          lead.instansi?.toLowerCase().contains(searchQuery) ??
-                          false;
-
-                      final catatanMatch =
-                          lead.catatan?.toLowerCase().contains(searchQuery) ??
-                          false;
-
-                      final emailMatch =
-                          lead.email?.toLowerCase().contains(searchQuery) ??
-                          false;
-
-                      final noHpMatch =
-                          lead.noHp?.toLowerCase().contains(searchQuery) ??
-                          false;
-
-                      final lokasiMatch =
-                          lead.lokasi?.toLowerCase().contains(searchQuery) ??
-                          false;
-
-                      final sumberMatch =
-                          lead.sumberLeads?.toLowerCase().contains(
-                            searchQuery,
-                          ) ??
-                          false;
-
-                      final tipeMatch =
-                          lead.tipeLead?.toLowerCase().contains(searchQuery) ??
-                          false;
-
                       matchSearch =
-                          namaMatch ||
-                          instansiMatch ||
-                          catatanMatch ||
-                          emailMatch ||
-                          noHpMatch ||
-                          lokasiMatch ||
-                          sumberMatch ||
-                          tipeMatch;
+                          (lead.nama.toLowerCase().contains(searchQuery)) ||
+                          (lead.instansi?.toLowerCase().contains(searchQuery) ??
+                              false) ||
+                          (lead.catatan?.toLowerCase().contains(searchQuery) ??
+                              false) ||
+                          (lead.email?.toLowerCase().contains(searchQuery) ??
+                              false) ||
+                          (lead.noHp?.toLowerCase().contains(searchQuery) ??
+                              false) ||
+                          (lead.lokasi?.toLowerCase().contains(searchQuery) ??
+                              false) ||
+                          (lead.sumberLeads?.toLowerCase().contains(
+                                searchQuery,
+                              ) ??
+                              false) ||
+                          (lead.tipeLead?.toLowerCase().contains(searchQuery) ??
+                              false);
                     }
 
-                    // ======================================
-                    // 3. FILTER SUMBER
-                    // ======================================
-
-                    bool matchSource = true;
-
-                    if (selectedSource != 'Semua Sumber') {
-                      matchSource =
-                          lead.sumberLeads?.toLowerCase() ==
-                          selectedSource.toLowerCase();
-                    }
-
-                    // ======================================
-                    // 4. FILTER TIPE
-                    // ======================================
-
-                    bool matchType = true;
-
-                    if (selectedType != 'Semua Tipe (Output)') {
-                      matchType =
-                          lead.tipeLead?.toLowerCase() ==
-                          selectedType.toLowerCase();
-                    }
-
-                    // ======================================
-                    // GABUNG SEMUA FILTER
-                    // ======================================
+                    bool matchSource =
+                        selectedSource == 'Semua Sumber' ||
+                        lead.sumberLeads?.toLowerCase() ==
+                            selectedSource.toLowerCase();
+                    bool matchType =
+                        selectedType == 'Semua Tipe (Output)' ||
+                        lead.tipeLead?.toLowerCase() ==
+                            selectedType.toLowerCase();
 
                     return matchStatus &&
                         matchSearch &&
                         matchSource &&
                         matchType;
                   }).toList();
-
-                  // ==========================================
-                  // TIDAK ADA DATA
-                  // ==========================================
 
                   if (filteredLeads.isEmpty) {
                     return Container(
@@ -1470,9 +1297,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             color: Colors.white.withOpacity(0.35),
                             size: 30,
                           ),
-
                           const SizedBox(height: 8),
-
                           const Text(
                             'Tidak ada prospek ditemukan.',
                             style: TextStyle(
@@ -1480,9 +1305,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               fontSize: 12,
                             ),
                           ),
-
                           const SizedBox(height: 4),
-
                           Text(
                             searchQuery.isNotEmpty
                                 ? 'Coba gunakan kata kunci lain.'
@@ -1498,10 +1321,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     );
                   }
 
-                  // ==========================================
-                  // LIST HASIL FILTER
-                  // ==========================================
-
                   return ListView.separated(
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
@@ -1513,18 +1332,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
                       return CrmProspectCard(
                         leadData: lead,
-
-                        // UPDATE STATUS
                         onStatusChange: (newStatus) {
                           _updateLeadStatus(lead.id, newStatus);
                         },
-
-                        // EDIT
                         onEdit: () {
                           _showEditProspectDialog(context, lead);
                         },
-
-                        // DELETE
                         onDelete: () {
                           _deleteLead(lead.id);
                         },
