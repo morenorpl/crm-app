@@ -8,6 +8,7 @@ import 'widgets/crm_statistics_grid.dart';
 import 'widgets/crm_kanban_tabs.dart';
 import 'widgets/crm_prospect_card.dart';
 import 'package:crm_app/screen/CRM/kanban/models/lead_model.dart';
+import 'package:provider/provider.dart';
 
 class CrmBoardScreen extends StatefulWidget {
   final String avatarLetter;
@@ -35,7 +36,7 @@ class _CrmBoardScreenState extends State<CrmBoardScreen> {
   @override
   void initState() {
     super.initState();
-    _crmController = CrmController();
+    _crmController = Provider.of<CrmController>(context, listen: false);
     _crmController.fetchLeads();
   }
 
@@ -98,60 +99,119 @@ class _CrmBoardScreenState extends State<CrmBoardScreen> {
   }
 
   Widget _buildFilteredProspects() {
-    // 🔍 MENGGUNAKAN filteredLeads BUKAN leads
-    final allFilteredLeads = _crmController.filteredLeads;
+    final searchQuery = _crmController.searchQuery.toLowerCase().trim();
+    final selectedSource = _crmController.selectedSource;
+    final selectedType = _crmController.selectedType;
 
-    // Memfilter data yang sudah dicari berdasarkan tab kategori aktif
-    final filteredLeads = allFilteredLeads
-        .where((lead) => lead.status == _activeStatus)
-        .toList();
-
-    if (filteredLeads.isEmpty) {
-      String activeTabName = _tabCategories.entries
-          .firstWhere(
-            (entry) => entry.value == _activeStatus,
-            orElse: () => const MapEntry('Layak', 'baru'),
-          )
-          .key;
-
-      final isSearching = _crmController.searchQuery.isNotEmpty;
-
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 40.0),
-          child: Text(
-            isSearching
-                ? 'Tidak ditemukan prospek dengan nama "${_crmController.searchQuery}" di kategori "$activeTabName"'
-                : 'belum ada prospek di kategori "$activeTabName"',
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              color: AppColors.textMuted,
-              fontSize: 14,
-              fontStyle: FontStyle.italic,
+    // GUNAKAN _getLeadsStream() YANG SAMA PERSIS DENGAN DASHBOARD
+    return StreamBuilder<List<LeadModel>>(
+      stream: _crmController.getLeadsStream(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(
+            child: Padding(
+              padding: EdgeInsets.all(24.0),
+              child: CircularProgressIndicator(color: Colors.white),
             ),
-          ),
-        ),
-      );
-    }
+          );
+        }
 
-    // Map the filtered leads to Prospect Cards
-    return Column(
-      children: filteredLeads.map((leadData) {
-        return CrmProspectCard(
-          leadData: leadData,
-          onEdit: () {
-            _showEditProspectDialog(context, leadData);
-          },
-          onDelete: () async {
-            await _crmController.deleteLead(leadData.id);
-          },
-          onStatusChange: (newStatus) async {
-            if (leadData.status == newStatus) return;
+        if (snapshot.hasError) {
+          return Center(
+            child: Text(
+              'Gagal memuat data: ${snapshot.error}',
+              style: const TextStyle(color: Colors.redAccent, fontSize: 12),
+            ),
+          );
+        }
 
-            await _crmController.updateLeadStatus(leadData.id, newStatus);
-          },
+        final allLeads = snapshot.data ?? [];
+
+        // Filter berdasarkan status tab aktif & pencarian
+        final filteredLeads = allLeads.where((lead) {
+          final matchStatus =
+              lead.status.toLowerCase().trim() ==
+              _activeStatus.toLowerCase().trim();
+          bool matchSearch = true;
+
+          if (searchQuery.isNotEmpty) {
+            matchSearch =
+                (lead.nama.toLowerCase().contains(searchQuery)) ||
+                (lead.instansi?.toLowerCase().contains(searchQuery) ?? false) ||
+                (lead.catatan?.toLowerCase().contains(searchQuery) ?? false) ||
+                (lead.email?.toLowerCase().contains(searchQuery) ?? false) ||
+                (lead.noHp?.toLowerCase().contains(searchQuery) ?? false) ||
+                (lead.lokasi?.toLowerCase().contains(searchQuery) ?? false) ||
+                (lead.sumberLeads?.toLowerCase().contains(searchQuery) ??
+                    false) ||
+                (lead.tipeLead?.toLowerCase().contains(searchQuery) ?? false);
+          }
+
+          bool matchSource =
+              selectedSource == 'Semua Sumber' ||
+              lead.sumberLeads?.toLowerCase() == selectedSource.toLowerCase();
+          bool matchType =
+              selectedType == 'Semua Tipe (Output)' ||
+              lead.tipeLead?.toLowerCase() == selectedType.toLowerCase();
+
+          return matchStatus && matchSearch && matchSource && matchType;
+        }).toList();
+
+        if (filteredLeads.isEmpty) {
+          return Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.04),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Column(
+              children: [
+                Icon(
+                  Icons.search_off_rounded,
+                  color: Colors.white.withOpacity(0.35),
+                  size: 30,
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  'Tidak ada prospek ditemukan.',
+                  style: TextStyle(color: Colors.white54, fontSize: 12),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  searchQuery.isNotEmpty
+                      ? 'Coba gunakan kata kunci lain.'
+                      : 'Belum ada data pada filter ini.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: Colors.white.withOpacity(0.35),
+                    fontSize: 10,
+                  ),
+                ),
+              ],
+            ),
+          );
+        }
+
+        // Tampilkan list card di Pipeline
+        return Column(
+          children: filteredLeads.map((leadData) {
+            return CrmProspectCard(
+              leadData: leadData,
+              onEdit: () {
+                _showEditProspectDialog(context, leadData);
+              },
+              onDelete: () async {
+                await _crmController.deleteLead(leadData.id);
+              },
+              onStatusChange: (newStatus) async {
+                if (leadData.status == newStatus) return;
+                await _crmController.updateLeadStatus(leadData.id, newStatus);
+              },
+            );
+          }).toList(),
         );
-      }).toList(),
+      },
     );
   }
 

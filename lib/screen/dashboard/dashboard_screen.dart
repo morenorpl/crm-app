@@ -10,6 +10,7 @@ import '../CRM/kanban/widgets/crm_search_panel.dart';
 import '../CRM/kanban/controllers/crm_controller.dart';
 import 'package:crm_app/constants/app_colors.dart';
 import '../CRM/kanban/kanban_screen.dart';
+import 'package:provider/provider.dart';
 
 class DashboardScreen extends StatefulWidget {
   final String avatarLetter;
@@ -26,101 +27,20 @@ class DashboardScreen extends StatefulWidget {
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
-  final CrmController _crmController = CrmController();
-
-  // ==========================================
-  // STATE USER & PROFIL (DITAMBAHKAN)
-  // ==========================================
-  int? _currentUserId;
-  String? _currentUserRole;
-  bool _isLoadingProfile = true;
-
-  // ==========================================
-  // FILTER DASHBOARD
-  // ==========================================
-
-  String _selectedTeamFilter = 'Kinerja Ku Saja';
-  // String _selectedTimeFilter = 'Semua waktu';
-
-  // ==========================================
-  // FILTER PIPELINE CRM
-  // ==========================================
+  late CrmController _crmController;
 
   String _selectedPipelineStatus = 'baru';
-
-  // ==========================================
-  // SUPABASE
-  // ==========================================
-
   final _supabase = Supabase.instance.client;
 
   // ==========================================
   // INIT STATE UTK AMBIL PROFIL (DITAMBAHKAN)
   // ==========================================
+
   @override
   void initState() {
     super.initState();
-    _fetchUserProfile();
-  }
-
-  Future<void> _fetchUserProfile() async {
-    final user = _supabase.auth.currentUser;
-    if (user != null && user.email != null) {
-      try {
-        final response = await _supabase
-            .from('users')
-            .select('id, role')
-            .eq('email', user.email!)
-            .single();
-
-        if (mounted) {
-          setState(() {
-            _currentUserId = response['id'];
-            _currentUserRole = response['role'];
-            _isLoadingProfile = false;
-          });
-        }
-      } catch (e) {
-        debugPrint('Error fetching user profile: $e');
-        if (mounted) {
-          setState(() => _isLoadingProfile = false);
-        }
-      }
-    } else {
-      if (mounted) {
-        setState(() => _isLoadingProfile = false);
-      }
-    }
-  }
-
-  // ==========================================
-  // STREAM LEADS (DIPERBARUI DGN FILTER DART)
-  // ==========================================
-
-  Stream<List<LeadModel>> _getLeadsStream() {
-    if (_isLoadingProfile || _currentUserId == null) {
-      return Stream.value([]);
-    }
-
-    return _supabase
-        .from('leads')
-        .stream(primaryKey: ['id'])
-        .order('id', ascending: false)
-        .map((data) {
-          // 1. Filter data secara lokal di Dart
-          var filteredData = data;
-          if (_selectedTeamFilter == 'Kinerja Ku Saja' ||
-              _currentUserRole != 'admin') {
-            filteredData = filteredData
-                .where((json) => json['user_id'] == _currentUserId)
-                .toList();
-          }
-
-          // 2. Convert ke Model
-          return filteredData
-              .map((json) => LeadModel.fromMap(Map<String, dynamic>.from(json)))
-              .toList();
-        });
+    _crmController = Provider.of<CrmController>(context, listen: false);
+    _crmController.fetchUserProfile();
   }
 
   // ==========================================
@@ -133,25 +53,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
     'Prospek Layak': 'layak',
     'Closed': 'closed',
   };
-
-  // ==========================================
-  // UPDATE STATUS LEAD
-  // ==========================================
-
-  Future<void> _updateLeadStatus(dynamic leadId, String newStatus) async {
-    try {
-      await _supabase
-          .from('leads')
-          .update({'status': newStatus})
-          .eq('id', leadId);
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Gagal memperbarui status: $e')));
-      }
-    }
-  }
 
   Future<void> _showEditProspectDialog(BuildContext context, LeadModel lead) {
     return showDialog(
@@ -186,22 +87,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   // ==========================================
-  // DELETE LEAD
-  // ==========================================
-
-  Future<void> _deleteLead(dynamic leadId) async {
-    try {
-      await _supabase.from('leads').delete().eq('id', leadId);
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Gagal menghapus data: $e')));
-      }
-    }
-  }
-
-  // ==========================================
   // BUILD
   // ==========================================
 
@@ -211,7 +96,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       backgroundColor: AppColors.background,
       body: SafeArea(
         // DITAMBAHKAN: Pengecekan loading profile
-        child: _isLoadingProfile
+        child: _crmController.currentUserId == null
             ? const Center(
                 child: CircularProgressIndicator(color: Colors.white),
               )
@@ -251,7 +136,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             child: GestureDetector(
                               onTap: () {
                                 setState(() {
-                                  _selectedTeamFilter = 'Kinerja Ku Saja';
+                                  _crmController.selectedTeamFilter =
+                                      'Kinerja Ku Saja';
                                 });
                               },
                               child: AnimatedContainer(
@@ -261,9 +147,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 ),
                                 decoration: BoxDecoration(
                                   color:
-                                      (_selectedTeamFilter ==
+                                      (_crmController.selectedTeamFilter ==
                                               'Kinerja Ku Saja' ||
-                                          _selectedTeamFilter.isEmpty)
+                                          _crmController
+                                              .selectedTeamFilter
+                                              .isEmpty)
                                       ? const Color(0xFF3B82F6)
                                       : Colors.transparent,
                                   borderRadius: BorderRadius.circular(20),
@@ -285,13 +173,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
                           const SizedBox(width: 4),
 
-                          // 2. Tim Bawahanku (KANAN - DIPERBARUI LOGIC GRAY OUT)
+                          // 2. Kinerja Semua Tim (KANAN - DIPERBARUI LOGIC GRAY OUT)
                           Expanded(
                             child: GestureDetector(
-                              onTap: _currentUserRole == 'admin'
+                              onTap: _crmController.currentUserRole == 'admin'
                                   ? () {
                                       setState(() {
-                                        _selectedTeamFilter = 'Tim Bawahanku';
+                                        _crmController.selectedTeamFilter =
+                                            'Kinerja Semua Tim';
                                       });
                                     }
                                   : null, // Disable klik jika user biasa
@@ -301,31 +190,36 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                   vertical: 10,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: _currentUserRole != 'admin'
+                                  color:
+                                      _crmController.currentUserRole != 'admin'
                                       ? Colors.grey.withOpacity(
                                           0.1,
                                         ) // Background abu-abu jika disable
-                                      : _selectedTeamFilter == 'Tim Bawahanku'
+                                      : _crmController.selectedTeamFilter ==
+                                            'Kinerja Semua Tim'
                                       ? const Color(0xFF3B82F6)
                                       : Colors.transparent,
                                   borderRadius: BorderRadius.circular(20),
                                 ),
                                 child: Center(
                                   child: Text(
-                                    'Tim Bawahanku',
+                                    'Kinerja Semua Tim',
                                     textAlign: TextAlign.center,
                                     style: TextStyle(
-                                      color: _currentUserRole != 'admin'
+                                      color:
+                                          _crmController.currentUserRole !=
+                                              'admin'
                                           ? Colors.grey.withOpacity(
                                               0.5,
                                             ) // Teks mati jika disable
-                                          : _selectedTeamFilter ==
-                                                'Tim Bawahanku'
+                                          : _crmController.selectedTeamFilter ==
+                                                'Kinerja Semua Tim'
                                           ? Colors.white
                                           : const Color(0xFFA197B4),
                                       fontSize: 12,
                                       fontWeight:
-                                          _selectedTeamFilter == 'Tim Bawahanku'
+                                          _crmController.selectedTeamFilter ==
+                                              'Kinerja Semua Tim'
                                           ? FontWeight.bold
                                           : FontWeight.normal,
                                     ),
@@ -344,7 +238,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     // METRIC CARDS (DYNAMIC ALL-TIME CRM STAGES)
                     // ==========================================
                     StreamBuilder<List<Map<String, dynamic>>>(
-                      stream: _getProductivityLeadsStream(),
+                      stream: _crmController.getProductivityLeadsStream(),
                       builder: (context, snapshot) {
                         int totalBaru = 0;
                         int totalDihubungi = 0;
@@ -534,37 +428,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   // ==========================================
-  // PRODUCTIVITY STREAM (DIPERBARUI DGN FILTER DART)
-  // ==========================================
-
-  Stream<List<Map<String, dynamic>>> _getProductivityLeadsStream() {
-    if (_isLoadingProfile || _currentUserId == null) {
-      return Stream.value([]);
-    }
-
-    return _supabase.from('leads').stream(primaryKey: ['id']).map((data) {
-      // Filter data secara lokal di Dart
-      var filteredData = data;
-      if (_selectedTeamFilter == 'Kinerja Ku Saja' ||
-          _currentUserRole != 'admin') {
-        filteredData = filteredData
-            .where((json) => json['user_id'] == _currentUserId)
-            .toList();
-      }
-
-      return filteredData
-          .map((json) => Map<String, dynamic>.from(json))
-          .toList();
-    });
-  }
-
-  // ==========================================
   // PRODUKTIFITAS HARIAN
   // ==========================================
 
   Widget _buildProduktifitasHarianCard() {
     return StreamBuilder<List<Map<String, dynamic>>>(
-      stream: _getProductivityLeadsStream(),
+      stream: _crmController.getProductivityLeadsStream(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return _buildProduktifitasCardContent(isLoading: true);
@@ -878,7 +747,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   Widget _buildLaporanHarianCard() {
     return StreamBuilder<List<Map<String, dynamic>>>(
-      stream: _getProductivityLeadsStream(),
+      stream: _crmController.getProductivityLeadsStream(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return _buildLaporanContainer(
@@ -1210,7 +1079,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             animation: _crmController,
             builder: (context, _) {
               return StreamBuilder<List<LeadModel>>(
-                stream: _getLeadsStream(),
+                stream: _crmController.getLeadsStream(),
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
                     return const Center(
@@ -1333,13 +1202,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       return CrmProspectCard(
                         leadData: lead,
                         onStatusChange: (newStatus) {
-                          _updateLeadStatus(lead.id, newStatus);
+                          _crmController.updateLeadStatus(lead.id, newStatus);
                         },
                         onEdit: () {
                           _showEditProspectDialog(context, lead);
                         },
                         onDelete: () {
-                          _deleteLead(lead.id);
+                          _crmController.deleteLead(lead.id);
                         },
                       );
                     },

@@ -21,6 +21,8 @@ class AddProspectDialog {
     // Variable untuk menyimpan tanggal Follow Up yang dipilih
     DateTime? selectedFollowUpDate;
 
+    bool _isSubmitting = false;
+
     showDialog(
       context: context,
       builder: (context) {
@@ -289,127 +291,191 @@ class AddProspectDialog {
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.greenAccent,
+                    disabledBackgroundColor: Colors.grey.withOpacity(
+                      0.3,
+                    ), // Warna saat tombol mati
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),
                     ),
                   ),
-                  onPressed: () async {
-                    if (nameController.text.trim().isEmpty) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Nama kontak wajib diisi!'),
-                          backgroundColor: Colors.redAccent,
-                        ),
-                      );
-                      return;
-                    }
-                    if (instansiController.text.trim().isEmpty) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Instansi/KBIH wajib diisi!'),
-                          backgroundColor: Colors.redAccent,
-                        ),
-                      );
-                      return;
-                    }
-                    if (phoneController.text.trim().isEmpty) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Nomor HP wajib diisi!'),
-                          backgroundColor: Colors.redAccent,
-                        ),
-                      );
-                      return;
-                    }
-                    if (emailController.text.trim().isEmpty) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Email wajib diisi!'),
-                          backgroundColor: Colors.redAccent,
-                        ),
-                      );
-                      return;
-                    }
-                    if (cityController.text.trim().isEmpty) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Kota/Alamat wajib diisi!'),
-                          backgroundColor: Colors.redAccent,
-                        ),
-                      );
-                      return;
-                    }
+                  // 1. Jika _isSubmitting bernilai true, set ke null agar tombol non-aktif (disabled)
+                  onPressed: _isSubmitting
+                      ? null
+                      : () async {
+                          // Validasi form seperti biasa
+                          if (nameController.text.trim().isEmpty) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Nama kontak wajib diisi!'),
+                                backgroundColor: Colors.redAccent,
+                              ),
+                            );
+                            return;
+                          }
+                          if (instansiController.text.trim().isEmpty) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Instansi/KBIH wajib diisi!'),
+                                backgroundColor: Colors.redAccent,
+                              ),
+                            );
+                            return;
+                          }
+                          if (phoneController.text.trim().isEmpty) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Nomor HP wajib diisi!'),
+                                backgroundColor: Colors.redAccent,
+                              ),
+                            );
+                            return;
+                          }
+                          if (emailController.text.trim().isEmpty) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Email wajib diisi!'),
+                                backgroundColor: Colors.redAccent,
+                              ),
+                            );
+                            return;
+                          }
+                          if (cityController.text.trim().isEmpty) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Kota/Alamat wajib diisi!'),
+                                backgroundColor: Colors.redAccent,
+                              ),
+                            );
+                            return;
+                          }
 
-                    // Format tanggal yyyy-MM-dd agar kompatibel dengan kolom DATE/TIMESTAMP di Supabase
-                    String? formattedDate;
-                    if (selectedFollowUpDate != null) {
-                      formattedDate =
-                          "${selectedFollowUpDate!.year}-${selectedFollowUpDate!.month.toString().padLeft(2, '0')}-${selectedFollowUpDate!.day.toString().padLeft(2, '0')}";
-                    }
+                          // 2. Aktifkan status loading di dalam dialog menggunakan setDialogState
+                          setDialogState(() {
+                            _isSubmitting = true;
+                          });
 
-                    print("MENCOBA MENYIMPAN KE SUPABASE...");
+                          // Format tanggal yyyy-MM-dd
+                          String? formattedDate;
+                          if (selectedFollowUpDate != null) {
+                            formattedDate =
+                                "${selectedFollowUpDate!.year}-${selectedFollowUpDate!.month.toString().padLeft(2, '0')}-${selectedFollowUpDate!.day.toString().padLeft(2, '0')}";
+                          }
 
-                    // Panggil controller untuk menyimpan data ke Supabase
-                    final success = await crmController.addLead(
-                      nama: nameController.text.trim(),
-                      instansi: instansiController.text.trim(),
-                      email: emailController.text.trim(),
-                      noHp: phoneController.text.trim(),
-                      lokasi: cityController.text.trim(),
-                      sumberLeads: selectedSumberLeads,
-                      tipeLead: selectedTipeLead,
-                      status: selectedStatus,
-                      jumlahPax: int.tryParse(paxController.text.trim()) ?? 0,
-                      potensiNilai:
-                          double.tryParse(nilaiDealController.text.trim()) ??
-                          0.0,
-                      catatan: notesController.text.trim(),
-                      jadwalFollowUp:
-                          formattedDate, // 👈 Passing string YYYY-MM-DD
-                    );
+                          print("MENCOBA MENYIMPAN KE SUPABASE...");
 
-                    print("HASIL SIMPAN SUPABASE (success) = $success");
+                          // Panggil controller untuk menyimpan data
+                          final String resultStatus = await crmController
+                              .addLead(
+                                nama: nameController.text.trim(),
+                                instansi: instansiController.text.trim(),
+                                email: emailController.text.trim(),
+                                noHp: phoneController.text.trim(),
+                                lokasi: cityController.text.trim(),
+                                sumberLeads: selectedSumberLeads,
+                                tipeLead: selectedTipeLead,
+                                status: selectedStatus,
+                                jumlahPax:
+                                    int.tryParse(paxController.text.trim()) ??
+                                    0,
+                                potensiNilai:
+                                    double.tryParse(
+                                      nilaiDealController.text.trim(),
+                                    ) ??
+                                    0.0,
+                                catatan: notesController.text.trim(),
+                                jadwalFollowUp: formattedDate,
+                              );
 
-                    if (!context.mounted) return;
+                          print("HASIL SIMPAN STATUS = $resultStatus");
 
-                    if (success) {
-                      if (selectedFollowUpDate != null) {
-                        // Buat ID unik berdasarkan angka waktu agar tidak bentrok antar leads
-                        final int uniqueId = DateTime.now()
-                            .millisecondsSinceEpoch
-                            .remainder(100000);
+                          if (!context.mounted) return;
 
-                        // Panggil fungsi jadwal jam 09:00 pagi pada tanggal yang dipilih user
-                        await NotificationService.scheduleFollowUp(
-                          uniqueId,
-                          'Jadwal Follow-up: ${nameController.text.trim()} 🚀',
-                          'Waktunya menghubungi prospek dari ${instansiController.text.trim()}.',
-                          selectedFollowUpDate!, // Tanggal dari DateTimePicker
-                        );
-                      }
+                          if (resultStatus == 'success') {
+                            if (selectedFollowUpDate != null) {
+                              final int uniqueId = DateTime.now()
+                                  .millisecondsSinceEpoch
+                                  .remainder(100000);
 
-                      Navigator.pop(context);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text(
-                            'Prospek berhasil ditambahkan! Menunggu 5 detik...',
+                              await NotificationService.scheduleFollowUp(
+                                uniqueId,
+                                'Jadwal Follow-up: ${nameController.text.trim()} 🚀',
+                                'Waktunya menghubungi prospek dari ${instansiController.text.trim()}.',
+                                selectedFollowUpDate!,
+                              );
+                            }
+
+                            Navigator.pop(context);
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text(
+                                  'Prospek berhasil ditambahkan ke database!',
+                                ),
+                                backgroundColor: Colors.green,
+                              ),
+                            );
+                          } else if (resultStatus == 'server_down') {
+                            // 👇 PESAN ERROR BARU SAAT EXPRESS MATI
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text(
+                                  'Server tidak aktif. Data sementara disimpan di lokal.',
+                                ),
+                                backgroundColor: Colors.orange,
+                              ),
+                            );
+                            Navigator.pop(context);
+                          } else if (resultStatus == 'offline') {
+                            if (selectedFollowUpDate != null) {
+                              final int uniqueId = DateTime.now()
+                                  .millisecondsSinceEpoch
+                                  .remainder(100000);
+
+                              await NotificationService.scheduleFollowUp(
+                                uniqueId,
+                                'Jadwal Follow-up: ${nameController.text.trim()} 🚀',
+                                'Waktunya menghubungi prospek dari ${instansiController.text.trim()}.',
+                                selectedFollowUpDate!,
+                              );
+                            }
+
+                            Navigator.pop(context);
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text(
+                                  'Tersimpan offline. Data akan disinkronkan saat online.',
+                                ),
+                                backgroundColor: Colors.orangeAccent,
+                                duration: Duration(seconds: 4),
+                              ),
+                            );
+                          } else {
+                            // Matikan loading jika gagal total
+                            setDialogState(() {
+                              _isSubmitting = false;
+                            });
+
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Gagal menyimpan prospek!'),
+                                backgroundColor: Colors.redAccent,
+                              ),
+                            );
+                          }
+                        },
+                  // 3. Tampilkan indikator loading jika sedang memproses, atau teks tombol jika normal
+                  child: _isSubmitting
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2,
                           ),
-                          backgroundColor: Colors.green,
+                        )
+                      : const Text(
+                          'Tambah Prospek',
+                          style: TextStyle(color: Colors.white),
                         ),
-                      );
-                    } else {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Gagal menyimpan prospek!'),
-                          backgroundColor: Colors.redAccent,
-                        ),
-                      );
-                    }
-                  },
-                  child: const Text(
-                    'Tambah Prospek',
-                    style: TextStyle(color: Colors.white),
-                  ),
                 ),
               ],
             );

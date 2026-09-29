@@ -6,7 +6,6 @@ class LeadModel {
   final String lokasi;
   final String status;
 
-  // Fields mapped from the Supabase table
   final String instansi;
   final String? sumberLeads;
   final String? tipeLead;
@@ -14,7 +13,6 @@ class LeadModel {
   final double? potensiNilai;
   final String? catatan;
 
-  // 📅 New field untuk Jadwal Follow Up
   final DateTime? jadwalFollowUp;
 
   LeadModel({
@@ -34,37 +32,51 @@ class LeadModel {
   });
 
   factory LeadModel.fromMap(Map<String, dynamic> map) {
+    // ID SQLite / Supabase
+    //
+    // Kalau data berasal dari pending SQLite dan belum punya ID,
+    // gunakan -1 sebagai ID lokal sementara.
+    final dynamic rawId = map['id'];
+
+    final int parsedId = rawId == null
+        ? -1
+        : int.tryParse(rawId.toString()) ?? -1;
+
     return LeadModel(
-      id: map['id'],
-      nama: map['nama'] ?? '',
-      email: map['email'] ?? '',
-      noHp: map['no_hp'] ?? '',
-      lokasi: map['lokasi'] ?? '',
-      status: map['status'] ?? 'baru',
+      id: parsedId,
 
-      // Mapping snake_case DB columns to camelCase Dart variables
-      instansi: map['instansi'],
-      sumberLeads: map['sumber_leads'],
-      tipeLead: map['tipe_lead'],
+      nama: map['nama']?.toString() ?? '',
 
-      // Safely parsing numbers in case they arrive as Strings or Ints from the DB
+      email: map['email']?.toString() ?? '',
+
+      noHp: map['no_hp']?.toString() ?? '',
+
+      lokasi: map['lokasi']?.toString() ?? '',
+
+      status: map['status']?.toString() ?? 'baru',
+
+      instansi: map['instansi']?.toString() ?? '',
+
+      sumberLeads: map['sumber_leads']?.toString(),
+
+      tipeLead: map['tipe_lead']?.toString(),
+
       jumlahPax: map['jumlah_pax'] != null
           ? int.tryParse(map['jumlah_pax'].toString())
           : null,
+
       potensiNilai: map['potensi_nilai'] != null
           ? double.tryParse(map['potensi_nilai'].toString())
           : null,
 
-      catatan: map['catatan'],
+      catatan: map['catatan']?.toString(),
 
-      // 📅 Safely parsing DateTime dari kolom Supabase 'jadwal_follow_up'
       jadwalFollowUp: map['jadwal_follow_up'] != null
           ? DateTime.tryParse(map['jadwal_follow_up'].toString())
           : null,
     );
   }
 
-  // Method toMap untuk kebutuhan serialisasi/insert ke Supabase jika diperlukan
   Map<String, dynamic> toMap() {
     return {
       'id': id,
